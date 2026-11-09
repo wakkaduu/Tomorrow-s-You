@@ -169,6 +169,40 @@ func _ready() -> void:
 	)
 
 	# --------------------------------------------------------------------------
+	# TEST 10: Authoritative Level Completion Flow & Complete Modal
+	# --------------------------------------------------------------------------
+	run_test.call("Level completion triggers CompleteModal and blocks subsequent input", func() -> bool:
+		GameManager.select_level(0)
+		var scene = load("res://scenes/gameplay/gameplay.tscn").instantiate()
+		add_child(scene)
+
+		var sim: PuzzleSimulation = GameManager.current_simulation
+		sim.step_move(Vector2i.DOWN)
+		sim.create_echo()
+		sim.complete_level()
+
+		if not scene.complete_modal.visible:
+			scene.queue_free()
+			return false
+		if not scene._is_modal_active():
+			scene.queue_free()
+			return false
+		if sim.game_state != PuzzleSimulation.GameState.COMPLETED:
+			scene.queue_free()
+			return false
+
+		# Ensure subsequent moves are blocked
+		var post_move: bool = sim.step_move(Vector2i.RIGHT)
+		var post_wait: bool = sim.step_wait()
+		if post_move or post_wait:
+			scene.queue_free()
+			return false
+
+		scene.queue_free()
+		return true
+	)
+
+	# --------------------------------------------------------------------------
 	# SUMMARY
 	# --------------------------------------------------------------------------
 	print("\n=======================================================")

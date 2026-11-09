@@ -59,6 +59,7 @@ var simulation: PuzzleSimulation = null
 var current_level_def: LevelDefinition = null
 var _dev_panel: PanelContainer = null
 var _dev_info_label: Label = null
+var _level_completed_handled: bool = false
 
 # Swipe gesture tracking
 var _touch_start_pos: Vector2 = Vector2.ZERO
@@ -94,12 +95,16 @@ func _on_viewport_resized() -> void:
 
 func _bind_simulation_signals() -> void:
 	simulation.turn_completed.connect(func(_turn): _update_hud())
-	simulation.attempt_restarted.connect(_update_hud)
+	simulation.attempt_restarted.connect(func():
+		_level_completed_handled = false
+		_update_hud()
+	)
 	simulation.echo_created.connect(func(_idx, _total):
 		if AudioManager: AudioManager.play_sfx("echo_create")
 		_update_hud()
 	)
 	simulation.echoes_cleared.connect(func():
+		_level_completed_handled = false
 		if AudioManager: AudioManager.play_sfx("ui_click")
 		_update_hud()
 	)
@@ -125,7 +130,7 @@ func _bind_simulation_signals() -> void:
 	simulation.level_completed.connect(_on_level_completed)
 
 func _is_modal_active() -> bool:
-	return pause_modal.visible or complete_modal.visible or hint_modal.visible or hint_confirm_modal.visible
+	return _level_completed_handled or pause_modal.visible or complete_modal.visible or hint_modal.visible or hint_confirm_modal.visible
 
 func _bind_ui_buttons() -> void:
 	# D-Pad
@@ -162,6 +167,7 @@ func _bind_ui_buttons() -> void:
 	)
 	btn_replay.pressed.connect(func():
 		complete_modal.visible = false
+		_level_completed_handled = false
 		simulation.clear_echoes()
 	)
 	btn_complete_levels.pressed.connect(func():
@@ -280,14 +286,19 @@ func _toggle_pause() -> void:
 	pause_modal.visible = not pause_modal.visible
 
 func _on_level_completed(turns: int, echoes: int, total_actions: int) -> void:
+	if _level_completed_handled:
+		return
+	_level_completed_handled = true
+
 	var stars: int = 1
 	if SaveManager:
 		stars = SaveManager.calculate_stars(current_level_def.level_id, total_actions)
 		var next_id: String = ""
-		if GameManager:
+		if GameManager and GameManager.next_level_exists():
 			var next_lvl = GameManager.get_next_level_def()
 			if next_lvl: next_id = next_lvl.level_id
 		SaveManager.record_level_completion(current_level_def.level_id, total_actions, echoes, next_id)
+		print("[SAVE] Level progress saved")
 
 	# Format star display
 	var star_str: String = ""
@@ -316,6 +327,7 @@ func _on_level_completed(turns: int, echoes: int, total_actions: int) -> void:
 		btn_next_level.text = "NEXT LEVEL >"
 		btn_next_level.disabled = false
 	complete_modal.visible = true
+	print("[SCENE] Level Complete screen displayed")
 
 # ==============================================================================
 # Desktop & Touch Input Handling

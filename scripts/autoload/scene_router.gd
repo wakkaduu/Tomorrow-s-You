@@ -5,13 +5,17 @@ extends Node
 signal scene_transition_started(target_scene: String)
 signal scene_transition_finished(target_scene: String)
 
+var suppress_scene_change: bool = false
 var current_scene_path: String = ""
 
 func change_scene(scene_path: String) -> void:
+	current_scene_path = scene_path
 	scene_transition_started.emit(scene_path)
+	if suppress_scene_change:
+		scene_transition_finished.emit(scene_path)
+		return
 	var err: Error = get_tree().change_scene_to_file(scene_path)
 	if err == OK:
-		current_scene_path = scene_path
 		scene_transition_finished.emit(scene_path)
 	else:
 		push_error("Failed to change scene to: " + scene_path)

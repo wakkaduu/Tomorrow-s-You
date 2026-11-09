@@ -29,6 +29,11 @@ func get_current_level_def() -> LevelDefinition:
 func next_level_exists() -> bool:
 	return current_level_index + 1 < LevelRegistryClass.get_level_count()
 
+func get_next_level_def() -> LevelDefinition:
+	if next_level_exists():
+		return LevelRegistryClass.get_level(current_level_index + 1)
+	return null
+
 func go_to_next_level() -> void:
 	if next_level_exists():
 		select_level(current_level_index + 1)
@@ -39,13 +44,6 @@ func go_to_next_level() -> void:
 func _on_sim_level_completed(turns: int, echoes: int, total_actions: int) -> void:
 	if current_level_def == null:
 		return
-
-	var next_id: String = ""
-	if current_level_index + 1 < LevelRegistryClass.get_level_count():
-		next_id = LevelRegistryClass.get_level(current_level_index + 1).level_id
-
-	if SaveManager:
-		SaveManager.record_level_completion(current_level_def.level_id, total_actions, echoes, next_id)
 
 	if AudioManager:
 		AudioManager.play_sfx("victory")

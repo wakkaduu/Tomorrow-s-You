@@ -19,6 +19,9 @@ signal echo_expired(echo_index: int, final_pos: Vector2i)
 signal sequence_advanced(door_id: String, step_index: int, total_steps: int)
 signal sequence_reset(door_id: String)
 
+enum GameState { PLAYING, PAUSED, COMPLETED, FAILED }
+var game_state: GameState = GameState.PLAYING
+
 var level_def: LevelDefinition = null
 var current_turn: int = 0
 var total_actions_taken: int = 0
@@ -37,12 +40,14 @@ func load_level(p_level_def: LevelDefinition) -> void:
 	level_def = p_level_def
 	total_actions_taken = 0
 	echoes.clear()
+	game_state = GameState.PLAYING
 	is_completed = false
 	restart_attempt()
 
 func restart_attempt() -> void:
 	if level_def == null:
 		return
+	game_state = GameState.PLAYING
 	is_completed = false
 	current_turn = 0
 	player_pos = level_def.spawn_pos
@@ -55,7 +60,7 @@ func restart_attempt() -> void:
 	attempt_restarted.emit()
 
 func create_echo() -> bool:
-	if level_def == null or is_completed:
+	if level_def == null or game_state == GameState.COMPLETED or is_completed:
 		return false
 	if current_recording == null or current_recording.get_step_count() == 0:
 		# Empty attempt, just restart without creating echo
@@ -80,8 +85,44 @@ func clear_echoes() -> void:
 	restart_attempt()
 	echoes_cleared.emit()
 
+func is_exit_available() -> bool:
+	if level_def == null:
+		return false
+	var door_info: Dictionary = level_def.get_door_at(level_def.exit_pos)
+	if door_info.is_empty():
+		return true
+	var door_id: String = str(door_info.get("id", ""))
+	return is_door_open(door_id) or player_pos == level_def.exit_pos
+
+func check_level_completion() -> bool:
+	if game_state == GameState.COMPLETED:
+		return false
+	if level_def == null:
+		print("[LEVEL] Rejected: No level definition loaded.")
+		return false
+	if player_pos != level_def.exit_pos:
+		return false
+	if not is_exit_available():
+		print("[LEVEL] Rejected: Exit at %s is locked/unavailable." % str(level_def.exit_pos))
+		return false
+
+	complete_level()
+	return true
+
+func complete_level() -> void:
+	if game_state == GameState.COMPLETED:
+		return
+
+	game_state = GameState.COMPLETED
+	is_completed = true
+
+	print("[LEVEL] Completion condition: satisfied")
+	print("[LEVEL] COMPLETION TRIGGERED")
+
+	level_completed.emit(current_turn, echoes.size(), total_actions_taken)
+
 func step_move(dir: Vector2i) -> bool:
-	if is_completed or level_def == null:
+	if game_state == GameState.COMPLETED or is_completed or level_def == null:
 		return false
 
 	var target_pos: Vector2i = player_pos + dir
@@ -95,7 +136,7 @@ func step_move(dir: Vector2i) -> bool:
 	var door_info: Dictionary = level_def.get_door_at(target_pos)
 	if not door_info.is_empty():
 		var door_id: String = str(door_info.get("id", ""))
-		var is_open: bool = doors_state.get(door_id, false)
+		var is_open: bool = is_door_open_at_turn(door_id, current_turn + 1)
 		if not is_open:
 			move_blocked.emit(target_pos, "DOOR_CLOSED")
 			return false # Does NOT consume a turn
@@ -112,7 +153,7 @@ func step_move(dir: Vector2i) -> bool:
 	return true
 
 func step_wait() -> bool:
-	if is_completed or level_def == null:
+	if game_state == GameState.COMPLETED or is_completed or level_def == null:
 		return false
 
 	current_turn += 1
@@ -124,7 +165,7 @@ func step_wait() -> bool:
 	return true
 
 func step_interact() -> bool:
-	if is_completed or level_def == null:
+	if game_state == GameState.COMPLETED or is_completed or level_def == null:
 		return false
 
 	current_turn += 1
@@ -136,22 +177,28 @@ func step_interact() -> bool:
 	return true
 
 func _advance_turn() -> void:
+	print("[TURN] Global turn: %d" % current_turn)
+
 	# 1. Advance echoes & emit stepped or expired
 	for i in range(echoes.size()):
 		var echo: EchoRecording = echoes[i]
 		var echo_pos: Vector2i = echo.get_position_at_turn(current_turn)
 		var echo_action: String = echo.get_action_at_turn(current_turn)
 		if current_turn == echo.get_step_count() + 1:
+			print("[ECHO] Echo %d expired." % (i + 1))
 			echo_expired.emit(i, echo_pos)
 		echo_stepped.emit(i, echo_pos, echo_action)
+
+	print("[PLAYER] Current position: %s" % str(player_pos))
+	if level_def:
+		print("[EXIT] Exit position: %s" % str(level_def.exit_pos))
+		print("[EXIT] Exit available: %s" % str(is_exit_available()).to_lower())
 
 	# 2. Recalculate environment (plates & doors)
 	_recalculate_plates_and_doors()
 
 	# 3. Check level completion (REAL PLAYER ONLY)
-	if player_pos == level_def.exit_pos:
-		is_completed = true
-		level_completed.emit(current_turn, echoes.size(), total_actions_taken)
+	check_level_completion()
 
 	turn_completed.emit(current_turn)
 
@@ -261,6 +308,56 @@ func is_sequence_unlocked(door_id: String) -> bool:
 
 func is_plate_active(plate_id: String) -> bool:
 	return plates_state.get(plate_id, false)
+
+func is_door_open_at_turn(door_id: String, turn: int) -> bool:
+	if level_def == null:
+		return false
+	var d: Dictionary = {}
+	for door: Dictionary in level_def.doors_data:
+		if str(door.get("id", "")) == door_id:
+			d = door
+			break
+	if d.is_empty():
+		return false
+
+	var dpos: Vector2i = d.get("pos", Vector2i(-1, -1))
+	# CRITICAL SAFETY RULE: Never close a physical door on the real player standing inside its tile!
+	if player_pos == dpos:
+		return true
+
+	var logic: String = str(d.get("logic", "AND")).to_upper()
+	if logic == "SEQUENCE":
+		return sequence_unlocked.get(door_id, false)
+
+	var req_plates: Array = d.get("required_plates", [])
+	if req_plates.is_empty():
+		return true
+
+	# Active actors at `turn`: Player (at current position) + Active Echoes at `turn`
+	var active_positions: Array[Vector2i] = [player_pos]
+	for echo: EchoRecording in echoes:
+		if echo.is_active_at_turn(turn):
+			active_positions.append(echo.get_position_at_turn(turn))
+
+	var active_plate_ids: Dictionary = {}
+	for p: Dictionary in level_def.plates_data:
+		var pid: String = str(p.get("id", ""))
+		var ppos: Vector2i = p.get("pos", Vector2i(-1, -1))
+		if active_positions.has(ppos):
+			active_plate_ids[pid] = true
+
+	if logic == "AND":
+		for rpid in req_plates:
+			if not active_plate_ids.get(str(rpid), false):
+				return false
+		return true
+	elif logic == "OR":
+		for rpid in req_plates:
+			if active_plate_ids.get(str(rpid), false):
+				return true
+		return false
+
+	return false
 
 func is_door_open(door_id: String) -> bool:
 	return doors_state.get(door_id, false)
