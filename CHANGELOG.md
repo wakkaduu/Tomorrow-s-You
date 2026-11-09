@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-11-09
+
+### Added
+- **Daily-Limited Hint System**:
+  - Global daily allowance of 3 hint credits (`DAILY_HINT_LIMIT = 3`) shared across all levels and difficulties.
+  - 3-stage progressive disclosure per level:
+    - Stage 0 (Observation): Focused environmental nudges and plate/door relationships.
+    - Stage 1 (Strategy): Echo role assignments, chamber routing, and WAIT timing.
+    - Stage 2 (Solution): Deterministic, verified step-by-step action sequences.
+  - Local midnight reset via `Time.get_date_string_from_system(false)` with zero external dependencies.
+  - Clock rollback protection detecting system date manipulation to block illegitimate allowance replenishment.
+  - Test clock injection API (`SaveManager.set_test_date()`, `clear_test_date()`) for automated testing.
+  - Mobile-first Gameplay HUD integration: `💡 HINT · X LEFT` button ($\ge 48\text{dp}$ touch target).
+  - Hint Modal with scrollable previously revealed list (permanently free to re-read) and Confirmation Modal dialog.
+  - Gameplay input and Echo playback freeze while hint modals are open, preventing turn advancement.
+  - Dedicated automated test suite: `tests/hints/test_hint_system.gd` with 20 verified test cases.
+- **Difficulty Tiers System**:
+  - 5 distinct difficulty tiers: Easy (Initiation), Normal (Synchronization), Hard (Convergence), Expert (Paradox), Nightmare (The Last Tomorrow).
+  - Dedicated Difficulty Selection screen (`scenes/menus/difficulty_select.tscn`) with interactive cards, tier stats, and star counters.
+  - Progressive tier unlocking requiring 100% verified completion of previous tiers.
+  - 3-star rating threshold system with optimal action targets.
+- **Echo Lifecycle & Expiration Rules**:
+  - Fixed-duration Echoes: Echoes expire immediately when their recording ends and stop activating plates/doors.
+  - Explicit `WAIT` turn recording: allows players to intentionally extend Echo lifespan on pressure plates.
+  - Sequence Lock security logic (`logic: "SEQUENCE"`) requiring exact plate activation sequences.
+- **Save System v2 & Legacy Invalidation**:
+  - Save schema migration to v2; automatically invalidates sub-minimum / legacy completions.
+  - Master test suite expanded to 38 automated tests (100% passing) and in-engine integration suite to 9 tests.
+
 ## [1.1.0] - 2026-11-09
 
 ### Changed

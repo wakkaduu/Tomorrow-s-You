@@ -38,3 +38,4 @@ func validate() -> Array[String]:
 		if not h.has("stage") or int(h["stage"]) != i:
 			errors.append("HintDefinition for %s: Stage %d index mismatch" % [level_id, i])
 	return errors
+
