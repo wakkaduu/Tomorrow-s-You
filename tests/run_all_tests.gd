@@ -206,73 +206,85 @@ func _init() -> void:
 				" ": pass
 
 	var campaign_solvers = [
-		func(sim: PuzzleSimulation) -> bool:
-			run_actions.call(sim, "RRRRDDDDR")
-			return sim.is_completed,
-		func(sim: PuzzleSimulation) -> bool:
-			run_actions.call(sim, "DDR")
-			sim.create_echo()
-			run_actions.call(sim, "RRRDDRR")
-			return sim.is_completed,
+		# Level 1: First Contact (Sector 1, Min 1 Echo)
 		func(sim: PuzzleSimulation) -> bool:
 			run_actions.call(sim, "DDD")
 			sim.create_echo()
-			run_actions.call(sim, "RRRRRRDDRD")
+			run_actions.call(sim, "RRRDDDRR")
 			return sim.is_completed,
+		# Level 2: Stay Behind (Sector 1, Min 1 Echo)
+		func(sim: PuzzleSimulation) -> bool:
+			run_actions.call(sim, "DDDD")
+			sim.create_echo()
+			run_actions.call(sim, "RRRDDRRR")
+			return sim.is_completed,
+		# Level 3: Double Perspective (Sector 1, Min 1 Echo)
+		func(sim: PuzzleSimulation) -> bool:
+			run_actions.call(sim, "RRRRRR")
+			sim.create_echo()
+			run_actions.call(sim, "RRRDWWDD RRR")
+			return sim.is_completed,
+		# Level 4: Sequential Relay (Sector 2, Min 2 Echoes)
+		func(sim: PuzzleSimulation) -> bool:
+			run_actions.call(sim, "RR")
+			sim.create_echo()
+			run_actions.call(sim, "DRRRRURR")
+			sim.create_echo()
+			run_actions.call(sim, "DRRRRDD W LLLD")
+			return sim.is_completed,
+		# Level 5: Split Decision (Sector 2, Min 2 Echoes)
+		func(sim: PuzzleSimulation) -> bool:
+			run_actions.call(sim, "LLLUU")
+			sim.create_echo()
+			run_actions.call(sim, "RRRUU")
+			sim.create_echo()
+			run_actions.call(sim, "WWWWW DD")
+			return sim.is_completed,
+		# Level 6: Crossed Signals (Sector 2, Min 2 Echoes)
 		func(sim: PuzzleSimulation) -> bool:
 			run_actions.call(sim, "DD")
 			sim.create_echo()
-			run_actions.call(sim, "RRRRRRDD")
+			run_actions.call(sim, "DRRRRRURR")
 			sim.create_echo()
-			run_actions.call(sim, "RRRDDWWWDDD")
+			run_actions.call(sim, "DRRRRRDDDRRR")
 			return sim.is_completed,
-		func(sim: PuzzleSimulation) -> bool:
-			run_actions.call(sim, "RRRRR")
-			sim.create_echo()
-			run_actions.call(sim, "DDRWWRDL")
-			sim.create_echo()
-			run_actions.call(sim, "DDDDDRRWRRRRR")
-			return sim.is_completed,
-		func(sim: PuzzleSimulation) -> bool:
-			run_actions.call(sim, "RRRRRRR")
-			sim.create_echo()
-			run_actions.call(sim, "DDRRWWWRRRRR")
-			sim.create_echo()
-			run_actions.call(sim, "DDDDRRWWWWWW RRRRR")
-			return sim.is_completed,
-		func(sim: PuzzleSimulation) -> bool:
-			run_actions.call(sim, "RRRRR")
-			sim.create_echo()
-			run_actions.call(sim, "DDRRWRRDR")
-			sim.create_echo()
-			run_actions.call(sim, "DDDDRRWWW RRRRRRR")
-			return sim.is_completed,
+		# Level 7: No Turning Back (Sector 2, Min 2 Echoes)
 		func(sim: PuzzleSimulation) -> bool:
 			run_actions.call(sim, "RRR")
 			sim.create_echo()
-			run_actions.call(sim, "DDRRWRRUURRR")
+			run_actions.call(sim, "DRRRRRURR")
 			sim.create_echo()
-			run_actions.call(sim, "DDRRWRRRRWWWRRRRR")
-			sim.create_echo()
-			run_actions.call(sim, "DDDDRRRRWWWWWWWWW RRRRRRR")
+			run_actions.call(sim, "DRRRRRDDDRRR")
 			return sim.is_completed,
+		# Level 8: Temporal Interlock (Sector 3, Min 3 Echoes)
 		func(sim: PuzzleSimulation) -> bool:
-			run_actions.call(sim, "RRRRR")
+			run_actions.call(sim, "RRR")
 			sim.create_echo()
-			run_actions.call(sim, "DDRRWW RRRRR")
+			run_actions.call(sim, "RRRRDDRRR")
 			sim.create_echo()
-			run_actions.call(sim, "DDDDRRWWWWW RRRRR")
+			run_actions.call(sim, "RRRRDD WWW D DLLL")
 			sim.create_echo()
-			run_actions.call(sim, "DDDDDDRRWWWWWWWW RRRRR")
+			run_actions.call(sim, "RRRRDD WWW DD WWW DD")
 			return sim.is_completed,
+		# Level 9: Parallel Existence (Sector 3, Min 3 Echoes)
 		func(sim: PuzzleSimulation) -> bool:
-			run_actions.call(sim, "RRRRRRR")
+			run_actions.call(sim, "RRR")
 			sim.create_echo()
-			run_actions.call(sim, "DDRRWWWRRRRR")
+			run_actions.call(sim, "RRRRDDRRR")
 			sim.create_echo()
-			run_actions.call(sim, "DDDDRRWWWWWWRRRRR")
+			run_actions.call(sim, "RRRRDD WWW D DLLL")
 			sim.create_echo()
-			run_actions.call(sim, "DDDDDDRRWWWW RRRR DD W RRRRR")
+			run_actions.call(sim, "RRRRDD WWW DD WWW DD")
+			return sim.is_completed,
+		# Level 10: The Last Tomorrow (Sector 3, Min 3 Echoes)
+		func(sim: PuzzleSimulation) -> bool:
+			run_actions.call(sim, "DR")
+			sim.create_echo()
+			run_actions.call(sim, "DRRRRRURRR")
+			sim.create_echo()
+			run_actions.call(sim, "DRRRRRDWWWWDDDRR")
+			sim.create_echo()
+			run_actions.call(sim, "DRRRRRDWWWWDDD WW LLDL")
 			return sim.is_completed
 	]
 
@@ -283,6 +295,17 @@ func _init() -> void:
 			sim.load_level(lvl)
 			var solver: Callable = campaign_solvers[i]
 			return solver.call(sim)
+		)
+
+	# ==========================================================================
+	# SECTION 3: AUTOMATED LEVEL VALIDATION (ZERO-ECHO BYPASS ELIMINATION)
+	# ==========================================================================
+	var LevelValidatorClass = preload("res://scripts/level/level_validator.gd")
+	for i in range(10):
+		var lvl: LevelDefinition = LevelRegistryClass.get_level(i)
+		run_test.call("VALIDATOR", "Level %d: Zero-Echo bypass blocked & Min %d Echoes enforced" % [i + 1, lvl.min_echoes_required], func() -> bool:
+			var res: Dictionary = LevelValidatorClass.validate_level(lvl)
+			return res["zero_echo_passed"] and res["sub_min_echoes_passed"]
 		)
 
 	# ==========================================================================

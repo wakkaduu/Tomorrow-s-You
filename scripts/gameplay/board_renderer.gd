@@ -49,6 +49,9 @@ var _shockwave_origin: Vector2 = Vector2.ZERO
 var _ambient_particles: Array[Dictionary] = []
 const MAX_PARTICLES: int = 16
 
+# Developer inspection mode
+var show_debug_connections: bool = false
+
 func setup(p_sim: PuzzleSimulation, viewport_size: Vector2) -> void:
 	simulation = p_sim
 	level_def = simulation.level_def
@@ -250,6 +253,8 @@ func _draw() -> void:
 	_draw_echoes()
 	_draw_player()
 	_draw_shockwave()
+	if show_debug_connections:
+		_draw_debug_connections()
 
 func _draw_ambient_effects() -> void:
 	var total_w: float = float(level_def.grid_width) * tile_size
@@ -460,3 +465,29 @@ func _draw_shockwave() -> void:
 	var shock_alpha: float = (1.0 - progress) * 0.7
 	var shock_col: Color = Color(COLOR_ECHO.r, COLOR_ECHO.g, COLOR_ECHO.b, shock_alpha)
 	draw_arc(_shockwave_origin, shock_r, 0, TAU, 36, shock_col, 3.0)
+
+func _draw_debug_connections() -> void:
+	if level_def == null:
+		return
+
+	# 1. Door to Plate connection lines
+	for d: Dictionary in level_def.doors_data:
+		var d_pos: Vector2 = grid_to_world(d.get("pos", Vector2i.ZERO))
+		var did: String = str(d.get("id", ""))
+		var req: Array = d.get("required_plates", [])
+		for pid in req:
+			for p: Dictionary in level_def.plates_data:
+				if str(p.get("id", "")) == str(pid):
+					var p_pos: Vector2 = grid_to_world(p.get("pos", Vector2i.ZERO))
+					draw_line(p_pos, d_pos, Color(1.0, 0.75, 0.2, 0.85), 2.5)
+					var mid: Vector2 = (p_pos + d_pos) * 0.5
+					draw_string(ThemeDB.fallback_font, mid, "%s➔%s" % [pid, did], HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color("#FFBE55"))
+
+	# 2. Highlight spawn & exit
+	var spawn_w: Vector2 = grid_to_world(level_def.spawn_pos)
+	draw_arc(spawn_w, tile_size * 0.45, 0, TAU, 24, Color("#54E6EA"), 2.0)
+	draw_string(ThemeDB.fallback_font, spawn_w + Vector2(-16, -tile_size * 0.4), "SPAWN", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color("#54E6EA"))
+
+	var exit_w: Vector2 = grid_to_world(level_def.exit_pos)
+	draw_arc(exit_w, tile_size * 0.45, 0, TAU, 24, Color("#38BDF8"), 2.0)
+	draw_string(ThemeDB.fallback_font, exit_w + Vector2(-12, tile_size * 0.55), "EXIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color("#38BDF8"))

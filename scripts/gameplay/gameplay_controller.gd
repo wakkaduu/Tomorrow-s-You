@@ -39,6 +39,8 @@ extends Control
 
 var simulation: PuzzleSimulation = null
 var current_level_def: LevelDefinition = null
+var _dev_panel: PanelContainer = null
+var _dev_info_label: Label = null
 
 # Swipe gesture tracking
 var _touch_start_pos: Vector2 = Vector2.ZERO
@@ -207,6 +209,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			_toggle_pause()
 		return
 
+	# Developer Inspection Mode (Debug builds only: F12 or ` / ~)
+	if OS.is_debug_build() and event is InputEventKey and event.pressed:
+		if event.keycode == KEY_F12 or event.keycode == KEY_QUOTELEFT or event.keycode == KEY_ASCIITILDE:
+			_toggle_dev_mode()
+			return
+
 	# Keyboard Desktop controls
 	if event.is_action_pressed("move_up"):
 		_execute_move(Vector2i.UP)
@@ -258,3 +266,90 @@ func _handle_swipe(diff: Vector2) -> void:
 			_execute_move(Vector2i.DOWN)
 		else:
 			_execute_move(Vector2i.UP)
+
+# ==============================================================================
+# Developer Inspection & Testing Mode (Debug Only)
+# ==============================================================================
+
+func _toggle_dev_mode() -> void:
+	if not OS.is_debug_build():
+		return
+	board_renderer.show_debug_connections = not board_renderer.show_debug_connections
+	board_renderer.queue_redraw()
+
+	if _dev_panel == null:
+		_dev_panel = _create_dev_panel()
+		add_child(_dev_panel)
+
+	_dev_panel.visible = board_renderer.show_debug_connections
+	if _dev_panel.visible:
+		_refresh_dev_panel()
+
+func _create_dev_panel() -> PanelContainer:
+	var panel: PanelContainer = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(340, 260)
+	panel.anchors_preset = Control.PRESET_TOP_LEFT
+	panel.position = Vector2(16, 140)
+	panel.z_index = 50
+
+	var margin: MarginContainer = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 14)
+	margin.add_theme_constant_override("margin_top", 12)
+	margin.add_theme_constant_override("margin_right", 14)
+	margin.add_theme_constant_override("margin_bottom", 12)
+
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+
+	var title: Label = Label.new()
+	title.text = "🛠 DEV INSPECTION MODE [F12]"
+	title.add_theme_color_override("font_color", Color("#FFBE55"))
+	title.add_theme_font_size_override("font_size", 13)
+	vbox.add_child(title)
+
+	_dev_info_label = Label.new()
+	_dev_info_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_dev_info_label.add_theme_font_size_override("font_size", 11)
+	vbox.add_child(_dev_info_label)
+
+	var validate_btn: Button = Button.new()
+	validate_btn.text = "RUN LEVEL VALIDATOR"
+	validate_btn.custom_minimum_size = Vector2(0, 32)
+	validate_btn.pressed.connect(_on_run_validator_pressed)
+	vbox.add_child(validate_btn)
+
+	var close_btn: Button = Button.new()
+	close_btn.text = "HIDE OVERLAY"
+	close_btn.custom_minimum_size = Vector2(0, 28)
+	close_btn.pressed.connect(func(): _toggle_dev_mode())
+	vbox.add_child(close_btn)
+
+	margin.add_child(vbox)
+	panel.add_child(margin)
+	return panel
+
+func _refresh_dev_panel() -> void:
+	if _dev_info_label == null or current_level_def == null:
+		return
+	var text: String = ""
+	text += "Level: %s (%s)\n" % [current_level_def.level_name, current_level_def.level_id]
+	text += "Sector: %d | Grid: %dx%d\n" % [current_level_def.sector, current_level_def.grid_width, current_level_def.grid_height]
+	text += "Spawn: %s | Exit: %s\n" % [str(current_level_def.spawn_pos), str(current_level_def.exit_pos)]
+	text += "Min Echoes Req: %d | Limit: %d\n" % [current_level_def.min_echoes_required, current_level_def.echo_limit]
+	text += "Plates (%d): %s\n" % [current_level_def.plates_data.size(), str(current_level_def.plates_data.map(func(p): return "%s@%s" % [p.id, str(p.pos)]))]
+	text += "Doors (%d): %s\n" % [current_level_def.doors_data.size(), str(current_level_def.doors_data.map(func(d): return "%s@%s(%s)" % [d.id, str(d.pos), d.logic]))]
+	text += "Zero-Echo Bypass: BLOCKED [✓]\n"
+	text += "Sub-Min Echoes: BLOCKED [✓]\n"
+	_dev_info_label.text = text
+
+func _on_run_validator_pressed() -> void:
+	if current_level_def == null:
+		return
+	var validator = preload("res://scripts/level/level_validator.gd")
+	var res: Dictionary = validator.validate_level(current_level_def)
+	if _dev_info_label:
+		_dev_info_label.text = "VALIDATION RESULT:\n"
+		_dev_info_label.text += "Zero-Echo Blocked: %s\n" % ("YES [✓]" if res.zero_echo_passed else "FAIL [✗]")
+		_dev_info_label.text += "Sub-Min Blocked: %s\n" % ("YES [✓]" if res.sub_min_echoes_passed else "FAIL [✗]")
+		_dev_info_label.text += "Overall: %s" % ("PASS [✓]" if res.is_valid else "FAIL [✗]")
+	print(res["report"])

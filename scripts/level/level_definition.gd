@@ -7,6 +7,8 @@ extends Resource
 @export var level_name: String = ""
 @export var sector: int = 1
 @export var echo_limit: int = 3
+@export var min_echoes_required: int = 1
+@export var intended_mechanic: String = ""
 @export var hint: String = ""
 @export var map_lines: Array[String] = []
 

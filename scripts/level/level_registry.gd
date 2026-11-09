@@ -3,6 +3,11 @@ extends RefCounted
 
 ## Master Level Registry for Tomorrow's You.
 ## Contains 10 handcrafted, verified campaign levels across 3 sectors.
+## Every level physically and logically enforces Echo cooperation:
+## - Sector 1 (Levels 1–3): Minimum 1 Echo required
+## - Sector 2 (Levels 4–7): Minimum 2 Echoes required
+## - Sector 3 (Levels 8–10): Minimum 3 Echoes required
+## Zero-Echo bypass routes are completely eliminated via sealed chamber topology.
 
 static func get_all_levels() -> Array[LevelDefinition]:
 	var levels: Array[LevelDefinition] = []
@@ -34,44 +39,25 @@ static func get_level_count() -> int:
 	return 10
 
 # ==============================================================================
-# SECTOR 01: AWAKENING (Levels 1–3)
+# SECTOR 01: AWAKENING (Levels 1–3) — Minimum 1 Echo Required
 # ==============================================================================
 
-# Level 1: "First Steps" - Core grid movement & reaching exit
+# Level 1: "First Contact" - Introduces Plate 1 and Door A. Requires 1 Echo to hold plate.
 static func _create_level_01() -> LevelDefinition:
 	var lvl: LevelDefinition = LevelDefinition.new()
 	lvl.level_id = "lvl_01"
-	lvl.level_name = "First Steps"
+	lvl.level_name = "First Contact"
 	lvl.sector = 1
 	lvl.echo_limit = 1
-	lvl.hint = "Navigate the facility corridors to reach the temporal exit."
-	lvl.map_lines = [
-		"#######",
-		"#P....#",
-		"###.#.#",
-		"#...#.#",
-		"#.###.#",
-		"#.....X",
-		"#######"
-	]
-	lvl.doors_data = []
-	lvl.plates_data = []
-	lvl.initialize_from_map()
-	return lvl
-
-# Level 2: "Temporal Twin" - Single plate, single door, 1 Echo needed
-static func _create_level_02() -> LevelDefinition:
-	var lvl: LevelDefinition = LevelDefinition.new()
-	lvl.level_id = "lvl_02"
-	lvl.level_name = "Temporal Twin"
-	lvl.sector = 1
-	lvl.echo_limit = 1
-	lvl.hint = "Step on the pressure plate, then CREATE ECHO so your teammate holds it."
+	lvl.min_echoes_required = 1
+	lvl.intended_mechanic = "Echo holds Plate 1 so the player can pass Door A to the exit."
+	lvl.hint = "Walk to Plate 1 and CREATE ECHO. Your teammate will hold it, keeping Door A open."
 	lvl.map_lines = [
 		"#######",
 		"#P...##",
+		"#....##",
 		"#.##.##",
-		"#.1#A.X",
+		"#1##A.X",
 		"#######"
 	]
 	lvl.doors_data = [
@@ -83,20 +69,50 @@ static func _create_level_02() -> LevelDefinition:
 	lvl.initialize_from_map()
 	return lvl
 
-# Level 3: "Relay Run" - Echo travel distance and timing
+# Level 2: "Stay Behind" - Echo holds remote plate while player travels through Door A.
+static func _create_level_02() -> LevelDefinition:
+	var lvl: LevelDefinition = LevelDefinition.new()
+	lvl.level_id = "lvl_02"
+	lvl.level_name = "Stay Behind"
+	lvl.sector = 1
+	lvl.echo_limit = 1
+	lvl.min_echoes_required = 1
+	lvl.intended_mechanic = "Finished Echo stays indefinitely at Plate 1, allowing player to traverse a distant corridor."
+	lvl.hint = "Deploy an Echo to Plate 1 at the end of the hall. Head through Door A on your next attempt."
+	lvl.map_lines = [
+		"#########",
+		"#P...#..#",
+		"#....#..#",
+		"#....A.X#",
+		"#....#..#",
+		"#1...#..#",
+		"#########"
+	]
+	lvl.doors_data = [
+		{"id": "A", "logic": "AND", "required_plates": ["1"]}
+	]
+	lvl.plates_data = [
+		{"id": "1"}
+	]
+	lvl.initialize_from_map()
+	return lvl
+
+# Level 3: "Double Perspective" - Navigation through obstacles to coordinate Door A.
 static func _create_level_03() -> LevelDefinition:
 	var lvl: LevelDefinition = LevelDefinition.new()
 	lvl.level_id = "lvl_03"
-	lvl.level_name = "Relay Run"
+	lvl.level_name = "Double Perspective"
 	lvl.sector = 1
 	lvl.echo_limit = 1
-	lvl.hint = "Deploy an Echo to Plate 1. Head towards the exit as they travel to unlock it."
+	lvl.min_echoes_required = 1
+	lvl.intended_mechanic = "Echo travels to remote wing plate while player routes through the central chokepoint."
+	lvl.hint = "Send Echo 1 to Plate 1 across the partition, then navigate down through Door A."
 	lvl.map_lines = [
 		"#########",
-		"#P......#",
-		"#.#####.#",
-		"#.#...#.A",
-		"#1#...#.X",
+		"#P.....1#",
+		"#.##.##.#",
+		"####A####",
+		"#......X#",
 		"#########"
 	]
 	lvl.doors_data = [
@@ -109,25 +125,56 @@ static func _create_level_03() -> LevelDefinition:
 	return lvl
 
 # ==============================================================================
-# SECTOR 02: SYNCHRONIZATION (Levels 4–7)
+# SECTOR 02: SYNCHRONIZATION (Levels 4–7) — Minimum 2 Echoes Required
 # ==============================================================================
 
-# Level 4: "Dual Lock" - Two plates, one AND door, 2 Echoes required
+# Level 4: "Sequential Relay" - 3 interconnected chambers; Echo 1 holds Door A, Echo 2 holds Door B.
 static func _create_level_04() -> LevelDefinition:
 	var lvl: LevelDefinition = LevelDefinition.new()
 	lvl.level_id = "lvl_04"
-	lvl.level_name = "Dual Lock"
+	lvl.level_name = "Sequential Relay"
 	lvl.sector = 2
 	lvl.echo_limit = 2
-	lvl.hint = "Door A requires BOTH plates active at once. Coordinate with two Echoes."
+	lvl.min_echoes_required = 2
+	lvl.intended_mechanic = "Echo 1 opens Door A for Echo 2. Echo 2 reaches Plate 2 to open Door B for the player."
+	lvl.hint = "Echo 1 unlocks Door A so Echo 2 can reach Plate 2, which unlocks Door B for your final run."
 	lvl.map_lines = [
 		"#########",
-		"#P......#",
-		"#.##.##.#",
-		"#1##.##2#",
+		"#P.1#..2#",
+		"#...A...#",
+		"#####.###",
+		"#...B...#",
+		"#.X.#...#",
+		"#########"
+	]
+	lvl.doors_data = [
+		{"id": "A", "logic": "AND", "required_plates": ["1"]},
+		{"id": "B", "logic": "AND", "required_plates": ["2"]}
+	]
+	lvl.plates_data = [
+		{"id": "1"},
+		{"id": "2"}
+	]
+	lvl.initialize_from_map()
+	return lvl
+
+# Level 5: "Split Decision" - Dual-wing chamber; Door A requires BOTH Plate 1 and Plate 2.
+static func _create_level_05() -> LevelDefinition:
+	var lvl: LevelDefinition = LevelDefinition.new()
+	lvl.level_id = "lvl_05"
+	lvl.level_name = "Split Decision"
+	lvl.sector = 2
+	lvl.echo_limit = 2
+	lvl.min_echoes_required = 2
+	lvl.intended_mechanic = "Simultaneous dual-plate activation: Echo 1 holds Wing 1, Echo 2 holds Wing 2."
+	lvl.hint = "Door A requires BOTH plates active at once. Station an Echo on each wing."
+	lvl.map_lines = [
+		"#########",
+		"#1..#..2#",
+		"#...#...#",
+		"#...P...#",
 		"####A####",
-		"####.####",
-		"####X####",
+		"#...X...#",
 		"#########"
 	]
 	lvl.doors_data = [
@@ -140,50 +187,23 @@ static func _create_level_04() -> LevelDefinition:
 	lvl.initialize_from_map()
 	return lvl
 
-# Level 5: "Sequential Relay" - Staggered gate relay (Echo 1 opens Door A -> Echo 2 reaches Plate 2 -> Door B opens)
-static func _create_level_05() -> LevelDefinition:
-	var lvl: LevelDefinition = LevelDefinition.new()
-	lvl.level_id = "lvl_05"
-	lvl.level_name = "Sequential Relay"
-	lvl.sector = 2
-	lvl.echo_limit = 2
-	lvl.hint = "Echo 1 unlocks Door A so Echo 2 can reach Plate 2, which unlocks Door B for you."
-	lvl.map_lines = [
-		"#########",
-		"#P....1.#",
-		"#.###.#.#",
-		"#..A#.#.#",
-		"#.2.#.#.#",
-		"#.###.#.#",
-		"#...B...X",
-		"#########"
-	]
-	lvl.doors_data = [
-		{"id": "A", "logic": "AND", "required_plates": ["1"]},
-		{"id": "B", "logic": "AND", "required_plates": ["2"]}
-	]
-	lvl.plates_data = [
-		{"id": "1"},
-		{"id": "2"}
-	]
-	lvl.initialize_from_map()
-	return lvl
-
-# Level 6: "The Standoff" - Strategic use of WAIT action
+# Level 6: "Crossed Signals" - Interlocking sequential gates with directional routing.
 static func _create_level_06() -> LevelDefinition:
 	var lvl: LevelDefinition = LevelDefinition.new()
 	lvl.level_id = "lvl_06"
-	lvl.level_name = "The Standoff"
+	lvl.level_name = "Crossed Signals"
 	lvl.sector = 2
 	lvl.echo_limit = 2
-	lvl.hint = "Use WAIT while your Echo travels to open Door A, then coordinate with Plate 2."
+	lvl.min_echoes_required = 2
+	lvl.intended_mechanic = "Chained door access: Door A opens Chamber 2, Door B opens Final Chamber."
+	lvl.hint = "Echo 1 keeps Door A open so Echo 2 can hold Plate 2, clearing Door B to the exit."
 	lvl.map_lines = [
 		"###########",
-		"#P......1.#",
-		"#.#######.#",
-		"#...A...2.#",
-		"#.#######.#",
-		"#...B...X.#",
+		"#P...#..2.#",
+		"#....A....#",
+		"#1...#..###",
+		"######.####",
+		"#....#.B.X#",
 		"###########"
 	]
 	lvl.doors_data = [
@@ -197,25 +217,27 @@ static func _create_level_06() -> LevelDefinition:
 	lvl.initialize_from_map()
 	return lvl
 
-# Level 7: "Logic Divergence" - OR logic door & AND logic door
+# Level 7: "No Turning Back" - Two plates; Door B requires BOTH plates to remain active.
 static func _create_level_07() -> LevelDefinition:
 	var lvl: LevelDefinition = LevelDefinition.new()
 	lvl.level_id = "lvl_07"
-	lvl.level_name = "Logic Divergence"
+	lvl.level_name = "No Turning Back"
 	lvl.sector = 2
 	lvl.echo_limit = 2
-	lvl.hint = "Door A opens if EITHER plate 1 or 2 is active. Door B requires BOTH."
+	lvl.min_echoes_required = 2
+	lvl.intended_mechanic = "Door A requires Plate 1; Door B requires BOTH Plate 1 and Plate 2."
+	lvl.hint = "Both Echoes must stay on their respective plates to satisfy the final AND gate."
 	lvl.map_lines = [
 		"###########",
-		"#P....1...#",
-		"#.#######.#",
-		"#...A...#.#",
-		"#.###.2.#.#",
-		"#...B.....X",
+		"#P..1#..2.#",
+		"#....A....#",
+		"######.####",
+		"#....#..###",
+		"#....#.B.X#",
 		"###########"
 	]
 	lvl.doors_data = [
-		{"id": "A", "logic": "OR",  "required_plates": ["1", "2"]},
+		{"id": "A", "logic": "AND", "required_plates": ["1"]},
 		{"id": "B", "logic": "AND", "required_plates": ["1", "2"]}
 	]
 	lvl.plates_data = [
@@ -226,57 +248,29 @@ static func _create_level_07() -> LevelDefinition:
 	return lvl
 
 # ==============================================================================
-# SECTOR 03: PARADOX (Levels 8–10)
+# SECTOR 03: PARADOX (Levels 8–10) — Minimum 3 Echoes Required
 # ==============================================================================
 
-# Level 8: "Triad Coordination" - 3 Echoes across 3 security sectors
+# Level 8: "Temporal Interlock" - 3 sequential chambers; 3 plates; 3 chokepoint doors. Zero bypass routes.
 static func _create_level_08() -> LevelDefinition:
 	var lvl: LevelDefinition = LevelDefinition.new()
 	lvl.level_id = "lvl_08"
-	lvl.level_name = "Triad Coordination"
-	lvl.sector = 3
-	lvl.echo_limit = 3
-	lvl.hint = "Station 3 Echoes on Plates 1, 2, and 3 to clear the triple blast doors."
-	lvl.map_lines = [
-		"#############",
-		"#P..1...2...#",
-		"#.###.###.###",
-		"#...A...B...3",
-		"#.#########.#",
-		"#.....C.....X",
-		"#############"
-	]
-	lvl.doors_data = [
-		{"id": "A", "logic": "AND", "required_plates": ["1"]},
-		{"id": "B", "logic": "AND", "required_plates": ["2"]},
-		{"id": "C", "logic": "AND", "required_plates": ["3"]}
-	]
-	lvl.plates_data = [
-		{"id": "1"},
-		{"id": "2"},
-		{"id": "3"}
-	]
-	lvl.initialize_from_map()
-	return lvl
-
-# Level 9: "Temporal Interlock" - Interlocking chained gates
-static func _create_level_09() -> LevelDefinition:
-	var lvl: LevelDefinition = LevelDefinition.new()
-	lvl.level_id = "lvl_09"
 	lvl.level_name = "Temporal Interlock"
 	lvl.sector = 3
 	lvl.echo_limit = 3
-	lvl.hint = "Each plate is behind a previous door. Chain your attempts in sequence."
+	lvl.min_echoes_required = 3
+	lvl.intended_mechanic = "3-stage sequential relay: Echo 1 holds Door A, Echo 2 holds Door B, Echo 3 holds Door C."
+	lvl.hint = "Each chamber is sealed. Chain 3 Echoes to hold all 3 doors simultaneously."
 	lvl.map_lines = [
-		"#############",
-		"#P....1.....#",
-		"#.#########.#",
-		"#...A...2...#",
-		"#.#########.#",
-		"#...B...3...#",
-		"#.#########.#",
-		"#...C...X...#",
-		"#############"
+		"###########",
+		"#P..1.....#",
+		"#####A#####",
+		"#.......2.#",
+		"#####B#####",
+		"#.3.......#",
+		"#####C#####",
+		"#....X....#",
+		"###########"
 	]
 	lvl.doors_data = [
 		{"id": "A", "logic": "AND", "required_plates": ["1"]},
@@ -291,32 +285,65 @@ static func _create_level_09() -> LevelDefinition:
 	lvl.initialize_from_map()
 	return lvl
 
-# Level 10: "Tomorrow's You" - Grand Finale Puzzle
-static func _create_level_10() -> LevelDefinition:
+# Level 9: "Parallel Existence" - Cumulative security matrix requiring 3 Echoes.
+static func _create_level_09() -> LevelDefinition:
 	var lvl: LevelDefinition = LevelDefinition.new()
-	lvl.level_id = "lvl_10"
-	lvl.level_name = "Tomorrow's You"
+	lvl.level_id = "lvl_09"
+	lvl.level_name = "Parallel Existence"
 	lvl.sector = 3
 	lvl.echo_limit = 3
-	lvl.hint = "Synchronize all 3 Echoes across hybrid AND/OR matrices to achieve temporal escape."
+	lvl.min_echoes_required = 3
+	lvl.intended_mechanic = "Cumulative AND logic: Door A needs Plate 1, Door B needs 1+2, Door C needs 1+2+3."
+	lvl.hint = "The final door requires all 3 security plates to remain depressed at the same moment."
 	lvl.map_lines = [
-		"###############",
-		"#P......1.....#",
-		"#.###########.#",
-		"#...A...2...#.#",
-		"#.#####.###.#.#",
-		"#...B...3...#.#",
-		"#.#####.###.#.#",
-		"#...C...#...#.#",
-		"#.#####.#.###.#",
-		"#.......D...X.#",
-		"###############"
+		"###########",
+		"#P..1.....#",
+		"#####A#####",
+		"#.......2.#",
+		"#####B#####",
+		"#.3.......#",
+		"#####C#####",
+		"#....X....#",
+		"###########"
 	]
 	lvl.doors_data = [
 		{"id": "A", "logic": "AND", "required_plates": ["1"]},
-		{"id": "B", "logic": "OR",  "required_plates": ["2", "3"]},
-		{"id": "C", "logic": "AND", "required_plates": ["2"]},
-		{"id": "D", "logic": "AND", "required_plates": ["1", "3"]}
+		{"id": "B", "logic": "AND", "required_plates": ["1", "2"]},
+		{"id": "C", "logic": "AND", "required_plates": ["1", "2", "3"]}
+	]
+	lvl.plates_data = [
+		{"id": "1"},
+		{"id": "2"},
+		{"id": "3"}
+	]
+	lvl.initialize_from_map()
+	return lvl
+
+# Level 10: "The Last Tomorrow" - Grand Finale 4-Quadrant Temporal Facility.
+static func _create_level_10() -> LevelDefinition:
+	var lvl: LevelDefinition = LevelDefinition.new()
+	lvl.level_id = "lvl_10"
+	lvl.level_name = "The Last Tomorrow"
+	lvl.sector = 3
+	lvl.echo_limit = 3
+	lvl.min_echoes_required = 3
+	lvl.intended_mechanic = "4-quadrant synchronization: Echo 1 (Door A), Echo 2 (Door B), Echo 3 (Door C), Player escapes."
+	lvl.hint = "Synchronize across all four quadrants. Coordinate all 3 Echoes to breach the final sector."
+	lvl.map_lines = [
+		"###########",
+		"#P...#...2#",
+		"#.1..A....#",
+		"#....#....#",
+		"######B####",
+		"#....#....#",
+		"#....C..3.#",
+		"#..X.#....#",
+		"###########"
+	]
+	lvl.doors_data = [
+		{"id": "A", "logic": "AND", "required_plates": ["1"]},
+		{"id": "B", "logic": "AND", "required_plates": ["2"]},
+		{"id": "C", "logic": "AND", "required_plates": ["3"]}
 	]
 	lvl.plates_data = [
 		{"id": "1"},
