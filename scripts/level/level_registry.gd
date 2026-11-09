@@ -48,10 +48,13 @@ static func _create_level_01() -> LevelDefinition:
 	lvl.level_id = "lvl_01"
 	lvl.level_name = "First Contact"
 	lvl.sector = 1
+	lvl.difficulty_tier = 1
+	lvl.target_3_stars = 18
+	lvl.target_2_stars = 25
 	lvl.echo_limit = 1
 	lvl.min_echoes_required = 1
-	lvl.intended_mechanic = "Echo holds Plate 1 so the player can pass Door A to the exit."
-	lvl.hint = "Walk to Plate 1 and CREATE ECHO. Your teammate will hold it, keeping Door A open."
+	lvl.intended_mechanic = "Echo holds Plate 1 with WAIT turns so the player can pass Door A to the exit."
+	lvl.hint = "Walk to Plate 1, WAIT several turns to hold the door open, then CREATE ECHO."
 	lvl.map_lines = [
 		"#######",
 		"#P...##",
@@ -75,10 +78,13 @@ static func _create_level_02() -> LevelDefinition:
 	lvl.level_id = "lvl_02"
 	lvl.level_name = "Stay Behind"
 	lvl.sector = 1
+	lvl.difficulty_tier = 1
+	lvl.target_3_stars = 18
+	lvl.target_2_stars = 25
 	lvl.echo_limit = 1
 	lvl.min_echoes_required = 1
-	lvl.intended_mechanic = "Finished Echo stays indefinitely at Plate 1, allowing player to traverse a distant corridor."
-	lvl.hint = "Deploy an Echo to Plate 1 at the end of the hall. Head through Door A on your next attempt."
+	lvl.intended_mechanic = "Echo stays at Plate 1 using WAITs, allowing player to traverse a distant corridor."
+	lvl.hint = "Deploy an Echo to Plate 1 and add WAIT commands before creating the Echo."
 	lvl.map_lines = [
 		"#########",
 		"#P...#..#",
@@ -103,10 +109,13 @@ static func _create_level_03() -> LevelDefinition:
 	lvl.level_id = "lvl_03"
 	lvl.level_name = "Double Perspective"
 	lvl.sector = 1
+	lvl.difficulty_tier = 1
+	lvl.target_3_stars = 24
+	lvl.target_2_stars = 32
 	lvl.echo_limit = 1
 	lvl.min_echoes_required = 1
 	lvl.intended_mechanic = "Echo travels to remote wing plate while player routes through the central chokepoint."
-	lvl.hint = "Send Echo 1 to Plate 1 across the partition, then navigate down through Door A."
+	lvl.hint = "Send Echo 1 to Plate 1 with WAIT turns, then navigate down through Door A."
 	lvl.map_lines = [
 		"#########",
 		"#P.....1#",
@@ -134,6 +143,9 @@ static func _create_level_04() -> LevelDefinition:
 	lvl.level_id = "lvl_04"
 	lvl.level_name = "Sequential Relay"
 	lvl.sector = 2
+	lvl.difficulty_tier = 2
+	lvl.target_3_stars = 40
+	lvl.target_2_stars = 52
 	lvl.echo_limit = 2
 	lvl.min_echoes_required = 2
 	lvl.intended_mechanic = "Echo 1 opens Door A for Echo 2. Echo 2 reaches Plate 2 to open Door B for the player."
@@ -164,6 +176,9 @@ static func _create_level_05() -> LevelDefinition:
 	lvl.level_id = "lvl_05"
 	lvl.level_name = "Split Decision"
 	lvl.sector = 2
+	lvl.difficulty_tier = 2
+	lvl.target_3_stars = 28
+	lvl.target_2_stars = 38
 	lvl.echo_limit = 2
 	lvl.min_echoes_required = 2
 	lvl.intended_mechanic = "Simultaneous dual-plate activation: Echo 1 holds Wing 1, Echo 2 holds Wing 2."
@@ -193,6 +208,9 @@ static func _create_level_06() -> LevelDefinition:
 	lvl.level_id = "lvl_06"
 	lvl.level_name = "Crossed Signals"
 	lvl.sector = 2
+	lvl.difficulty_tier = 3
+	lvl.target_3_stars = 42
+	lvl.target_2_stars = 55
 	lvl.echo_limit = 2
 	lvl.min_echoes_required = 2
 	lvl.intended_mechanic = "Chained door access: Door A opens Chamber 2, Door B opens Final Chamber."
@@ -223,6 +241,9 @@ static func _create_level_07() -> LevelDefinition:
 	lvl.level_id = "lvl_07"
 	lvl.level_name = "No Turning Back"
 	lvl.sector = 2
+	lvl.difficulty_tier = 3
+	lvl.target_3_stars = 42
+	lvl.target_2_stars = 55
 	lvl.echo_limit = 2
 	lvl.min_echoes_required = 2
 	lvl.intended_mechanic = "Door A requires Plate 1; Door B requires BOTH Plate 1 and Plate 2."
@@ -257,10 +278,13 @@ static func _create_level_08() -> LevelDefinition:
 	lvl.level_id = "lvl_08"
 	lvl.level_name = "Temporal Interlock"
 	lvl.sector = 3
+	lvl.difficulty_tier = 4
+	lvl.target_3_stars = 70
+	lvl.target_2_stars = 88
 	lvl.echo_limit = 3
 	lvl.min_echoes_required = 3
 	lvl.intended_mechanic = "3-stage sequential relay: Echo 1 holds Door A, Echo 2 holds Door B, Echo 3 holds Door C."
-	lvl.hint = "Each chamber is sealed. Chain 3 Echoes to hold all 3 doors simultaneously."
+	lvl.hint = "Each chamber is sealed. Chain 3 Echoes with coordinated WAITs to hold all 3 doors."
 	lvl.map_lines = [
 		"###########",
 		"#P..1.....#",
@@ -291,6 +315,9 @@ static func _create_level_09() -> LevelDefinition:
 	lvl.level_id = "lvl_09"
 	lvl.level_name = "Parallel Existence"
 	lvl.sector = 3
+	lvl.difficulty_tier = 4
+	lvl.target_3_stars = 70
+	lvl.target_2_stars = 88
 	lvl.echo_limit = 3
 	lvl.min_echoes_required = 3
 	lvl.intended_mechanic = "Cumulative AND logic: Door A needs Plate 1, Door B needs 1+2, Door C needs 1+2+3."
@@ -319,16 +346,19 @@ static func _create_level_09() -> LevelDefinition:
 	lvl.initialize_from_map()
 	return lvl
 
-# Level 10: "The Last Tomorrow" - Grand Finale 4-Quadrant Temporal Facility.
+# Level 10: "The Last Tomorrow" - Grand Finale 4-Quadrant Temporal Facility with Sequence Lock.
 static func _create_level_10() -> LevelDefinition:
 	var lvl: LevelDefinition = LevelDefinition.new()
 	lvl.level_id = "lvl_10"
 	lvl.level_name = "The Last Tomorrow"
 	lvl.sector = 3
+	lvl.difficulty_tier = 5
+	lvl.target_3_stars = 80
+	lvl.target_2_stars = 100
 	lvl.echo_limit = 3
 	lvl.min_echoes_required = 3
-	lvl.intended_mechanic = "4-quadrant synchronization: Echo 1 (Door A), Echo 2 (Door B), Echo 3 (Door C), Player escapes."
-	lvl.hint = "Synchronize across all four quadrants. Coordinate all 3 Echoes to breach the final sector."
+	lvl.intended_mechanic = "4-quadrant synchronization with Sequence Lock on Door C: Plate 1 -> Plate 2 -> Plate 3."
+	lvl.hint = "Synchronize across all 4 quadrants. Door C is a Sequence Lock: activate Plates 1 -> 2 -> 3 in order."
 	lvl.map_lines = [
 		"###########",
 		"#P...#...2#",
@@ -343,7 +373,7 @@ static func _create_level_10() -> LevelDefinition:
 	lvl.doors_data = [
 		{"id": "A", "logic": "AND", "required_plates": ["1"]},
 		{"id": "B", "logic": "AND", "required_plates": ["2"]},
-		{"id": "C", "logic": "AND", "required_plates": ["3"]}
+		{"id": "C", "logic": "SEQUENCE", "required_sequence": ["1", "2", "3"]}
 	]
 	lvl.plates_data = [
 		{"id": "1"},

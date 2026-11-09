@@ -54,9 +54,22 @@ func _ready() -> void:
 	)
 
 	# --------------------------------------------------------------------------
-	# TEST 4: Level Select Scene & Grid
+	# TEST 4: Difficulty Select Scene
 	# --------------------------------------------------------------------------
-	run_test.call("Level Select displays all 10 campaign levels", func() -> bool:
+	run_test.call("Difficulty Select displays 5 difficulty tier cards", func() -> bool:
+		var scene = load("res://scenes/menus/difficulty_select.tscn").instantiate()
+		add_child(scene)
+		var cards: VBoxContainer = scene.get_node("ScrollContainer/VBoxContainer/CardsContainer")
+		if cards.get_child_count() != 5: return false
+		scene.queue_free()
+		return true
+	)
+
+	# --------------------------------------------------------------------------
+	# TEST 5: Level Select Scene & Filtering
+	# --------------------------------------------------------------------------
+	run_test.call("Level Select displays filtered campaign levels by difficulty tier", func() -> bool:
+		SaveManager.selected_difficulty_tier = 1 # Easy (3 levels)
 		var scene = load("res://scenes/menus/level_select.tscn").instantiate()
 		add_child(scene)
 		var grid: GridContainer = scene.get_node("ScrollContainer/VBoxContainer/LevelsGrid")
@@ -64,8 +77,22 @@ func _ready() -> void:
 		for child in grid.get_children():
 			if child is Button:
 				button_count += 1
-		if button_count != 10: return false
+		if button_count != 3: return false
 		scene.queue_free()
+
+		# Test showing all levels when tier is 0
+		SaveManager.selected_difficulty_tier = 0
+		var scene_all = load("res://scenes/menus/level_select.tscn").instantiate()
+		add_child(scene_all)
+		var grid_all: GridContainer = scene_all.get_node("ScrollContainer/VBoxContainer/LevelsGrid")
+		var all_count: int = 0
+		for child in grid_all.get_children():
+			if child is Button:
+				all_count += 1
+		if all_count != 10: return false
+		scene_all.queue_free()
+
+		SaveManager.selected_difficulty_tier = 1 # reset
 		return true
 	)
 

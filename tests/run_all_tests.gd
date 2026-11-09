@@ -83,18 +83,21 @@ func _init() -> void:
 		return true
 	)
 
-	run_test.call("CORE", "Finished Echo remains at final tile indefinitely", func() -> bool:
+	run_test.call("CORE", "Finished Echo expires when recording ends", func() -> bool:
 		var lvl = make_test_level.call(["#####", "#P..#", "#...#", "####X"], [], [])
 		var sim: PuzzleSimulation = PuzzleSimulationClass.new()
 		sim.load_level(lvl)
 		sim.step_move(Vector2i.RIGHT)
 		sim.step_move(Vector2i.RIGHT)
 		sim.create_echo()
-		for _i in range(10): sim.step_wait()
-		return sim.get_echo_position(0) == Vector2i(3, 1)
+		sim.step_wait()
+		sim.step_wait()
+		if not sim.is_echo_active(0): return false
+		sim.step_wait() # turn 3 > 2 steps -> expired
+		return not sim.is_echo_active(0) and sim.get_echo_position(0) == Vector2i(-1, -1)
 	)
 
-	run_test.call("CORE", "Echo activates pressure plate to hold door open", func() -> bool:
+	run_test.call("CORE", "Echo activates pressure plate to hold door open with WAIT", func() -> bool:
 		var lvl = make_test_level.call([
 			"#######", "#P.1.A#", "#####X#"
 		], [{"id": "A", "pos": Vector2i(5, 1), "logic": "AND", "required_plates": ["1"]}], [{"id": "1", "pos": Vector2i(3, 1)}])
@@ -102,6 +105,8 @@ func _init() -> void:
 		sim.load_level(lvl)
 		sim.step_move(Vector2i.RIGHT)
 		sim.step_move(Vector2i.RIGHT)
+		sim.step_wait()
+		sim.step_wait()
 		sim.create_echo()
 		sim.step_wait()
 		sim.step_wait()
@@ -116,6 +121,7 @@ func _init() -> void:
 		sim.load_level(lvl)
 		sim.step_move(Vector2i.RIGHT)
 		sim.step_move(Vector2i.RIGHT)
+		for _w in range(4): sim.step_wait()
 		sim.create_echo()
 		for _i in range(4): sim.step_move(Vector2i.RIGHT)
 		return sim.is_plate_active("1") and sim.is_plate_active("2") and sim.is_door_open("A")
@@ -166,10 +172,12 @@ func _init() -> void:
 		var sim: PuzzleSimulation = PuzzleSimulationClass.new()
 		sim.load_level(lvl)
 		sim.step_move(Vector2i.DOWN)
+		for _w in range(8): sim.step_wait()
 		sim.create_echo()
 		sim.step_move(Vector2i.RIGHT)
 		sim.step_move(Vector2i.RIGHT)
 		sim.step_move(Vector2i.DOWN)
+		for _w in range(6): sim.step_wait()
 		sim.create_echo()
 		sim.step_wait()
 		sim.step_wait()
@@ -208,81 +216,81 @@ func _init() -> void:
 	var campaign_solvers = [
 		# Level 1: First Contact (Sector 1, Min 1 Echo)
 		func(sim: PuzzleSimulation) -> bool:
-			run_actions.call(sim, "DDD")
+			run_actions.call(sim, "DDDWWWWW")
 			sim.create_echo()
 			run_actions.call(sim, "RRRDDDRR")
 			return sim.is_completed,
 		# Level 2: Stay Behind (Sector 1, Min 1 Echo)
 		func(sim: PuzzleSimulation) -> bool:
-			run_actions.call(sim, "DDDD")
+			run_actions.call(sim, "DDDDWWWW")
 			sim.create_echo()
 			run_actions.call(sim, "RRRDDRRR")
 			return sim.is_completed,
 		# Level 3: Double Perspective (Sector 1, Min 1 Echo)
 		func(sim: PuzzleSimulation) -> bool:
-			run_actions.call(sim, "RRRRRR")
+			run_actions.call(sim, "RRRRRRWWWW")
 			sim.create_echo()
 			run_actions.call(sim, "RRRDWWDD RRR")
 			return sim.is_completed,
 		# Level 4: Sequential Relay (Sector 2, Min 2 Echoes)
 		func(sim: PuzzleSimulation) -> bool:
-			run_actions.call(sim, "RR")
+			run_actions.call(sim, "RRWWWWWWWW")
 			sim.create_echo()
-			run_actions.call(sim, "DRRRRURR")
+			run_actions.call(sim, "DRRRRURRWWWWWW")
 			sim.create_echo()
 			run_actions.call(sim, "DRRRRDD W LLLD")
 			return sim.is_completed,
 		# Level 5: Split Decision (Sector 2, Min 2 Echoes)
 		func(sim: PuzzleSimulation) -> bool:
-			run_actions.call(sim, "LLLUU")
+			run_actions.call(sim, "LLLUUWWWW")
 			sim.create_echo()
-			run_actions.call(sim, "RRRUU")
+			run_actions.call(sim, "RRRUUWWWW")
 			sim.create_echo()
 			run_actions.call(sim, "WWWWW DD")
 			return sim.is_completed,
 		# Level 6: Crossed Signals (Sector 2, Min 2 Echoes)
 		func(sim: PuzzleSimulation) -> bool:
-			run_actions.call(sim, "DD")
+			run_actions.call(sim, "DDWWWWWWWW")
 			sim.create_echo()
-			run_actions.call(sim, "DRRRRRURR")
+			run_actions.call(sim, "DRRRRRURRWWWWWW")
 			sim.create_echo()
 			run_actions.call(sim, "DRRRRRDDDRRR")
 			return sim.is_completed,
 		# Level 7: No Turning Back (Sector 2, Min 2 Echoes)
 		func(sim: PuzzleSimulation) -> bool:
-			run_actions.call(sim, "RRR")
+			run_actions.call(sim, "RRRWWWWWWWW")
 			sim.create_echo()
-			run_actions.call(sim, "DRRRRRURR")
+			run_actions.call(sim, "DRRRRRURRWWWWWW")
 			sim.create_echo()
 			run_actions.call(sim, "DRRRRRDDDRRR")
 			return sim.is_completed,
 		# Level 8: Temporal Interlock (Sector 3, Min 3 Echoes)
 		func(sim: PuzzleSimulation) -> bool:
-			run_actions.call(sim, "RRR")
+			run_actions.call(sim, "RRRWWWWWWWWWWWW")
 			sim.create_echo()
-			run_actions.call(sim, "RRRRDDRRR")
+			run_actions.call(sim, "RRRRDDRRRWWWWWW")
 			sim.create_echo()
-			run_actions.call(sim, "RRRRDD WWW D DLLL")
+			run_actions.call(sim, "RRRRDD WWW D DLLL WWWW")
 			sim.create_echo()
 			run_actions.call(sim, "RRRRDD WWW DD WWW DD")
 			return sim.is_completed,
 		# Level 9: Parallel Existence (Sector 3, Min 3 Echoes)
 		func(sim: PuzzleSimulation) -> bool:
-			run_actions.call(sim, "RRR")
+			run_actions.call(sim, "RRRWWWWWWWWWWWW")
 			sim.create_echo()
-			run_actions.call(sim, "RRRRDDRRR")
+			run_actions.call(sim, "RRRRDDRRRWWWWWW")
 			sim.create_echo()
-			run_actions.call(sim, "RRRRDD WWW D DLLL")
+			run_actions.call(sim, "RRRRDD WWW D DLLL WWWW")
 			sim.create_echo()
 			run_actions.call(sim, "RRRRDD WWW DD WWW DD")
 			return sim.is_completed,
 		# Level 10: The Last Tomorrow (Sector 3, Min 3 Echoes)
 		func(sim: PuzzleSimulation) -> bool:
-			run_actions.call(sim, "DR")
+			run_actions.call(sim, "DRWWWWWWWWWWWWWW")
 			sim.create_echo()
-			run_actions.call(sim, "DRRRRRURRR")
+			run_actions.call(sim, "DRRRRRURRRWWWWWWWW")
 			sim.create_echo()
-			run_actions.call(sim, "DRRRRRDWWWWDDDRR")
+			run_actions.call(sim, "DRRRRRDWWWWDDDRRWWWW")
 			sim.create_echo()
 			run_actions.call(sim, "DRRRRRDWWWWDDD WW LLDL")
 			return sim.is_completed

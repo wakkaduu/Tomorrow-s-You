@@ -22,6 +22,9 @@ func go_to_boot() -> void:
 func go_to_main_menu() -> void:
 	change_scene("res://scenes/menus/main_menu.tscn")
 
+func go_to_difficulty_select() -> void:
+	change_scene("res://scenes/menus/difficulty_select.tscn")
+
 func go_to_level_select() -> void:
 	change_scene("res://scenes/menus/level_select.tscn")
 

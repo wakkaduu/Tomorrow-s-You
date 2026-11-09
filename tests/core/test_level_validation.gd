@@ -46,16 +46,16 @@ func _init() -> void:
 
 func _get_verified_solutions() -> Dictionary:
 	return {
-		"lvl_01": _str_to_actions("DDD ECHO RRRDDDRR"),
-		"lvl_02": _str_to_actions("DDDD ECHO RRRDDRRR"),
-		"lvl_03": _str_to_actions("RRRRRR ECHO RRR D W W D D RRR"),
-		"lvl_04": _str_to_actions("RR ECHO DRRRRURR ECHO DRRRRDD W LLLD"),
-		"lvl_05": _str_to_actions("LLLUU ECHO RRRUU ECHO W W W W W DD"),
-		"lvl_06": _str_to_actions("DD ECHO DRRRRRURR ECHO DRRRRRDDDRRR"),
-		"lvl_07": _str_to_actions("RRR ECHO DRRRRRURR ECHO DRRRRRDDDRRR"),
-		"lvl_08": _str_to_actions("RRR ECHO RRRRDDRRR ECHO RRRRDD W W W D D LLL ECHO RRRRDD W W W DD W W W DD"),
-		"lvl_09": _str_to_actions("RRR ECHO RRRRDDRRR ECHO RRRRDD W W W D D LLL ECHO RRRRDD W W W DD W W W DD"),
-		"lvl_10": _str_to_actions("DR ECHO DRRRRRURRR ECHO DRRRRRD W W W W D D DRR ECHO DRRRRRD W W W W D DD W W LLDL")
+		"lvl_01": _str_to_actions("DDDWWWWW ECHO RRRDDDRR"),
+		"lvl_02": _str_to_actions("DDDDWWWW ECHO RRRDDRRR"),
+		"lvl_03": _str_to_actions("RRRRRRWWWW ECHO RRR D W W D D RRR"),
+		"lvl_04": _str_to_actions("RRWWWWWWWW ECHO DRRRRURRWWWWWW ECHO DRRRRDD W LLLD"),
+		"lvl_05": _str_to_actions("LLLUUWWWW ECHO RRRUUWWWW ECHO W W W W W DD"),
+		"lvl_06": _str_to_actions("DDWWWWWWWW ECHO DRRRRRURRWWWWWW ECHO DRRRRRDDDRRR"),
+		"lvl_07": _str_to_actions("RRRWWWWWWWW ECHO DRRRRRURRWWWWWW ECHO DRRRRRDDDRRR"),
+		"lvl_08": _str_to_actions("RRRWWWWWWWWWWWW ECHO RRRRDDRRRWWWWWW ECHO RRRRDD W W W D D LLL WWWW ECHO RRRRDD W W W DD W W W DD"),
+		"lvl_09": _str_to_actions("RRRWWWWWWWWWWWW ECHO RRRRDDRRRWWWWWW ECHO RRRRDD W W W D D LLL WWWW ECHO RRRRDD W W W DD W W W DD"),
+		"lvl_10": _str_to_actions("DRWWWWWWWWWWWWWW ECHO DRRRRRURRRWWWWWWWW ECHO DRRRRRDWWWWDDDRRWWWW ECHO DRRRRRDWWWWDDD WW LLDL")
 	}
 
 func _str_to_actions(s: String) -> Array:
@@ -72,3 +72,4 @@ func _str_to_actions(s: String) -> Array:
 				match ch:
 					"U", "D", "L", "R", "W": result.append(ch)
 	return result
+

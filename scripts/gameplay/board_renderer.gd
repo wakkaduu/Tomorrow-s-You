@@ -374,7 +374,11 @@ func _draw_doors() -> void:
 			# Door label & logic badge
 			if open_alpha > 0.6:
 				var badge_text: String = "%s: %s" % [did, logic]
-				draw_string(ThemeDB.fallback_font, center + Vector2(-16, 5), badge_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, beam_col)
+				if logic == "SEQUENCE":
+					var seq: Array = d.get("required_sequence", [])
+					var cur_step: int = simulation.get_sequence_progress(did) if simulation else 0
+					badge_text = "%s: %d/%d" % [did, cur_step, seq.size()]
+				draw_string(ThemeDB.fallback_font, center + Vector2(-18, 5), badge_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, beam_col)
 		else:
 			# Open state: glowing floor conduits with direction chevrons
 			var open_glow: Color = Color(COLOR_AMBER_ACTIVE.r, COLOR_AMBER_ACTIVE.g, COLOR_AMBER_ACTIVE.b, 0.25)
@@ -413,12 +417,21 @@ func _draw_echo_trails() -> void:
 
 func _draw_echoes() -> void:
 	for i in range(echo_visual_positions.size()):
+		var is_active: bool = simulation.is_echo_active(i) if simulation else true
+		if not is_active:
+			# Expired Echo is not drawn on board
+			continue
+
+		var remaining: int = simulation.get_echo_remaining_turns(i) if simulation else 99
+		var is_warning: bool = (remaining == 1)
 		var e_pos: Vector2 = echo_visual_positions[i]
 		var radius: float = tile_size * 0.33
 		var aura_pulse: float = sin(_pulse_timer + float(i) * 1.8) * 0.12 + 0.88
 
-		# Holographic expanding aura
-		draw_circle(e_pos, radius * 1.4 * aura_pulse, Color(COLOR_ECHO.r, COLOR_ECHO.g, COLOR_ECHO.b, 0.2))
+		# Holographic expanding aura (amber pulse if 1 turn left before expiration)
+		var aura_color: Color = Color("#FFBE55") if is_warning else COLOR_ECHO
+		var aura_alpha: float = (sin(_pulse_timer * 6.0) * 0.2 + 0.35) if is_warning else 0.2
+		draw_circle(e_pos, radius * 1.4 * aura_pulse, Color(aura_color.r, aura_color.g, aura_color.b, aura_alpha))
 
 		# Semi-transparent holographic phantom body
 		draw_circle(e_pos, radius, Color(COLOR_ECHO.r, COLOR_ECHO.g, COLOR_ECHO.b, 0.65))
@@ -430,13 +443,15 @@ func _draw_echoes() -> void:
 			draw_line(e_pos + Vector2(-half_chord, scan_y), e_pos + Vector2(half_chord, scan_y), Color(1, 1, 1, 0.35), 1.0)
 
 		# Distinct outer ring
-		draw_arc(e_pos, radius, 0, TAU, 28, Color.WHITE, 2.0)
+		var ring_color: Color = Color("#FFBE55") if is_warning else Color.WHITE
+		draw_arc(e_pos, radius, 0, TAU, 28, ring_color, 2.0)
 
-		# Echo ID badge pill
-		var badge_rect: Rect2 = Rect2(e_pos.x - 14, e_pos.y - radius - 14, 28, 16)
+		# Echo ID badge pill + remaining turns
+		var badge_rect: Rect2 = Rect2(e_pos.x - 22, e_pos.y - radius - 15, 44, 16)
 		draw_rect(badge_rect, Color("#1E1B4B"), true)
-		draw_rect(badge_rect, COLOR_ECHO, false, 1.5)
-		draw_string(ThemeDB.fallback_font, Vector2(badge_rect.position.x + 4, badge_rect.position.y + 12), "E%d" % (i + 1), HORIZONTAL_ALIGNMENT_CENTER, -1, 11, COLOR_ECHO)
+		draw_rect(badge_rect, ring_color, false, 1.5)
+		var badge_str: String = "E%d:%d" % [i + 1, remaining]
+		draw_string(ThemeDB.fallback_font, Vector2(badge_rect.position.x + 3, badge_rect.position.y + 12), badge_str, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, ring_color)
 
 func _draw_player() -> void:
 	var radius: float = tile_size * 0.35
@@ -475,13 +490,32 @@ func _draw_debug_connections() -> void:
 		var d_pos: Vector2 = grid_to_world(d.get("pos", Vector2i.ZERO))
 		var did: String = str(d.get("id", ""))
 		var req: Array = d.get("required_plates", [])
-		for pid in req:
-			for p: Dictionary in level_def.plates_data:
-				if str(p.get("id", "")) == str(pid):
-					var p_pos: Vector2 = grid_to_world(p.get("pos", Vector2i.ZERO))
-					draw_line(p_pos, d_pos, Color(1.0, 0.75, 0.2, 0.85), 2.5)
-					var mid: Vector2 = (p_pos + d_pos) * 0.5
-					draw_string(ThemeDB.fallback_font, mid, "%s➔%s" % [pid, did], HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color("#FFBE55"))
+		var logic: String = str(d.get("logic", "AND")).to_upper()
+		if logic == "SEQUENCE":
+			var seq: Array = d.get("required_sequence", [])
+			var prev_pos: Vector2 = Vector2.ZERO
+			var has_prev: bool = false
+			for step_i in range(seq.size()):
+				var seq_pid = seq[step_i]
+				for p: Dictionary in level_def.plates_data:
+					if str(p.get("id", "")) == str(seq_pid):
+						var p_pos: Vector2 = grid_to_world(p.get("pos", Vector2i.ZERO))
+						if has_prev:
+							draw_line(prev_pos, p_pos, Color("#FF647C"), 2.0)
+						prev_pos = p_pos
+						has_prev = true
+						draw_string(ThemeDB.fallback_font, p_pos + Vector2(10, -10), "[#%d]" % (step_i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#FF647C"))
+			if has_prev:
+				draw_line(prev_pos, d_pos, Color("#FF647C"), 2.5)
+				draw_string(ThemeDB.fallback_font, (prev_pos + d_pos) * 0.5, "SEQ➔%s" % did, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color("#FF647C"))
+		else:
+			for pid in req:
+				for p: Dictionary in level_def.plates_data:
+					if str(p.get("id", "")) == str(pid):
+						var p_pos: Vector2 = grid_to_world(p.get("pos", Vector2i.ZERO))
+						draw_line(p_pos, d_pos, Color(1.0, 0.75, 0.2, 0.85), 2.5)
+						var mid: Vector2 = (p_pos + d_pos) * 0.5
+						draw_string(ThemeDB.fallback_font, mid, "%s➔%s" % [pid, did], HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color("#FFBE55"))
 
 	# 2. Highlight spawn & exit
 	var spawn_w: Vector2 = grid_to_world(level_def.spawn_pos)

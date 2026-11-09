@@ -1,72 +1,71 @@
 extends Control
 
 ## Level Selection screen for Tomorrow's You.
-## Displays campaign levels organized by Sector with clear status indicators and best records.
+## Displays campaign levels filtered by selected difficulty tier,
+## showing earned stars (1–3), move budgets, and minimum Echo requirements.
 
 @onready var levels_grid: GridContainer = $ScrollContainer/VBoxContainer/LevelsGrid
 @onready var back_button: Button = $Header/BackButton
+@onready var title_label: Label = $Header/Title
+
+const TIER_NAMES: Dictionary = {
+	1: "EASY — INITIATION",
+	2: "NORMAL — SYNCHRONIZATION",
+	3: "HARD — CONVERGENCE",
+	4: "EXPERT — PARADOX",
+	5: "NIGHTMARE"
+}
 
 func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
+	var tier: int = SaveManager.selected_difficulty_tier if SaveManager else 1
+	title_label.text = TIER_NAMES.get(tier, "SELECT LEVEL")
 	_build_level_cards()
 
 func _on_back_pressed() -> void:
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
-	SceneRouter.go_to_main_menu()
+	SceneRouter.go_to_difficulty_select()
 
 func _build_level_cards() -> void:
 	for child in levels_grid.get_children():
 		child.queue_free()
 
 	var total_levels: int = LevelRegistry.get_level_count()
-	var current_sector: int = -1
-
-	var sector_titles: Dictionary = {
-		1: "SECTOR 01 — AWAKENING",
-		2: "SECTOR 02 — SYNCHRONIZATION",
-		3: "SECTOR 03 — PARADOX"
-	}
+	var filter_tier: int = SaveManager.selected_difficulty_tier if SaveManager else 1
 
 	for i in range(total_levels):
 		var lvl: LevelDefinition = LevelRegistry.get_level(i)
-
-		# Add Sector Header when transitioning sectors
-		if lvl.sector != current_sector:
-			current_sector = lvl.sector
-			var header_panel: PanelContainer = PanelContainer.new()
-			var margin: MarginContainer = MarginContainer.new()
-			margin.add_theme_constant_override("margin_top", 12)
-			margin.add_theme_constant_override("margin_bottom", 4)
-			margin.add_theme_constant_override("margin_left", 8)
-
-			var header_lbl: Label = Label.new()
-			header_lbl.text = sector_titles.get(current_sector, "SECTOR %02d" % current_sector)
-			header_lbl.add_theme_font_size_override("font_size", 16)
-			header_lbl.add_theme_color_override("font_color", Color("#A78BFA"))
-
-			margin.add_child(header_lbl)
-			header_panel.add_child(margin)
-			levels_grid.add_child(header_panel)
+		# Filter by tier if set
+		if filter_tier > 0 and lvl.difficulty_tier != filter_tier:
+			continue
 
 		var is_unlocked: bool = SaveManager.is_level_unlocked(lvl.level_id) if SaveManager else (i == 0)
 		var is_completed: bool = SaveManager.is_level_completed(lvl.level_id) if SaveManager else false
+		var stars: int = SaveManager.get_level_stars(lvl.level_id) if SaveManager else 0
 
 		var btn: Button = Button.new()
-		btn.custom_minimum_size = Vector2(300, 68)
+		btn.custom_minimum_size = Vector2(300, 76)
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 		if not is_unlocked:
-			btn.text = "🔒  %d. [LOCKED]" % [i + 1]
+			btn.text = "🔒  %d. %s [LOCKED]\n     Requires previous level completion" % [i + 1, lvl.level_name]
 			btn.disabled = true
 			btn.modulate = Color(0.45, 0.45, 0.55, 0.6)
 		elif is_completed:
+			var star_str: String = ""
+			for s in range(3):
+				star_str += "★" if s < stars else "☆"
 			var best_turns: int = SaveManager.best_actions.get(lvl.level_id, 0) if SaveManager else 0
-			var best_echoes: int = SaveManager.best_echoes.get(lvl.level_id, 0) if SaveManager else 0
-			btn.text = "✓  %d. %s  |  Best: %d turns (%d echoes)" % [i + 1, lvl.level_name, best_turns, best_echoes]
+			var best_ech: int = SaveManager.best_echoes.get(lvl.level_id, 0) if SaveManager else 0
+			btn.text = "%s  %d. %s\nBest: %d turns (%d echoes) | 3★ Target: ≤%d" % [
+				star_str, i + 1, lvl.level_name, best_turns, best_ech, lvl.target_3_stars
+			]
 			btn.modulate = Color("#54E6EA")
 		else:
-			btn.text = "▶  %d. %s  [NEW]" % [i + 1, lvl.level_name]
+			btn.text = "▶  %d. %s [NEW]\nMin Echoes: %d | 3★ Target: ≤%d" % [
+				i + 1, lvl.level_name, lvl.min_echoes_required, lvl.target_3_stars
+			]
 			btn.modulate = Color("#FFFFFF")
 
 		var level_idx: int = i

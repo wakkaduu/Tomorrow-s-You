@@ -33,7 +33,7 @@ func get_position_at_turn(turn: int) -> Vector2i:
 		return spawn_pos
 	if turn <= steps.size():
 		return steps[turn - 1]["position"]
-	# Finished recording: Echo remains permanently at final recorded position
+	# Expired recording: returns last position for fadeout visuals
 	return steps[steps.size() - 1]["position"]
 
 func get_action_at_turn(turn: int) -> String:
@@ -41,7 +41,15 @@ func get_action_at_turn(turn: int) -> String:
 		return "SPAWN"
 	if turn <= steps.size():
 		return steps[turn - 1]["action"]
-	return "IDLE"
+	return "EXPIRED"
+
+func is_active_at_turn(turn: int) -> bool:
+	if steps.is_empty():
+		return false
+	return turn <= steps.size()
+
+func get_remaining_turns(turn: int) -> int:
+	return maxi(0, steps.size() - turn)
 
 func duplicate_recording() -> EchoRecording:
 	var dup: EchoRecording = EchoRecording.new(level_id, spawn_pos)

@@ -80,7 +80,7 @@ func _run_actions(sim: PuzzleSimulation, actions: String) -> void:
 # LEVEL 1: First Contact (Sector 1, Min 1 Echo)
 # ------------------------------------------------------------------------------
 func _solve_lvl_01(sim: PuzzleSimulation) -> bool:
-	_run_actions(sim, "DDD")
+	_run_actions(sim, "DDDWWWWW")
 	sim.create_echo()
 	_run_actions(sim, "RRRDDDRR")
 	return sim.is_completed
@@ -89,7 +89,7 @@ func _solve_lvl_01(sim: PuzzleSimulation) -> bool:
 # LEVEL 2: Stay Behind (Sector 1, Min 1 Echo)
 # ------------------------------------------------------------------------------
 func _solve_lvl_02(sim: PuzzleSimulation) -> bool:
-	_run_actions(sim, "DDDD")
+	_run_actions(sim, "DDDDWWWW")
 	sim.create_echo()
 	_run_actions(sim, "RRRDDRRR")
 	return sim.is_completed
@@ -98,7 +98,7 @@ func _solve_lvl_02(sim: PuzzleSimulation) -> bool:
 # LEVEL 3: Double Perspective (Sector 1, Min 1 Echo)
 # ------------------------------------------------------------------------------
 func _solve_lvl_03(sim: PuzzleSimulation) -> bool:
-	_run_actions(sim, "RRRRRR")
+	_run_actions(sim, "RRRRRRWWWW")
 	sim.create_echo()
 	_run_actions(sim, "RRRDWWDD RRR")
 	return sim.is_completed
@@ -107,9 +107,9 @@ func _solve_lvl_03(sim: PuzzleSimulation) -> bool:
 # LEVEL 4: Sequential Relay (Sector 2, Min 2 Echoes)
 # ------------------------------------------------------------------------------
 func _solve_lvl_04(sim: PuzzleSimulation) -> bool:
-	_run_actions(sim, "RR")
+	_run_actions(sim, "RRWWWWWWWW")
 	sim.create_echo()
-	_run_actions(sim, "DRRRRURR")
+	_run_actions(sim, "DRRRRURRWWWWWW")
 	sim.create_echo()
 	_run_actions(sim, "DRRRRDD W LLLD")
 	return sim.is_completed
@@ -118,9 +118,9 @@ func _solve_lvl_04(sim: PuzzleSimulation) -> bool:
 # LEVEL 5: Split Decision (Sector 2, Min 2 Echoes, AND Door A)
 # ------------------------------------------------------------------------------
 func _solve_lvl_05(sim: PuzzleSimulation) -> bool:
-	_run_actions(sim, "LLLUU")
+	_run_actions(sim, "LLLUUWWWW")
 	sim.create_echo()
-	_run_actions(sim, "RRRUU")
+	_run_actions(sim, "RRRUUWWWW")
 	sim.create_echo()
 	_run_actions(sim, "WWWWW DD")
 	return sim.is_completed
@@ -129,9 +129,9 @@ func _solve_lvl_05(sim: PuzzleSimulation) -> bool:
 # LEVEL 6: Crossed Signals (Sector 2, Min 2 Echoes)
 # ------------------------------------------------------------------------------
 func _solve_lvl_06(sim: PuzzleSimulation) -> bool:
-	_run_actions(sim, "DD")
+	_run_actions(sim, "DDWWWWWWWW")
 	sim.create_echo()
-	_run_actions(sim, "DRRRRRURR")
+	_run_actions(sim, "DRRRRRURRWWWWWW")
 	sim.create_echo()
 	_run_actions(sim, "DRRRRRDDDRRR")
 	return sim.is_completed
@@ -140,9 +140,9 @@ func _solve_lvl_06(sim: PuzzleSimulation) -> bool:
 # LEVEL 7: No Turning Back (Sector 2, Min 2 Echoes, AND Door B)
 # ------------------------------------------------------------------------------
 func _solve_lvl_07(sim: PuzzleSimulation) -> bool:
-	_run_actions(sim, "RRR")
+	_run_actions(sim, "RRRWWWWWWWW")
 	sim.create_echo()
-	_run_actions(sim, "DRRRRRURR")
+	_run_actions(sim, "DRRRRRURRWWWWWW")
 	sim.create_echo()
 	_run_actions(sim, "DRRRRRDDDRRR")
 	return sim.is_completed
@@ -151,11 +151,11 @@ func _solve_lvl_07(sim: PuzzleSimulation) -> bool:
 # LEVEL 8: Temporal Interlock (Sector 3, Min 3 Echoes)
 # ------------------------------------------------------------------------------
 func _solve_lvl_08(sim: PuzzleSimulation) -> bool:
-	_run_actions(sim, "RRR")
+	_run_actions(sim, "RRRWWWWWWWWWWWW")
 	sim.create_echo()
-	_run_actions(sim, "RRRRDDRRR")
+	_run_actions(sim, "RRRRDDRRRWWWWWW")
 	sim.create_echo()
-	_run_actions(sim, "RRRRDD WWW D DLLL")
+	_run_actions(sim, "RRRRDD WWW D DLLL WWWW")
 	sim.create_echo()
 	_run_actions(sim, "RRRRDD WWW DD WWW DD")
 	return sim.is_completed
@@ -164,11 +164,11 @@ func _solve_lvl_08(sim: PuzzleSimulation) -> bool:
 # LEVEL 9: Parallel Existence (Sector 3, Min 3 Echoes, Cumulative AND Matrix)
 # ------------------------------------------------------------------------------
 func _solve_lvl_09(sim: PuzzleSimulation) -> bool:
-	_run_actions(sim, "RRR")
+	_run_actions(sim, "RRRWWWWWWWWWWWW")
 	sim.create_echo()
-	_run_actions(sim, "RRRRDDRRR")
+	_run_actions(sim, "RRRRDDRRRWWWWWW")
 	sim.create_echo()
-	_run_actions(sim, "RRRRDD WWW D DLLL")
+	_run_actions(sim, "RRRRDD WWW D DLLL WWWW")
 	sim.create_echo()
 	_run_actions(sim, "RRRRDD WWW DD WWW DD")
 	return sim.is_completed
@@ -177,11 +177,11 @@ func _solve_lvl_09(sim: PuzzleSimulation) -> bool:
 # LEVEL 10: The Last Tomorrow (Sector 3, Min 3 Echoes, 4-Quadrant Synchronization)
 # ------------------------------------------------------------------------------
 func _solve_lvl_10(sim: PuzzleSimulation) -> bool:
-	_run_actions(sim, "DR")
+	_run_actions(sim, "DRWWWWWWWWWWWWWW")
 	sim.create_echo()
-	_run_actions(sim, "DRRRRRURRR")
+	_run_actions(sim, "DRRRRRURRRWWWWWWWW")
 	sim.create_echo()
-	_run_actions(sim, "DRRRRRDWWWWDDDRR")
+	_run_actions(sim, "DRRRRRDWWWWDDDRRWWWW")
 	sim.create_echo()
 	_run_actions(sim, "DRRRRRDWWWWDDD WW LLDL")
 	return sim.is_completed

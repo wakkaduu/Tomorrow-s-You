@@ -49,7 +49,7 @@ func _on_play_pressed() -> void:
 func _on_levels_pressed() -> void:
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
-	SceneRouter.go_to_level_select()
+	SceneRouter.go_to_difficulty_select()
 
 func _on_settings_pressed() -> void:
 	if AudioManager:

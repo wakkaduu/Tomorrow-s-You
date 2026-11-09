@@ -109,6 +109,28 @@ theme_override_font_sizes/font_size = 15
 text = "✦ ECHOES: 0 / 1"
 horizontal_alignment = 1
 
+[node name="BudgetPill" type="PanelContainer" parent="TopHUD/MarginContainer/VBoxContainer/StatsPillsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Margin" type="MarginContainer" parent="TopHUD/MarginContainer/VBoxContainer/StatsPillsRow/BudgetPill"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 4
+
+[node name="BudgetLabel" type="Label" parent="TopHUD/MarginContainer/VBoxContainer/StatsPillsRow/BudgetPill/Margin"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.984314, 0.74902, 0.141176, 1)
+theme_override_font_sizes/font_size = 14
+text = "🎯 3★: ≤18"
+horizontal_alignment = 1
+
+[node name="EchoTimelineRow" type="HBoxContainer" parent="TopHUD/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
 [node name="BottomHUD" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 12
@@ -343,6 +365,20 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
 theme_override_font_sizes/font_size = 28
 text = "LEVEL COMPLETED!"
+horizontal_alignment = 1
+
+[node name="StarsLabel" type="Label" parent="Modals/CompleteModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.984314, 0.74902, 0.141176, 1)
+theme_override_font_sizes/font_size = 36
+text = "★★★"
+horizontal_alignment = 1
+
+[node name="RatingLabel" type="Label" parent="Modals/CompleteModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.83, 0.6, 1)
+theme_override_font_sizes/font_size = 15
+text = "PERFECT EFFICIENCY!"
 horizontal_alignment = 1
 
 [node name="StatsLabel" type="Label" parent="Modals/CompleteModal/Margin/VBoxContainer"]

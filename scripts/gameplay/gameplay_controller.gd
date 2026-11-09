@@ -9,6 +9,8 @@ extends Control
 @onready var sector_label: Label = $TopHUD/MarginContainer/VBoxContainer/HeaderRow/LevelInfo/SectorLabel
 @onready var turn_count_label: Label = $TopHUD/MarginContainer/VBoxContainer/StatsPillsRow/TurnPill/Margin/TurnCountLabel
 @onready var echo_count_label: Label = $TopHUD/MarginContainer/VBoxContainer/StatsPillsRow/EchoPill/Margin/EchoCountLabel
+@onready var budget_label: Label = $TopHUD/MarginContainer/VBoxContainer/StatsPillsRow/BudgetPill/Margin/BudgetLabel
+@onready var echo_timeline_row: HBoxContainer = $TopHUD/MarginContainer/VBoxContainer/EchoTimelineRow
 @onready var pause_button: Button = $TopHUD/MarginContainer/VBoxContainer/HeaderRow/PauseButton
 
 # Bottom controls
@@ -36,6 +38,8 @@ extends Control
 @onready var btn_replay: Button = $Modals/CompleteModal/Margin/VBoxContainer/ReplayButton
 @onready var btn_complete_levels: Button = $Modals/CompleteModal/Margin/VBoxContainer/LevelsButton
 @onready var complete_stats_label: Label = $Modals/CompleteModal/Margin/VBoxContainer/StatsLabel
+@onready var complete_stars_label: Label = $Modals/CompleteModal/Margin/VBoxContainer/StarsLabel
+@onready var complete_rating_label: Label = $Modals/CompleteModal/Margin/VBoxContainer/RatingLabel
 
 var simulation: PuzzleSimulation = null
 var current_level_def: LevelDefinition = null
@@ -163,6 +167,20 @@ func _update_hud() -> void:
 	turn_count_label.text = "⏱ TURN: %02d" % simulation.current_turn
 	echo_count_label.text = "✦ ECHOES: %d / %d" % [simulation.echoes.size(), current_level_def.echo_limit]
 
+	if current_level_def.target_3_stars > 0:
+		var total_act: int = simulation.total_actions_taken
+		budget_label.text = "🎯 3★: ≤%d (Act: %d)" % [current_level_def.target_3_stars, total_act]
+		if total_act <= current_level_def.target_3_stars:
+			budget_label.add_theme_color_override("font_color", Color("#FBBF24")) # Gold 3-star on track
+		elif total_act <= current_level_def.target_2_stars:
+			budget_label.add_theme_color_override("font_color", Color("#38BDF8")) # Blue 2-star
+		else:
+			budget_label.add_theme_color_override("font_color", Color("#94A3B8")) # Gray 1-star
+	else:
+		budget_label.text = "🎯 ACT: %d" % simulation.total_actions_taken
+
+	_update_echo_timeline()
+
 	if not current_level_def.hint.is_empty():
 		hint_label.text = "💡 " + current_level_def.hint
 		hint_label.get_parent().get_parent().visible = true
@@ -182,14 +200,89 @@ func _update_hud() -> void:
 	else:
 		btn_create_echo.modulate = Color(0.65, 0.65, 0.7, 0.6)
 
+func _update_echo_timeline() -> void:
+	if not echo_timeline_row:
+		return
+
+	for child in echo_timeline_row.get_children():
+		child.queue_free()
+
+	if simulation.echoes.is_empty():
+		echo_timeline_row.visible = false
+		return
+
+	echo_timeline_row.visible = true
+
+	for i in range(simulation.echoes.size()):
+		var is_active: bool = simulation.is_echo_active(i)
+		var rem: int = simulation.get_echo_remaining_turns(i)
+		var tot: int = simulation.get_echo_total_turns(i)
+		var curr: int = simulation.current_turn
+
+		var pill: PanelContainer = PanelContainer.new()
+		pill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		var margin: MarginContainer = MarginContainer.new()
+		margin.add_theme_constant_override("margin_left", 8)
+		margin.add_theme_constant_override("margin_right", 8)
+		margin.add_theme_constant_override("margin_top", 4)
+		margin.add_theme_constant_override("margin_bottom", 4)
+		pill.add_child(margin)
+
+		var lbl: Label = Label.new()
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.add_theme_font_size_override("font_size", 12)
+
+		if is_active:
+			if rem == 1:
+				lbl.text = "⚠️ E%d: 1 TURN LEFT" % (i + 1)
+				lbl.add_theme_color_override("font_color", Color("#FBBF24")) # Warning amber
+			else:
+				var blocks: int = clampi(tot - rem, 0, tot)
+				var bar: String = "■".repeat(mini(blocks, 6)) + "□".repeat(mini(rem, 6))
+				lbl.text = "E%d: %s (rem %d)" % [i + 1, bar, rem]
+				lbl.add_theme_color_override("font_color", Color("#54E6EA")) # Active cyan
+		else:
+			lbl.text = "E%d: EXPIRED" % (i + 1)
+			lbl.add_theme_color_override("font_color", Color(0.6, 0.3, 0.3, 0.8)) # Expired dim
+
+		margin.add_child(lbl)
+		echo_timeline_row.add_child(pill)
+
 func _toggle_pause() -> void:
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
 	pause_modal.visible = not pause_modal.visible
 
 func _on_level_completed(turns: int, echoes: int, total_actions: int) -> void:
-	complete_stats_label.text = "Winning Attempt: %d turns\nEchoes Used: %d / %d\nTotal Actions Taken: %d" % [
-		turns, echoes, current_level_def.echo_limit, total_actions
+	var stars: int = 1
+	if SaveManager:
+		stars = SaveManager.calculate_stars(current_level_def.level_id, total_actions)
+		var next_id: String = ""
+		if GameManager:
+			var next_lvl = GameManager.get_next_level_def()
+			if next_lvl: next_id = next_lvl.level_id
+		SaveManager.record_level_completion(current_level_def.level_id, total_actions, echoes, next_id)
+
+	# Format star display
+	var star_str: String = ""
+	for s in range(3):
+		star_str += "★" if s < stars else "☆"
+	complete_stars_label.text = star_str
+
+	match stars:
+		3:
+			complete_rating_label.text = "PERFECT EFFICIENCY (3 STARS)"
+			complete_rating_label.add_theme_color_override("font_color", Color("#34D399"))
+		2:
+			complete_rating_label.text = "SOLID SYNCHRONIZATION (2 STARS)"
+			complete_rating_label.add_theme_color_override("font_color", Color("#FBBF24"))
+		_:
+			complete_rating_label.text = "PUZZLE SOLVED (1 STAR)"
+			complete_rating_label.add_theme_color_override("font_color", Color("#94A3B8"))
+
+	complete_stats_label.text = "Winning Attempt: %d turns\nEchoes Used: %d / %d\nTotal Actions Taken: %d (3★ Target: ≤%d)" % [
+		turns, echoes, current_level_def.echo_limit, total_actions, current_level_def.target_3_stars
 	]
 	if GameManager and not GameManager.next_level_exists():
 		btn_next_level.text = "CAMPAIGN COMPLETE!"

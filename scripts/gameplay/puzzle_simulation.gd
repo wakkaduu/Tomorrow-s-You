@@ -15,6 +15,9 @@ signal door_state_changed(door_id: String, is_open: bool)
 signal level_completed(turns_in_winning_attempt: int, echoes_used: int, total_actions: int)
 signal move_blocked(target_pos: Vector2i, reason: String)
 signal echo_limit_reached()
+signal echo_expired(echo_index: int, final_pos: Vector2i)
+signal sequence_advanced(door_id: String, step_index: int, total_steps: int)
+signal sequence_reset(door_id: String)
 
 var level_def: LevelDefinition = null
 var current_turn: int = 0
@@ -26,6 +29,8 @@ var current_recording: EchoRecording = null
 # State tables
 var plates_state: Dictionary = {} # plate_id (String) -> bool
 var doors_state: Dictionary = {}  # door_id (String) -> bool
+var sequence_progress: Dictionary = {} # door_id (String) -> int
+var sequence_unlocked: Dictionary = {} # door_id (String) -> bool
 var is_completed: bool = false
 
 func load_level(p_level_def: LevelDefinition) -> void:
@@ -42,6 +47,8 @@ func restart_attempt() -> void:
 	current_turn = 0
 	player_pos = level_def.spawn_pos
 	current_recording = EchoRecording.new(level_def.level_id, level_def.spawn_pos)
+	sequence_progress.clear()
+	sequence_unlocked.clear()
 
 	# Initialize states at turn 0
 	_recalculate_plates_and_doors()
@@ -129,14 +136,16 @@ func step_interact() -> bool:
 	return true
 
 func _advance_turn() -> void:
-	# 1. Advance echoes
+	# 1. Advance echoes & emit stepped or expired
 	for i in range(echoes.size()):
 		var echo: EchoRecording = echoes[i]
 		var echo_pos: Vector2i = echo.get_position_at_turn(current_turn)
 		var echo_action: String = echo.get_action_at_turn(current_turn)
+		if current_turn == echo.get_step_count() + 1:
+			echo_expired.emit(i, echo_pos)
 		echo_stepped.emit(i, echo_pos, echo_action)
 
-	# 2. Recalculate environment
+	# 2. Recalculate environment (plates & doors)
 	_recalculate_plates_and_doors()
 
 	# 3. Check level completion (REAL PLAYER ONLY)
@@ -150,10 +159,14 @@ func _recalculate_plates_and_doors() -> void:
 	if level_def == null:
 		return
 
-	# Determine positions of all eligible actors (Player + Echoes)
+	# Determine positions of all eligible active actors (Player + Active Echoes ONLY)
+	# IMPORTANT: Expired Echoes DO NOT press pressure plates!
 	var active_positions: Array[Vector2i] = [player_pos]
 	for echo: EchoRecording in echoes:
-		active_positions.append(echo.get_position_at_turn(current_turn))
+		if echo.is_active_at_turn(current_turn):
+			active_positions.append(echo.get_position_at_turn(current_turn))
+
+	var newly_pressed_plates: Array[String] = []
 
 	# 1. Update plates
 	for p: Dictionary in level_def.plates_data:
@@ -162,6 +175,9 @@ func _recalculate_plates_and_doors() -> void:
 		var is_pressed: bool = ppos in active_positions
 
 		var old_state: bool = plates_state.get(pid, false)
+		if is_pressed and not old_state:
+			newly_pressed_plates.append(pid)
+
 		if old_state != is_pressed or not plates_state.has(pid):
 			plates_state[pid] = is_pressed
 			plate_state_changed.emit(pid, is_pressed)
@@ -186,6 +202,24 @@ func _recalculate_plates_and_doors() -> void:
 				if plates_state.get(str(rpid), false):
 					condition_met = true
 					break
+		elif logic == "SEQUENCE":
+			var seq: Array = d.get("required_sequence", [])
+			if sequence_unlocked.get(did, false):
+				condition_met = true
+			else:
+				var curr_step: int = sequence_progress.get(did, 0)
+				for pid in newly_pressed_plates:
+					if seq.has(pid):
+						if curr_step < seq.size() and pid == str(seq[curr_step]):
+							curr_step += 1
+							sequence_progress[did] = curr_step
+							sequence_advanced.emit(did, curr_step, seq.size())
+							if curr_step >= seq.size():
+								sequence_unlocked[did] = true
+								condition_met = true
+						else:
+							sequence_progress[did] = 0
+							sequence_reset.emit(did)
 
 		# CRITICAL SAFETY RULE:
 		# Never close a physical door on the real player standing inside its tile!
@@ -200,7 +234,30 @@ func _recalculate_plates_and_doors() -> void:
 func get_echo_position(echo_index: int) -> Vector2i:
 	if echo_index < 0 or echo_index >= echoes.size():
 		return Vector2i(-1, -1)
+	if not is_echo_active(echo_index):
+		return Vector2i(-1, -1)
 	return echoes[echo_index].get_position_at_turn(current_turn)
+
+func is_echo_active(echo_index: int) -> bool:
+	if echo_index < 0 or echo_index >= echoes.size():
+		return false
+	return echoes[echo_index].is_active_at_turn(current_turn)
+
+func get_echo_remaining_turns(echo_index: int) -> int:
+	if echo_index < 0 or echo_index >= echoes.size():
+		return 0
+	return echoes[echo_index].get_remaining_turns(current_turn)
+
+func get_echo_total_turns(echo_index: int) -> int:
+	if echo_index < 0 or echo_index >= echoes.size():
+		return 0
+	return echoes[echo_index].get_step_count()
+
+func get_sequence_progress(door_id: String) -> int:
+	return sequence_progress.get(door_id, 0)
+
+func is_sequence_unlocked(door_id: String) -> bool:
+	return sequence_unlocked.get(door_id, false)
 
 func is_plate_active(plate_id: String) -> bool:
 	return plates_state.get(plate_id, false)

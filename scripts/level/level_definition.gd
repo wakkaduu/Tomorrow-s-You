@@ -6,6 +6,9 @@ extends Resource
 @export var level_id: String = ""
 @export var level_name: String = ""
 @export var sector: int = 1
+@export var difficulty_tier: int = 1 # 1: Easy, 2: Normal, 3: Hard, 4: Expert, 5: Nightmare
+@export var target_3_stars: int = 0 # Max moves for 3 stars
+@export var target_2_stars: int = 0 # Max moves for 2 stars
 @export var echo_limit: int = 3
 @export var min_echoes_required: int = 1
 @export var intended_mechanic: String = ""
@@ -144,15 +147,15 @@ func validate() -> Array[String]:
 		else:
 			door_ids[did] = true
 
-		var req_plates: Array = d.get("required_plates", [])
+		var logic: String = str(d.get("logic", "AND")).to_upper()
+		if logic != "AND" and logic != "OR" and logic != "SEQUENCE":
+			errors.append("Door %s has invalid logic mode %s" % [did, logic])
+
+		var req_plates: Array = d.get("required_sequence", d.get("required_plates", []))
 		if req_plates.is_empty():
-			errors.append("Door %s has no required plates" % did)
+			errors.append("Door %s has no required plates/sequence" % did)
 		for rpid in req_plates:
 			if not plate_ids.has(str(rpid)):
 				errors.append("Door %s references non-existent plate %s" % [did, str(rpid)])
-
-		var logic: String = str(d.get("logic", "AND")).to_upper()
-		if logic != "AND" and logic != "OR":
-			errors.append("Door %s has invalid logic mode %s" % [did, logic])
 
 	return errors
