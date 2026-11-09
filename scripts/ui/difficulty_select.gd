@@ -181,3 +181,4 @@ func _build_tier_cards() -> void:
 		vbox.add_child(select_btn)
 
 		cards_container.add_child(card)
+
