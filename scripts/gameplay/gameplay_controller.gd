@@ -54,6 +54,9 @@ const HintRegistryClass = preload("res://scripts/hints/hint_registry.gd")
 @onready var complete_stats_label: Label = $Modals/CompleteModal/Margin/VBoxContainer/StatsLabel
 @onready var complete_stars_label: Label = $Modals/CompleteModal/Margin/VBoxContainer/StarsLabel
 @onready var complete_rating_label: Label = $Modals/CompleteModal/Margin/VBoxContainer/RatingLabel
+@onready var background: Control = $TemporalBackground
+
+const ThemeManagerClass = preload("res://scripts/background/background_theme_manager.gd")
 
 var simulation: PuzzleSimulation = null
 var current_level_def: LevelDefinition = null
@@ -82,6 +85,11 @@ func _ready() -> void:
 
 	_bind_simulation_signals()
 	_bind_ui_buttons()
+	_style_holographic_modals()
+
+	if background and background.has_method("set_screen_mode"):
+		var tier: int = current_level_def.difficulty_tier if current_level_def else 1
+		background.set_screen_mode(ThemeManagerClass.ScreenMode.GAMEPLAY, tier)
 
 	board_renderer.setup(simulation, get_viewport_rect().size)
 	_update_hud()
@@ -97,6 +105,8 @@ func _bind_simulation_signals() -> void:
 	simulation.turn_completed.connect(func(_turn): _update_hud())
 	simulation.attempt_restarted.connect(func():
 		_level_completed_handled = false
+		if background and background.has_method("set_level_complete"):
+			background.set_level_complete(false)
 		_update_hud()
 	)
 	simulation.echo_created.connect(func(_idx, _total):
@@ -105,6 +115,8 @@ func _bind_simulation_signals() -> void:
 	)
 	simulation.echoes_cleared.connect(func():
 		_level_completed_handled = false
+		if background and background.has_method("set_level_complete"):
+			background.set_level_complete(false)
 		if AudioManager: AudioManager.play_sfx("ui_click")
 		_update_hud()
 	)
@@ -168,6 +180,8 @@ func _bind_ui_buttons() -> void:
 	btn_replay.pressed.connect(func():
 		complete_modal.visible = false
 		_level_completed_handled = false
+		if background and background.has_method("set_level_complete"):
+			background.set_level_complete(false)
 		simulation.clear_echoes()
 	)
 	btn_complete_levels.pressed.connect(func():
@@ -284,6 +298,8 @@ func _toggle_pause() -> void:
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
 	pause_modal.visible = not pause_modal.visible
+	if background and background.has_method("set_paused"):
+		background.set_paused(pause_modal.visible)
 
 func _on_level_completed(turns: int, echoes: int, total_actions: int) -> void:
 	if _level_completed_handled:
@@ -328,6 +344,29 @@ func _on_level_completed(turns: int, echoes: int, total_actions: int) -> void:
 		btn_next_level.disabled = false
 	complete_modal.visible = true
 	print("[SCENE] Level Complete screen displayed")
+	if background and background.has_method("set_level_complete"):
+		background.set_level_complete(true)
+
+func _style_holographic_modals() -> void:
+	var make_panel_style = func(border_col: Color, fill_col: Color = Color(0.05, 0.075, 0.14, 0.96), border_w: int = 2) -> StyleBoxFlat:
+		var sb: StyleBoxFlat = StyleBoxFlat.new()
+		sb.bg_color = fill_col
+		sb.border_color = border_col
+		sb.set_border_width_all(border_w)
+		sb.set_corner_radius_all(12)
+		sb.shadow_color = Color(border_col.r, border_col.g, border_col.b, 0.22)
+		sb.shadow_size = 14
+		sb.shadow_offset = Vector2(0, 4)
+		return sb
+
+	if pause_modal:
+		pause_modal.add_theme_stylebox_override("panel", make_panel_style.call(Color(0.329, 0.902, 0.918, 0.8)))
+	if complete_modal:
+		complete_modal.add_theme_stylebox_override("panel", make_panel_style.call(Color(0.329, 0.902, 0.918, 1.0), Color(0.06, 0.10, 0.18, 0.97), 2))
+	if hint_modal:
+		hint_modal.add_theme_stylebox_override("panel", make_panel_style.call(Color(1.0, 0.745, 0.333, 0.8)))
+	if hint_confirm_modal:
+		hint_confirm_modal.add_theme_stylebox_override("panel", make_panel_style.call(Color(1.0, 0.745, 0.333, 0.9)))
 
 # ==============================================================================
 # Desktop & Touch Input Handling

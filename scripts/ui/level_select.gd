@@ -7,6 +7,7 @@ extends Control
 @onready var levels_grid: GridContainer = $ScrollContainer/VBoxContainer/LevelsGrid
 @onready var back_button: Button = $Header/BackButton
 @onready var title_label: Label = $Header/Title
+@onready var background: Control = $TemporalBackground
 
 const TIER_NAMES: Dictionary = {
 	1: "EASY — INITIATION",
@@ -20,6 +21,8 @@ func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
 	var tier: int = SaveManager.selected_difficulty_tier if SaveManager else 1
 	title_label.text = TIER_NAMES.get(tier, "SELECT LEVEL")
+	if background and background.has_method("set_difficulty_tier"):
+		background.set_difficulty_tier(tier)
 	_build_level_cards()
 
 func _on_back_pressed() -> void:

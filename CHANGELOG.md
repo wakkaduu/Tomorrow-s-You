@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2026-11-09
+
+### Added
+- **Temporal Research Facility Visual Atmosphere Overhaul**:
+  - Reusable 5-layer procedural environmental background system (`scenes/background/temporal_background.tscn`):
+    - Layer 1 (Base Environment): Deep vertical gradient (`#0B1020` to `#141C2E`) with radial atmospheric glow and dither.
+    - Layer 2 (Architecture Silhouettes): Distant laboratory walls, structural pillars, suspended catwalks, and floor perspective grid.
+    - Layer 3 (Atmospheric Lighting): Downward volumetric light cones radiating from central temporal aperture with breathing fog drift.
+    - Layer 4 (Particle Simulation): Floating dust motes and energetic sparks with zero-allocation wrap-around physics.
+    - Layer 5 (Temporal Effects): Concentric rotating time rings with cardinal ticks and faint wireframe Echo silhouettes.
+  - Screen-specific atmospheric presets for Main Menu, Credits, Level Select, Settings, Gameplay, Pause, and Level Complete.
+  - Dynamic difficulty tier environmental progression (calm cyan Initiation through volatile crimson Nightmare).
+  - Floating holographic glass modals for Pause, Hint Assistance, and Level Complete with glowing borders and drop shadows.
+  - Full accessibility integration with `SaveManager.reduced_animations` (pauses particle velocity and stabilizes glow).
+  - Dedicated visual background test suite (`tests/visual/test_temporal_background.tscn`) and 10 in-engine 720×1280 screen captures.
+
 ## [1.2.1] - 2026-11-09
 
 ### Fixed

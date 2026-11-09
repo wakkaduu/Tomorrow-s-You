@@ -9,6 +9,7 @@ extends Control
 @onready var reset_button: Button = $Content/VBoxContainer/ResetButton
 @onready var back_button: Button = $Header/BackButton
 @onready var reset_confirm_dialog: ConfirmationDialog = $ResetConfirmDialog
+@onready var background: Control = $TemporalBackground
 
 func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
@@ -53,6 +54,8 @@ func _on_haptics_toggled(pressed: bool) -> void:
 func _on_anims_toggled(pressed: bool) -> void:
 	if SaveManager:
 		SaveManager.reduced_animations = pressed
+	if background and background.has_method("_on_settings_updated"):
+		background._on_settings_updated()
 
 func _on_reset_confirmed() -> void:
 	if SaveManager:

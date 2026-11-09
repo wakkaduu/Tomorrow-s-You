@@ -203,6 +203,28 @@ func _ready() -> void:
 	)
 
 	# --------------------------------------------------------------------------
+	# TEST 11: Atmospheric Temporal Background System
+	# --------------------------------------------------------------------------
+	run_test.call("Atmospheric Temporal Background mounts and transitions across all screens", func() -> bool:
+		var bg_scene = load("res://scenes/background/temporal_background.tscn").instantiate()
+		add_child(bg_scene)
+
+		# Test screen mode transitions
+		bg_scene.set_screen_mode(0) # MAIN_MENU
+		bg_scene.set_screen_mode(1, 3) # DIFFICULTY_SELECT Tier 3
+		bg_scene.set_difficulty_tier(5) # Tier 5 Nightmare
+		bg_scene.set_screen_mode(5) # GAMEPLAY
+		bg_scene.set_paused(true)
+		bg_scene.set_paused(false)
+		bg_scene.set_level_complete(true)
+		bg_scene.set_level_complete(false)
+
+		var ok: bool = (bg_scene.mouse_filter == Control.MOUSE_FILTER_IGNORE)
+		bg_scene.queue_free()
+		return ok
+	)
+
+	# --------------------------------------------------------------------------
 	# SUMMARY
 	# --------------------------------------------------------------------------
 	print("\n=======================================================")

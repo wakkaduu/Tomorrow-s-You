@@ -4,3 +4,4 @@
 
 [node name="TestLevelCompletion" type="Node"]
 script = ExtResource("1_test")
+

@@ -7,6 +7,7 @@ extends Control
 @onready var cards_container: VBoxContainer = $ScrollContainer/VBoxContainer/CardsContainer
 @onready var back_button: Button = $Header/BackButton
 @onready var stars_label: Label = $Header/StarsLabel
+@onready var background: Control = $TemporalBackground
 
 const TIER_DATA: Array[Dictionary] = [
 	{
@@ -55,6 +56,9 @@ func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
 	_update_header_stars()
 	_build_tier_cards()
+	var active_tier: int = SaveManager.selected_difficulty_tier if SaveManager else 1
+	if background and background.has_method("set_difficulty_tier"):
+		background.set_difficulty_tier(active_tier)
 
 func _on_back_pressed() -> void:
 	if AudioManager:
@@ -171,6 +175,14 @@ func _build_tier_cards() -> void:
 			select_btn.modulate = info["color"]
 
 		var captured_tier: int = tier_num
+		select_btn.focus_entered.connect(func():
+			if background and background.has_method("set_difficulty_tier"):
+				background.set_difficulty_tier(captured_tier)
+		)
+		select_btn.mouse_entered.connect(func():
+			if background and background.has_method("set_difficulty_tier"):
+				background.set_difficulty_tier(captured_tier)
+		)
 		select_btn.pressed.connect(func():
 			if AudioManager:
 				AudioManager.play_sfx("ui_click")
