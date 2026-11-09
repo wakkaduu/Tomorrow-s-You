@@ -4,6 +4,8 @@ extends Control
 ## Main Gameplay Controller for Tomorrow's You.
 ## Coordinates puzzle simulation, board rendering, mobile touch controls, desktop input, HUD, and dialogs.
 
+const HintRegistryClass = preload("res://scripts/hints/hint_registry.gd")
+
 @onready var board_renderer: BoardRenderer = $BoardRenderer
 @onready var level_title_label: Label = $TopHUD/MarginContainer/VBoxContainer/HeaderRow/LevelInfo/LevelTitle
 @onready var sector_label: Label = $TopHUD/MarginContainer/VBoxContainer/HeaderRow/LevelInfo/SectorLabel
@@ -22,11 +24,23 @@ extends Control
 @onready var btn_wait: Button = $BottomHUD/ControlsRow/ActionButtons/BtnWait
 @onready var btn_restart: Button = $BottomHUD/ControlsRow/ActionButtons/BtnRestart
 @onready var btn_clear_echoes: Button = $BottomHUD/ControlsRow/ActionButtons/BtnClearEchoes
-@onready var hint_label: Label = $BottomHUD/HintContainer/HintPanel/Margin/HintLabel
+@onready var btn_hint: Button = $BottomHUD/HintContainer/BtnHint
 
-# Dialogs
+# Dialogs & Modals
 @onready var pause_modal: PanelContainer = $Modals/PauseModal
 @onready var complete_modal: PanelContainer = $Modals/CompleteModal
+
+# Hint Modals
+@onready var hint_modal: PanelContainer = $Modals/HintModal
+@onready var hint_level_name: Label = $Modals/HintModal/Margin/VBoxContainer/HeaderBox/LevelNameLabel
+@onready var hint_allowance_label: Label = $Modals/HintModal/Margin/VBoxContainer/HeaderBox/AllowanceLabel
+@onready var hint_content_vbox: VBoxContainer = $Modals/HintModal/Margin/VBoxContainer/ScrollContainer/ContentVBox
+@onready var btn_reveal_next: Button = $Modals/HintModal/Margin/VBoxContainer/BtnRevealNext
+@onready var btn_close_hint: Button = $Modals/HintModal/Margin/VBoxContainer/BtnCloseHint
+
+@onready var hint_confirm_modal: PanelContainer = $Modals/HintConfirmModal
+@onready var btn_confirm_reveal: Button = $Modals/HintConfirmModal/Margin/VBoxContainer/BtnConfirmReveal
+@onready var btn_cancel_reveal: Button = $Modals/HintConfirmModal/Margin/VBoxContainer/BtnCancelReveal
 
 # Modal buttons
 @onready var btn_resume: Button = $Modals/PauseModal/Margin/VBoxContainer/ResumeButton
@@ -54,6 +68,8 @@ const SWIPE_THRESHOLD: float = 35.0
 func _ready() -> void:
 	pause_modal.visible = false
 	complete_modal.visible = false
+	hint_modal.visible = false
+	hint_confirm_modal.visible = false
 
 	if GameManager:
 		simulation = GameManager.current_simulation
@@ -108,18 +124,21 @@ func _bind_simulation_signals() -> void:
 	)
 	simulation.level_completed.connect(_on_level_completed)
 
+func _is_modal_active() -> bool:
+	return pause_modal.visible or complete_modal.visible or hint_modal.visible or hint_confirm_modal.visible
+
 func _bind_ui_buttons() -> void:
 	# D-Pad
-	btn_up.pressed.connect(func(): _execute_move(Vector2i.UP))
-	btn_down.pressed.connect(func(): _execute_move(Vector2i.DOWN))
-	btn_left.pressed.connect(func(): _execute_move(Vector2i.LEFT))
-	btn_right.pressed.connect(func(): _execute_move(Vector2i.RIGHT))
+	btn_up.pressed.connect(func(): if not _is_modal_active(): _execute_move(Vector2i.UP))
+	btn_down.pressed.connect(func(): if not _is_modal_active(): _execute_move(Vector2i.DOWN))
+	btn_left.pressed.connect(func(): if not _is_modal_active(): _execute_move(Vector2i.LEFT))
+	btn_right.pressed.connect(func(): if not _is_modal_active(): _execute_move(Vector2i.RIGHT))
 
 	# Actions
-	btn_wait.pressed.connect(func(): simulation.step_wait())
-	btn_create_echo.pressed.connect(func(): simulation.create_echo())
-	btn_restart.pressed.connect(func(): simulation.restart_attempt())
-	btn_clear_echoes.pressed.connect(func(): simulation.clear_echoes())
+	btn_wait.pressed.connect(func(): if not _is_modal_active(): simulation.step_wait())
+	btn_create_echo.pressed.connect(func(): if not _is_modal_active(): simulation.create_echo())
+	btn_restart.pressed.connect(func(): if not _is_modal_active(): simulation.restart_attempt())
+	btn_clear_echoes.pressed.connect(func(): if not _is_modal_active(): simulation.clear_echoes())
 
 	# Pause
 	pause_button.pressed.connect(_toggle_pause)
@@ -150,8 +169,19 @@ func _bind_ui_buttons() -> void:
 		SceneRouter.go_to_level_select()
 	)
 
+	# Hint system buttons
+	btn_hint.pressed.connect(_open_hint_modal)
+	btn_close_hint.pressed.connect(_close_hint_modal)
+	btn_reveal_next.pressed.connect(_on_reveal_next_pressed)
+	btn_confirm_reveal.pressed.connect(_on_confirm_reveal)
+	btn_cancel_reveal.pressed.connect(_on_cancel_reveal)
+
+	if SaveManager:
+		SaveManager.daily_hints_reset.connect(_update_hint_button)
+		SaveManager.hint_revealed.connect(func(_lid, _idx, _rem): _update_hint_button())
+
 func _execute_move(dir: Vector2i) -> void:
-	if pause_modal.visible or complete_modal.visible:
+	if _is_modal_active():
 		return
 	simulation.step_move(dir)
 
@@ -180,12 +210,7 @@ func _update_hud() -> void:
 		budget_label.text = "🎯 ACT: %d" % simulation.total_actions_taken
 
 	_update_echo_timeline()
-
-	if not current_level_def.hint.is_empty():
-		hint_label.text = "💡 " + current_level_def.hint
-		hint_label.get_parent().get_parent().visible = true
-	else:
-		hint_label.get_parent().get_parent().visible = false
+	_update_hint_button()
 
 	# Action button states
 	var at_echo_limit: bool = simulation.echoes.size() >= current_level_def.echo_limit
@@ -297,9 +322,14 @@ func _on_level_completed(turns: int, echoes: int, total_actions: int) -> void:
 # ==============================================================================
 
 func _unhandled_input(event: InputEvent) -> void:
-	if pause_modal.visible or complete_modal.visible:
+	if _is_modal_active():
 		if event.is_action_pressed("action_pause"):
-			_toggle_pause()
+			if hint_confirm_modal.visible:
+				_on_cancel_reveal()
+			elif hint_modal.visible:
+				_close_hint_modal()
+			elif pause_modal.visible:
+				_toggle_pause()
 		return
 
 	# Developer Inspection Mode (Debug builds only: F12 or ` / ~)
@@ -446,3 +476,148 @@ func _on_run_validator_pressed() -> void:
 		_dev_info_label.text += "Sub-Min Blocked: %s\n" % ("YES [✓]" if res.sub_min_echoes_passed else "FAIL [✗]")
 		_dev_info_label.text += "Overall: %s" % ("PASS [✓]" if res.is_valid else "FAIL [✗]")
 	print(res["report"])
+
+# ==============================================================================
+# Progressive Daily Hint Assistance System
+# ==============================================================================
+
+func _update_hint_button() -> void:
+	if not btn_hint:
+		return
+	var rem: int = SaveManager.get_remaining_daily_hints() if SaveManager else 3
+	btn_hint.text = "💡 HINT · %d LEFT" % rem
+	if rem > 0:
+		btn_hint.modulate = Color(1.0, 1.0, 1.0)
+	else:
+		btn_hint.modulate = Color(0.65, 0.65, 0.7, 0.8)
+
+func _open_hint_modal() -> void:
+	if AudioManager:
+		AudioManager.play_sfx("ui_click")
+	if SaveManager:
+		SaveManager.check_and_apply_daily_reset()
+
+	hint_level_name.text = current_level_def.level_name
+	var rem: int = SaveManager.get_remaining_daily_hints() if SaveManager else 3
+	hint_allowance_label.text = "Daily hints remaining: %d / %d" % [rem, SaveManager.DAILY_HINT_LIMIT if SaveManager else 3]
+
+	for child in hint_content_vbox.get_children():
+		child.queue_free()
+
+	var highest_revealed: int = SaveManager.get_revealed_hint_index(current_level_def.level_id) if SaveManager else -1
+
+	# 1. PREVIOUSLY REVEALED HINTS
+	var prev_header: Label = Label.new()
+	prev_header.text = "PREVIOUSLY REVEALED:"
+	prev_header.add_theme_font_size_override("font_size", 14)
+	prev_header.add_theme_color_override("font_color", Color("#94A3B8"))
+	hint_content_vbox.add_child(prev_header)
+
+	if highest_revealed >= 0:
+		for s in range(highest_revealed + 1):
+			var hdata: Dictionary = HintRegistryClass.get_hint_stage(current_level_def.level_id, s)
+			if hdata.is_empty():
+				continue
+
+			var card: PanelContainer = PanelContainer.new()
+			var margin: MarginContainer = MarginContainer.new()
+			margin.add_theme_constant_override("margin_left", 12)
+			margin.add_theme_constant_override("margin_right", 12)
+			margin.add_theme_constant_override("margin_top", 8)
+			margin.add_theme_constant_override("margin_bottom", 8)
+			card.add_child(margin)
+
+			var vbox: VBoxContainer = VBoxContainer.new()
+			vbox.add_theme_constant_override("separation", 4)
+			margin.add_child(vbox)
+
+			var stage_title: Label = Label.new()
+			stage_title.text = "✓ " + str(hdata.get("title", "Hint %d" % (s + 1)))
+			stage_title.add_theme_font_size_override("font_size", 13)
+			stage_title.add_theme_color_override("font_color", Color("#54E6EA")) # Cyan
+			vbox.add_child(stage_title)
+
+			var stage_text: Label = Label.new()
+			stage_text.text = str(hdata.get("text", ""))
+			stage_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			stage_text.add_theme_font_size_override("font_size", 13)
+			stage_text.add_theme_color_override("font_color", Color("#E2E8F0"))
+			vbox.add_child(stage_text)
+
+			hint_content_vbox.add_child(card)
+	else:
+		var empty_lbl: Label = Label.new()
+		empty_lbl.text = "No hints revealed for this level yet."
+		empty_lbl.add_theme_font_size_override("font_size", 13)
+		empty_lbl.add_theme_color_override("font_color", Color("#64748B"))
+		hint_content_vbox.add_child(empty_lbl)
+
+	# Separator
+	var sep: HSeparator = HSeparator.new()
+	hint_content_vbox.add_child(sep)
+
+	# 2. NEXT AVAILABLE STAGE / ALL REVEALED
+	if highest_revealed < 2:
+		var next_stage: int = highest_revealed + 1
+		var stage_names: Array[String] = ["Observation", "Strategy", "Solution"]
+		var next_header: Label = Label.new()
+		next_header.text = "NEXT AVAILABLE: Hint %d — %s" % [next_stage + 1, stage_names[next_stage]]
+		next_header.add_theme_font_size_override("font_size", 14)
+		next_header.add_theme_color_override("font_color", Color("#FBBF24")) # Amber
+		hint_content_vbox.add_child(next_header)
+
+		if rem > 0:
+			btn_reveal_next.visible = true
+			btn_reveal_next.disabled = false
+			btn_reveal_next.text = "🔓 REVEAL HINT %d (%s) — [1 CREDIT]" % [next_stage + 1, stage_names[next_stage].to_upper()]
+		else:
+			btn_reveal_next.visible = true
+			btn_reveal_next.disabled = true
+			btn_reveal_next.text = "🔒 NO HINTS REMAINING TODAY"
+			var exhaust_lbl: Label = Label.new()
+			exhaust_lbl.text = "You've used all 3 hints for today.\nNew hints will be available tomorrow after midnight."
+			exhaust_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			exhaust_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			exhaust_lbl.add_theme_font_size_override("font_size", 12)
+			exhaust_lbl.add_theme_color_override("font_color", Color("#F87171"))
+			hint_content_vbox.add_child(exhaust_lbl)
+	else:
+		btn_reveal_next.visible = false
+		var all_done_lbl: Label = Label.new()
+		all_done_lbl.text = "★ ALL HINTS REVEALED FOR THIS LEVEL"
+		all_done_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		all_done_lbl.add_theme_font_size_override("font_size", 14)
+		all_done_lbl.add_theme_color_override("font_color", Color("#34D399"))
+		hint_content_vbox.add_child(all_done_lbl)
+
+	hint_confirm_modal.visible = false
+	hint_modal.visible = true
+
+func _close_hint_modal() -> void:
+	if AudioManager:
+		AudioManager.play_sfx("ui_click")
+	hint_confirm_modal.visible = false
+	hint_modal.visible = false
+	_update_hint_button()
+
+func _on_reveal_next_pressed() -> void:
+	if AudioManager:
+		AudioManager.play_sfx("ui_click")
+	hint_confirm_modal.visible = true
+
+func _on_cancel_reveal() -> void:
+	if AudioManager:
+		AudioManager.play_sfx("ui_click")
+	hint_confirm_modal.visible = false
+
+func _on_confirm_reveal() -> void:
+	hint_confirm_modal.visible = false
+	if not SaveManager:
+		return
+	var ok: bool = SaveManager.reveal_next_hint(current_level_def.level_id)
+	if ok:
+		if AudioManager:
+			AudioManager.play_sfx("echo_create")
+		_open_hint_modal()
+		_update_hint_button()
+

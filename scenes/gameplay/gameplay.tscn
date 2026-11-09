@@ -147,23 +147,12 @@ layout_mode = 2
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_right = 20
 
-[node name="HintPanel" type="PanelContainer" parent="BottomHUD/HintContainer"]
-layout_mode = 2
-
-[node name="Margin" type="MarginContainer" parent="BottomHUD/HintContainer/HintPanel"]
-layout_mode = 2
-theme_override_constants/margin_left = 14
-theme_override_constants/margin_top = 6
-theme_override_constants/margin_right = 14
-theme_override_constants/margin_bottom = 6
-
-[node name="HintLabel" type="Label" parent="BottomHUD/HintContainer/HintPanel/Margin"]
+[node name="BtnHint" type="Button" parent="BottomHUD/HintContainer"]
+custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.745098, 0.333333, 1)
 theme_override_font_sizes/font_size = 14
-text = "💡 Hint text appears here"
-horizontal_alignment = 1
-autowrap_mode = 2
+text = "💡 HINT · 3 LEFT"
 
 [node name="PrimaryActionContainer" type="MarginContainer" parent="BottomHUD"]
 layout_mode = 2
@@ -404,3 +393,127 @@ text = "REPLAY PUZZLE"
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "LEVEL SELECT"
+
+[node name="HintModal" type="PanelContainer" parent="Modals"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -280.0
+offset_right = 260.0
+offset_bottom = 280.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="Modals/HintModal"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Modals/HintModal/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HeaderBox" type="VBoxContainer" parent="Modals/HintModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ModalTitle" type="Label" parent="Modals/HintModal/Margin/VBoxContainer/HeaderBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.75, 0.3, 1)
+theme_override_font_sizes/font_size = 22
+text = "💡 HINT ASSISTANCE"
+horizontal_alignment = 1
+
+[node name="LevelNameLabel" type="Label" parent="Modals/HintModal/Margin/VBoxContainer/HeaderBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.33, 0.9, 0.92, 1)
+theme_override_font_sizes/font_size = 16
+text = "Level 1: First Contact"
+horizontal_alignment = 1
+
+[node name="AllowanceLabel" type="Label" parent="Modals/HintModal/Margin/VBoxContainer/HeaderBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.75, 0.85, 1)
+theme_override_font_sizes/font_size = 13
+text = "Daily hints remaining: 3 / 3"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Modals/HintModal/Margin/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ContentVBox" type="VBoxContainer" parent="Modals/HintModal/Margin/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="BtnRevealNext" type="Button" parent="Modals/HintModal/Margin/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.75, 0.3, 1)
+theme_override_font_sizes/font_size = 15
+text = "🔓 REVEAL NEXT HINT"
+
+[node name="BtnCloseHint" type="Button" parent="Modals/HintModal/Margin/VBoxContainer"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "CLOSE"
+
+[node name="HintConfirmModal" type="PanelContainer" parent="Modals"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -140.0
+offset_right = 220.0
+offset_bottom = 140.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="Modals/HintConfirmModal"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Modals/HintConfirmModal/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="ConfirmTitle" type="Label" parent="Modals/HintConfirmModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.75, 0.3, 1)
+theme_override_font_sizes/font_size = 18
+text = "CONFIRM HINT REVEAL"
+horizontal_alignment = 1
+
+[node name="ConfirmText" type="Label" parent="Modals/HintConfirmModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Reveal the next hint? This will use one of your three daily hints."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="BtnConfirmReveal" type="Button" parent="Modals/HintConfirmModal/Margin/VBoxContainer"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.33, 0.9, 0.92, 1)
+text = "REVEAL HINT"
+
+[node name="BtnCancelReveal" type="Button" parent="Modals/HintConfirmModal/Margin/VBoxContainer"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "CANCEL"

@@ -3,6 +3,8 @@ extends SceneTree
 # Preloads
 const LevelRegistryClass = preload("res://scripts/level/level_registry.gd")
 const PuzzleSimulationClass = preload("res://scripts/gameplay/puzzle_simulation.gd")
+const SaveManagerClass = preload("res://scripts/autoload/save_manager.gd")
+const HintRegistryClass = preload("res://scripts/hints/hint_registry.gd")
 
 func _init() -> void:
 	print("\n===================================================================")
@@ -315,6 +317,76 @@ func _init() -> void:
 			var res: Dictionary = LevelValidatorClass.validate_level(lvl)
 			return res["zero_echo_passed"] and res["sub_min_echoes_passed"]
 		)
+
+	# ==========================================================================
+	# SECTION 4: DAILY HINT SYSTEM (ALLOWANCE, ROBUST RESET, AND PROGRESSION)
+	# ==========================================================================
+	var sm = SaveManagerClass.new()
+	sm.reset_progress()
+
+	run_test.call("HINTS", "Global daily allowance starts at 3 and decrements to 0", func() -> bool:
+		sm.reset_progress()
+		if sm.get_remaining_daily_hints() != 3: return false
+		sm.reveal_next_hint("lvl_01")
+		if sm.get_remaining_daily_hints() != 2: return false
+		sm.reveal_next_hint("lvl_01")
+		if sm.get_remaining_daily_hints() != 1: return false
+		sm.reveal_next_hint("lvl_01")
+		if sm.get_remaining_daily_hints() != 0: return false
+		var blocked = not sm.reveal_next_hint("lvl_02")
+		return blocked and sm.get_remaining_daily_hints() == 0
+	)
+
+	run_test.call("HINTS", "Daily allowance is shared across all levels", func() -> bool:
+		sm.reset_progress()
+		sm.set_test_date("2026-11-20", 1000)
+		sm.reveal_next_hint("lvl_01")
+		if sm.get_remaining_daily_hints() != 2: return false
+		var rem_lvl2 = sm.get_remaining_daily_hints()
+		sm.reveal_next_hint("lvl_02")
+		var rem_lvl3 = sm.get_remaining_daily_hints()
+		return rem_lvl2 == 2 and rem_lvl3 == 1
+	)
+
+	run_test.call("HINTS", "Calendar day rollover resets allowance to 3", func() -> bool:
+		sm.set_test_date("2026-11-20", 1000)
+		while sm.get_remaining_daily_hints() > 0:
+			sm.reveal_next_hint("lvl_03")
+		if sm.get_remaining_daily_hints() != 0: return false
+		sm.set_test_date("2026-11-21", 86400 + 1000)
+		return sm.get_remaining_daily_hints() == 3
+	)
+
+	run_test.call("HINTS", "Clock rollback is detected and does not grant fresh allowance", func() -> bool:
+		sm.set_test_date("2026-11-21", 86400 + 1000)
+		while sm.get_remaining_daily_hints() > 0:
+			sm.reveal_next_hint("lvl_04")
+		sm.set_test_date("2026-11-20", 1000) # backwards
+		return sm.get_remaining_daily_hints() == 0
+	)
+
+	run_test.call("HINTS", "Persistence roundtrip preserves hints used and revealed stages", func() -> bool:
+		sm.set_test_date("2026-11-22", 200000)
+		sm.reset_progress()
+		sm.set_test_date("2026-11-22", 200000)
+		sm.reveal_next_hint("lvl_05")
+		sm.write_save()
+		var sm_fresh = SaveManagerClass.new()
+		sm_fresh.set_test_date("2026-11-22", 200000)
+		sm_fresh.load_save()
+		var ok = sm_fresh.get_remaining_daily_hints() == 2 and sm_fresh.get_revealed_hint_index("lvl_05") == 0
+		sm_fresh.free()
+		return ok
+	)
+
+	run_test.call("HINTS", "All 10 campaign levels have valid 3-stage verified hint data", func() -> bool:
+		var errs = HintRegistryClass.validate_all_hints()
+		return errs.is_empty()
+	)
+
+	sm.clear_test_date()
+	sm.reset_progress()
+	sm.free()
 
 	# ==========================================================================
 	# FINAL SUMMARY

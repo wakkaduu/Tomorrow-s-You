@@ -127,13 +127,44 @@ func _ready() -> void:
 	)
 
 	# --------------------------------------------------------------------------
-	# TEST 7: Audio Synthesis
+	# TEST 8: AudioManager Sound Synthesis
 	# --------------------------------------------------------------------------
 	run_test.call("AudioManager generates and plays SFX", func() -> bool:
 		AudioManager.play_sfx("move")
 		AudioManager.play_sfx("plate_on")
 		AudioManager.play_sfx("door_open")
 		AudioManager.play_sfx("victory")
+		return true
+	)
+
+	# --------------------------------------------------------------------------
+	# TEST 9: Hint System Integration in Gameplay Scene
+	# --------------------------------------------------------------------------
+	run_test.call("Hint Modal opens, displays allowance, and closes without advancing turns", func() -> bool:
+		GameManager.select_level(0)
+		var scene = load("res://scenes/gameplay/gameplay.tscn").instantiate()
+		add_child(scene)
+
+		var btn_hint: Button = scene.btn_hint
+		var hint_modal: PanelContainer = scene.hint_modal
+		var btn_close: Button = scene.btn_close_hint
+		var sim: PuzzleSimulation = GameManager.current_simulation
+		var turn_before: int = sim.current_turn
+
+		# Open hint modal
+		btn_hint.pressed.emit()
+		if not hint_modal.visible: return false
+		if not scene._is_modal_active(): return false
+
+		# Verify turn has not advanced
+		if sim.current_turn != turn_before: return false
+
+		# Close hint modal
+		btn_close.pressed.emit()
+		if hint_modal.visible: return false
+		if scene._is_modal_active(): return false
+
+		scene.queue_free()
 		return true
 	)
 
