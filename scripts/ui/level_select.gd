@@ -24,10 +24,30 @@ func _ready() -> void:
 	if background and background.has_method("set_difficulty_tier"):
 		background.set_difficulty_tier(tier)
 	_build_level_cards()
+	_apply_safe_area()
+	if AndroidSystemManager:
+		AndroidSystemManager.safe_area_changed.connect(func(_m): _apply_safe_area())
+
+func _apply_safe_area() -> void:
+	if not AndroidSystemManager:
+		return
+	var m = AndroidSystemManager.get_safe_margins()
+	var header = $Header
+	if header:
+		header.offset_top = maxi(float(m.get("top", 0)), 16.0)
+	var scroll = $ScrollContainer
+	if scroll:
+		scroll.offset_bottom = -maxi(float(m.get("bottom", 0)), 16.0)
+
+func handle_back_button() -> bool:
+	_on_back_pressed()
+	return true
 
 func _on_back_pressed() -> void:
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
+	if AndroidSystemManager:
+		AndroidSystemManager.trigger_haptic("button")
 	SceneRouter.go_to_difficulty_select()
 
 func _build_level_cards() -> void:
@@ -75,6 +95,8 @@ func _build_level_cards() -> void:
 		btn.pressed.connect(func():
 			if AudioManager:
 				AudioManager.play_sfx("ui_click")
+			if AndroidSystemManager:
+				AndroidSystemManager.trigger_haptic("button")
 			SceneRouter.go_to_gameplay(level_idx)
 		)
 

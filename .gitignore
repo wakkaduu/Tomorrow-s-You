@@ -11,6 +11,11 @@
 # Export artifacts
 /build/android/*.apk
 /build/android/*.aab
+/build/android/*.idsig
+/build/android/*.pck
+/build/desktop/*.pck
+/build/desktop/TomorrowsYou.x86_64
+/build/desktop/TomorrowsYou.sh
 
 # OS files
 .DS_Store

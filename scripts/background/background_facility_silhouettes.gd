@@ -181,3 +181,4 @@ func _draw() -> void:
 			draw_line(Vector2(ex, ey - 7.0), Vector2(ex + 4.0, ey), echo_col, 1.2)
 			# Arms
 			draw_line(Vector2(ex - 5.0, ey - 14.0), Vector2(ex + 5.0, ey - 14.0), echo_col, 1.2)
+

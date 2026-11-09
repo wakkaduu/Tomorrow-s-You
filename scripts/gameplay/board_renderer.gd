@@ -83,22 +83,31 @@ func calculate_layout(viewport_size: Vector2) -> void:
 	if level_def == null:
 		return
 
+	# Query safe margins if available
+	var safe_top: float = 0.0
+	var safe_bottom: float = 0.0
+	var safe_mgr = get_node_or_null("/root/AndroidSystemManager")
+	if safe_mgr and safe_mgr.has_method("get_safe_margins"):
+		var m = safe_mgr.get_safe_margins()
+		safe_top = float(m.get("top", 0))
+		safe_bottom = float(m.get("bottom", 0))
+
 	# Responsive vertical budget calculation for small, medium, and tall screens
 	# Small screens (e.g. 360x640): Top HUD ~90px, Bottom Controls ~230px
 	# Standard screens (e.g. 720x1280): Top HUD ~120px, Bottom Controls ~310px
 	# Tall screens (e.g. 1080x2400): Top HUD ~150px, Bottom Controls ~360px
-	var top_hud_h: float = 100.0
-	var bottom_hud_h: float = 270.0
+	var top_hud_h: float = 110.0 + safe_top
+	var bottom_hud_h: float = 290.0 + safe_bottom
 
 	if viewport_size.y < 700.0:
-		top_hud_h = 75.0
-		bottom_hud_h = 220.0
+		top_hud_h = 80.0 + safe_top
+		bottom_hud_h = 230.0 + safe_bottom
 	elif viewport_size.y > 1600.0:
-		top_hud_h = 140.0
-		bottom_hud_h = 360.0
+		top_hud_h = 150.0 + safe_top
+		bottom_hud_h = 370.0 + safe_bottom
 
-	var available_h: float = maxf(viewport_size.y - (top_hud_h + bottom_hud_h), 200.0)
-	var available_w: float = maxf(viewport_size.x - 32.0, 200.0)
+	var available_h: float = maxf(viewport_size.y - (top_hud_h + bottom_hud_h), 180.0)
+	var available_w: float = maxf(viewport_size.x - 32.0, 180.0)
 
 	var scale_x: float = available_w / float(maxi(level_def.grid_width, 1))
 	var scale_y: float = available_h / float(maxi(level_def.grid_height, 1))

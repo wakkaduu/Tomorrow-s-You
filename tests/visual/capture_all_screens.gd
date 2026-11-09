@@ -133,3 +133,4 @@ func _save_screen(filename: String) -> void:
 			push_error("Failed to save: " + path)
 	else:
 		push_error("Viewport texture is null for: " + filename)
+

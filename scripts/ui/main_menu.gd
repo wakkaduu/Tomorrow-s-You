@@ -48,6 +48,28 @@ func _ready() -> void:
 	if AudioManager:
 		AudioManager.play_music()
 
+	_apply_safe_area()
+	if AndroidSystemManager:
+		AndroidSystemManager.safe_area_changed.connect(func(_m): _apply_safe_area())
+
+func _apply_safe_area() -> void:
+	if not AndroidSystemManager:
+		return
+	var m = AndroidSystemManager.get_safe_margins()
+	var vb = $VBoxContainer
+	if vb:
+		vb.offset_top = maxi(float(m.get("top", 0)), 40.0)
+		vb.offset_bottom = -maxi(float(m.get("bottom", 0)), 40.0)
+
+func handle_back_button() -> bool:
+	if credits_popup and credits_popup.visible:
+		credits_popup.visible = false
+		$VBoxContainer.visible = true
+		if background and background.has_method("set_screen_mode"):
+			background.set_screen_mode(ThemeManagerClass.ScreenMode.MAIN_MENU)
+		return true
+	return false
+
 func _process(delta: float) -> void:
 	_pulse_timer += delta * 2.0
 	var glow: float = sin(_pulse_timer) * 0.15 + 0.85

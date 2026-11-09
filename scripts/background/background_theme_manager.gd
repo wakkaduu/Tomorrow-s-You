@@ -300,3 +300,4 @@ static func get_difficulty_tier_theme(tier: int) -> Dictionary:
 				"echo_silhouette_count": 3,
 				"fog_density": 0.18,
 			}
+

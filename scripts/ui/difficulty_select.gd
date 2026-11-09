@@ -56,13 +56,33 @@ func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
 	_update_header_stars()
 	_build_tier_cards()
+	_apply_safe_area()
+	if AndroidSystemManager:
+		AndroidSystemManager.safe_area_changed.connect(func(_m): _apply_safe_area())
 	var active_tier: int = SaveManager.selected_difficulty_tier if SaveManager else 1
 	if background and background.has_method("set_difficulty_tier"):
 		background.set_difficulty_tier(active_tier)
 
+func _apply_safe_area() -> void:
+	if not AndroidSystemManager:
+		return
+	var m = AndroidSystemManager.get_safe_margins()
+	var header = $Header
+	if header:
+		header.offset_top = maxi(float(m.get("top", 0)), 16.0)
+	var scroll = $ScrollContainer
+	if scroll:
+		scroll.offset_bottom = -maxi(float(m.get("bottom", 0)), 16.0)
+
+func handle_back_button() -> bool:
+	_on_back_pressed()
+	return true
+
 func _on_back_pressed() -> void:
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
+	if AndroidSystemManager:
+		AndroidSystemManager.trigger_haptic("button")
 	SceneRouter.go_to_main_menu()
 
 func _update_header_stars() -> void:
@@ -186,6 +206,8 @@ func _build_tier_cards() -> void:
 		select_btn.pressed.connect(func():
 			if AudioManager:
 				AudioManager.play_sfx("ui_click")
+			if AndroidSystemManager:
+				AndroidSystemManager.trigger_haptic("button")
 			if SaveManager:
 				SaveManager.selected_difficulty_tier = captured_tier
 			SceneRouter.go_to_level_select()

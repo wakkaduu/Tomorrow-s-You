@@ -86,6 +86,10 @@ func _ready() -> void:
 	_bind_simulation_signals()
 	_bind_ui_buttons()
 	_style_holographic_modals()
+	_apply_safe_area()
+
+	if AndroidSystemManager:
+		AndroidSystemManager.safe_area_changed.connect(func(_m): _apply_safe_area())
 
 	if background and background.has_method("set_screen_mode"):
 		var tier: int = current_level_def.difficulty_tier if current_level_def else 1
@@ -96,7 +100,27 @@ func _ready() -> void:
 
 	get_viewport().size_changed.connect(_on_viewport_resized)
 
+func _apply_safe_area() -> void:
+	if not AndroidSystemManager:
+		return
+	var margins = AndroidSystemManager.get_safe_margins()
+	var top_margin: int = maxi(int(margins.get("top", 0)), 16)
+	var bottom_margin: int = maxi(int(margins.get("bottom", 0)), 16)
+	var left_margin: int = maxi(int(margins.get("left", 0)), 16)
+	var right_margin: int = maxi(int(margins.get("right", 0)), 16)
+
+	var top_mc = $TopHUD/MarginContainer
+	if top_mc:
+		top_mc.add_theme_constant_override("margin_top", top_margin)
+		top_mc.add_theme_constant_override("margin_left", left_margin)
+		top_mc.add_theme_constant_override("margin_right", right_margin)
+
+	var bottom_hud = $BottomHUD
+	if bottom_hud:
+		bottom_hud.offset_bottom = -float(bottom_margin)
+
 func _on_viewport_resized() -> void:
+	_apply_safe_area()
 	if board_renderer:
 		board_renderer.calculate_layout(get_viewport_rect().size)
 		board_renderer.queue_redraw()
@@ -107,10 +131,13 @@ func _bind_simulation_signals() -> void:
 		_level_completed_handled = false
 		if background and background.has_method("set_level_complete"):
 			background.set_level_complete(false)
+		if AndroidSystemManager:
+			AndroidSystemManager.trigger_haptic("reset")
 		_update_hud()
 	)
 	simulation.echo_created.connect(func(_idx, _total):
 		if AudioManager: AudioManager.play_sfx("echo_create")
+		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("echo_create")
 		_update_hud()
 	)
 	simulation.echoes_cleared.connect(func():
@@ -118,26 +145,33 @@ func _bind_simulation_signals() -> void:
 		if background and background.has_method("set_level_complete"):
 			background.set_level_complete(false)
 		if AudioManager: AudioManager.play_sfx("ui_click")
+		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("reset")
 		_update_hud()
 	)
 	simulation.player_moved.connect(func(_from, _to, action):
 		if AudioManager:
 			if action == "WAIT": AudioManager.play_sfx("wait")
 			else: AudioManager.play_sfx("move")
+		if AndroidSystemManager:
+			if action == "WAIT": AndroidSystemManager.trigger_haptic("wait")
+			else: AndroidSystemManager.trigger_haptic("move")
 		_update_hud()
 	)
 	simulation.move_blocked.connect(func(_target, _reason):
 		if AudioManager: AudioManager.play_sfx("blocked")
+		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("error")
 	)
 	simulation.plate_state_changed.connect(func(_id, is_active):
 		if AudioManager:
 			if is_active: AudioManager.play_sfx("plate_on")
 			else: AudioManager.play_sfx("plate_off")
+		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("plate")
 	)
 	simulation.door_state_changed.connect(func(_id, is_open):
 		if AudioManager:
 			if is_open: AudioManager.play_sfx("door_open")
 			else: AudioManager.play_sfx("door_close")
+		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("door")
 	)
 	simulation.level_completed.connect(_on_level_completed)
 
@@ -146,38 +180,81 @@ func _is_modal_active() -> bool:
 
 func _bind_ui_buttons() -> void:
 	# D-Pad
-	btn_up.pressed.connect(func(): if not _is_modal_active(): _execute_move(Vector2i.UP))
-	btn_down.pressed.connect(func(): if not _is_modal_active(): _execute_move(Vector2i.DOWN))
-	btn_left.pressed.connect(func(): if not _is_modal_active(): _execute_move(Vector2i.LEFT))
-	btn_right.pressed.connect(func(): if not _is_modal_active(): _execute_move(Vector2i.RIGHT))
+	btn_up.pressed.connect(func():
+		if not _is_modal_active():
+			if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+			_execute_move(Vector2i.UP)
+	)
+	btn_down.pressed.connect(func():
+		if not _is_modal_active():
+			if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+			_execute_move(Vector2i.DOWN)
+	)
+	btn_left.pressed.connect(func():
+		if not _is_modal_active():
+			if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+			_execute_move(Vector2i.LEFT)
+	)
+	btn_right.pressed.connect(func():
+		if not _is_modal_active():
+			if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+			_execute_move(Vector2i.RIGHT)
+	)
 
 	# Actions
-	btn_wait.pressed.connect(func(): if not _is_modal_active(): simulation.step_wait())
-	btn_create_echo.pressed.connect(func(): if not _is_modal_active(): simulation.create_echo())
-	btn_restart.pressed.connect(func(): if not _is_modal_active(): simulation.restart_attempt())
-	btn_clear_echoes.pressed.connect(func(): if not _is_modal_active(): simulation.clear_echoes())
+	btn_wait.pressed.connect(func():
+		if not _is_modal_active():
+			if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+			simulation.step_wait()
+	)
+	btn_create_echo.pressed.connect(func():
+		if not _is_modal_active():
+			if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+			simulation.create_echo()
+	)
+	btn_restart.pressed.connect(func():
+		if not _is_modal_active():
+			if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+			simulation.restart_attempt()
+	)
+	btn_clear_echoes.pressed.connect(func():
+		if not _is_modal_active():
+			if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+			simulation.clear_echoes()
+	)
 
 	# Pause
-	pause_button.pressed.connect(_toggle_pause)
-	btn_resume.pressed.connect(_toggle_pause)
+	pause_button.pressed.connect(func():
+		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+		_toggle_pause()
+	)
+	btn_resume.pressed.connect(func():
+		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+		_toggle_pause()
+	)
 	btn_modal_restart.pressed.connect(func():
+		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
 		_toggle_pause()
 		simulation.restart_attempt()
 	)
 	btn_modal_levels.pressed.connect(func():
+		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
 		SceneRouter.go_to_level_select()
 	)
 	btn_modal_settings.pressed.connect(func():
+		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
 		SceneRouter.go_to_settings()
 	)
 
 	# Completion modal
 	btn_next_level.pressed.connect(func():
+		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
 		complete_modal.visible = false
 		if GameManager:
 			GameManager.go_to_next_level()
 	)
 	btn_replay.pressed.connect(func():
+		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
 		complete_modal.visible = false
 		_level_completed_handled = false
 		if background and background.has_method("set_level_complete"):
@@ -185,16 +262,32 @@ func _bind_ui_buttons() -> void:
 		simulation.clear_echoes()
 	)
 	btn_complete_levels.pressed.connect(func():
+		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
 		complete_modal.visible = false
 		SceneRouter.go_to_level_select()
 	)
 
 	# Hint system buttons
-	btn_hint.pressed.connect(_open_hint_modal)
-	btn_close_hint.pressed.connect(_close_hint_modal)
-	btn_reveal_next.pressed.connect(_on_reveal_next_pressed)
-	btn_confirm_reveal.pressed.connect(_on_confirm_reveal)
-	btn_cancel_reveal.pressed.connect(_on_cancel_reveal)
+	btn_hint.pressed.connect(func():
+		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+		_open_hint_modal()
+	)
+	btn_close_hint.pressed.connect(func():
+		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+		_close_hint_modal()
+	)
+	btn_reveal_next.pressed.connect(func():
+		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+		_on_reveal_next_pressed()
+	)
+	btn_confirm_reveal.pressed.connect(func():
+		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+		_on_confirm_reveal()
+	)
+	btn_cancel_reveal.pressed.connect(func():
+		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+		_on_cancel_reveal()
+	)
 
 	if SaveManager:
 		SaveManager.daily_hints_reset.connect(_update_hint_button)
@@ -344,8 +437,27 @@ func _on_level_completed(turns: int, echoes: int, total_actions: int) -> void:
 		btn_next_level.disabled = false
 	complete_modal.visible = true
 	print("[SCENE] Level Complete screen displayed")
+	if AndroidSystemManager:
+		AndroidSystemManager.trigger_haptic("complete")
 	if background and background.has_method("set_level_complete"):
 		background.set_level_complete(true)
+
+func handle_back_button() -> bool:
+	if hint_confirm_modal and hint_confirm_modal.visible:
+		_on_cancel_reveal()
+		return true
+	if hint_modal and hint_modal.visible:
+		_close_hint_modal()
+		return true
+	if complete_modal and complete_modal.visible:
+		complete_modal.visible = false
+		SceneRouter.go_to_level_select()
+		return true
+	if pause_modal and pause_modal.visible:
+		_toggle_pause()
+		return true
+	_toggle_pause()
+	return true
 
 func _style_holographic_modals() -> void:
 	var make_panel_style = func(border_col: Color, fill_col: Color = Color(0.05, 0.075, 0.14, 0.96), border_w: int = 2) -> StyleBoxFlat:
@@ -412,16 +524,24 @@ func _unhandled_input(event: InputEvent) -> void:
 	# Mobile Touchscreen Swipe Gestures
 	if event is InputEventScreenTouch:
 		if event.pressed:
-			_touch_start_pos = event.position
-			_is_swiping = true
+			var vp_h: float = get_viewport_rect().size.y
+			if event.position.y > 130.0 and event.position.y < (vp_h - 320.0):
+				_touch_start_pos = event.position
+				_is_swiping = true
+			else:
+				_is_swiping = false
 		else:
 			if _is_swiping:
 				_handle_swipe(event.position - _touch_start_pos)
 			_is_swiping = false
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
-			_touch_start_pos = event.position
-			_is_swiping = true
+			var vp_h: float = get_viewport_rect().size.y
+			if event.position.y > 130.0 and event.position.y < (vp_h - 320.0):
+				_touch_start_pos = event.position
+				_is_swiping = true
+			else:
+				_is_swiping = false
 		else:
 			if _is_swiping:
 				_handle_swipe(event.position - _touch_start_pos)

@@ -27,9 +27,30 @@ func _ready() -> void:
 	haptics_check.toggled.connect(_on_haptics_toggled)
 	anims_check.toggled.connect(_on_anims_toggled)
 
+	_apply_safe_area()
+	if AndroidSystemManager:
+		AndroidSystemManager.safe_area_changed.connect(func(_m): _apply_safe_area())
+
+func _apply_safe_area() -> void:
+	if not AndroidSystemManager:
+		return
+	var m = AndroidSystemManager.get_safe_margins()
+	var header = $Header
+	if header:
+		header.offset_top = maxi(float(m.get("top", 0)), 16.0)
+	var content = $Content
+	if content:
+		content.offset_bottom = -maxi(float(m.get("bottom", 0)), 16.0)
+
+func handle_back_button() -> bool:
+	_on_back_pressed()
+	return true
+
 func _on_back_pressed() -> void:
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
+	if AndroidSystemManager:
+		AndroidSystemManager.trigger_haptic("button")
 	if SaveManager:
 		SaveManager.write_save()
 	SceneRouter.go_to_main_menu()
@@ -50,6 +71,8 @@ func _on_sfx_changed(val: float) -> void:
 func _on_haptics_toggled(pressed: bool) -> void:
 	if SaveManager:
 		SaveManager.haptics_enabled = pressed
+	if pressed and AndroidSystemManager:
+		AndroidSystemManager.trigger_haptic("button")
 
 func _on_anims_toggled(pressed: bool) -> void:
 	if SaveManager:

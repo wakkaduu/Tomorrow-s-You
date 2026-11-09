@@ -137,3 +137,4 @@ func _draw() -> void:
 			current_alpha
 		)
 		draw_circle(m.pos, m.size, core_col)
+
