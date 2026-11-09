@@ -14,12 +14,23 @@
   - **Sector 1 — Awakening**: Core movement and your first temporal teammate.
   - **Sector 2 — Synchronization**: AND-doors, relay doors, and strategic WAIT timing.
   - **Sector 3 — Paradox**: Complex 3-Echo puzzles, interlocking doors, and multi-stage solutions.
-- **Mobile-First Experience**:
-  - Portrait orientation (720×1280 base viewport).
-  - High-touch-target on-screen D-Pad and swipe gestures.
-  - Desktop keyboard controls for testing.
+- **5 Difficulty Tiers**:
+  - **Initiation (Easy)**: Single-Echo mechanics and temporal fundamentals.
+  - **Synchronization (Normal)**: Dual-timeline coordination and AND-logic doors.
+  - **Convergence (Hard)**: Staggered lifecycles and strict duration limits.
+  - **Paradox (Expert)**: Multi-timeline planning and triple-Echo relays.
+  - **The Last Tomorrow (Nightmare)**: 4-Quadrant facility with precision Sequence Lock.
+- **Fixed-Duration Echo Lifecycle**: Echoes exist strictly for the duration of their recorded sequence and expire upon completion, preventing indefinite holding of pressure plates.
+- **Atmospheric Visual Engine ("Temporal Research Facility")**:
+  - Multi-layer procedural sci-fi background with facility silhouettes, reactive particles, and custom GLSL chromatic/vignette shader.
+  - Distinct theme palettes per difficulty tier and floating holographic glass modals.
+- **Mobile-First Android Architecture**:
+  - Portrait locked with automatic notch/cutout safe-area insets via `DisplayServer.get_display_safe_area()`.
+  - Comprehensive hardware back-button routing (`AndroidSystemManager`).
+  - Tactile haptic feedback engine (`Input.vibrate_handheld()`) mapped to movement, Echo creation, plates, doors, and completions.
+  - Dynamic responsive board renderer tested across 7 mobile resolutions (`360×640` to `1080×2400`).
+  - High-touch-target 72×72px D-Pad, full-width `CREATE ECHO` button, and constrained board swipe gestures.
 - **Offline & Privacy-Respecting**: Zero ads, zero trackers, zero cloud dependencies. Local progress saving via `user://save.cfg`.
-- **Procedural Audiovisuals**: Neon cyberpunk holographic art style with synthesized sound effects and ambient music.
 - **Fair Daily Hint System**: 3 free hints per calendar day shared across all levels, resetting at midnight with clock rollback protection and zero microtransactions.
 
 ---
@@ -80,20 +91,26 @@ static func _create_lvl_custom_hints() -> HintDefinitionClass:
 
 ## Automated Test Suites
 
-The project includes exhaustive automated test suites that run in headless Godot:
+The project includes exhaustive automated test suites that run in headless Godot (129/129 passing):
 
 ```bash
-# 1. Master Comprehensive Test Suite (38 tests: Core Mechanics + Campaign Solutions + Topology Enforcement + Hint System)
-godot --headless -s tests/run_all_tests.gd
+# 1. Android Mobile System Suite (50 tests: Safe Area, Haptics, Back Navigation, 7 Aspect Ratios, Swipes)
+godot --headless tests/mobile/test_mobile_system.tscn
 
-# 2. Dedicated Daily Hint System Suite (20 tests covering allowance, reset, persistence, modals, rollback)
-godot --headless -s tests/hints/test_hint_system.gd
-
-# 3. In-Engine Full Integration Scene Suite (9 tests with mounted Autoloads, UI, audio, and gameplay)
+# 2. In-Engine Full Integration Suite (11 tests with mounted Autoloads, UI, audio, and gameplay)
 godot --headless tests/test_runner.tscn
 
-# 4. Campaign 10-Level Validation & Physical Solvability Suite
+# 3. Master Comprehensive Test Suite (38 tests: Core Mechanics + Campaign Solutions + Topology Enforcement + Hint System)
+godot --headless -s tests/run_all_tests.gd
+
+# 4. Dedicated Daily Hint System Suite (20 tests covering allowance, reset, persistence, modals, rollback)
+godot --headless -s tests/hints/test_hint_system.gd
+
+# 5. Campaign 10-Level Validation & Physical Solvability Suite
 godot --headless -s tests/levels/test_campaign_solutions.gd
+
+# 6. Temporal Background System Suite (8 tests for shader uniforms, layers, input passthrough)
+godot --headless tests/visual/test_temporal_background.tscn
 ```
 
 ---
