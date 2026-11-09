@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.1] - 2026-11-09
+
+### Fixed
+- **Level Completion Modal & Progression Lockup**:
+  - Resolved fatal runtime script crash where missing `GameManager.get_next_level_def()` prevented `GameplayController._on_level_completed()` from displaying the Level Complete modal.
+  - Implemented lookahead door evaluation via `is_door_open_at_turn(door_id, turn)` so door state changes coinciding with turns never incorrectly block legal moves.
+  - Preserved actor safety: doors closing behind players never crush or retroactively invalidate legal movement.
+  - Centralized level completion state transitions in `GameplayController` with `_level_completed_handled` guarding against duplicate completion recordings.
+  - Added formal `GameState` enum (`PLAYING`, `PAUSED`, `COMPLETED`, `FAILED`) in `PuzzleSimulation`.
+  - Added structured real-time diagnostic logging (`[TURN]`, `[PLAYER]`, `[EXIT]`, `[ECHO]`, `[LEVEL]`, `[SAVE]`, `[SCENE]`).
+  - Added 12-case regression test harness (`tests/core/test_level_completion.gd` & `.tscn`) covering all exit reach and door expiration timing interactions with 100% pass rate.
+
 ## [1.2.0] - 2026-11-09
 
 ### Added
