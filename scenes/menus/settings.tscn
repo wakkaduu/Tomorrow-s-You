@@ -1,0 +1,140 @@
+[gd_scene load_steps=2 format=3 uid="uid://settings0001"]
+
+[ext_resource type="Script" path="res://scripts/ui/settings_menu.gd" id="1_sett"]
+
+[node name="Settings" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_sett")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0431373, 0.0627451, 0.12549, 1)
+
+[node name="Header" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 24.0
+offset_top = 40.0
+offset_right = -24.0
+offset_bottom = 104.0
+grow_horizontal = 2
+
+[node name="BackButton" type="Button" parent="Header"]
+custom_minimum_size = Vector2(100, 48)
+layout_mode = 2
+size_flags_vertical = 4
+text = "< BACK"
+
+[node name="Title" type="Label" parent="Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 32
+text = "SETTINGS"
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="Header"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+
+[node name="Content" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = 140.0
+offset_right = -40.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Content"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 400.0
+grow_horizontal = 2
+theme_override_constants/separation = 28
+
+[node name="MusicRow" type="VBoxContainer" parent="Content/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="Content/VBoxContainer/MusicRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Music Volume"
+
+[node name="MusicSlider" type="HSlider" parent="Content/VBoxContainer/MusicRow"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+value = 80.0
+
+[node name="SFXRow" type="VBoxContainer" parent="Content/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="Content/VBoxContainer/SFXRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Sound Effects"
+
+[node name="SFXSlider" type="HSlider" parent="Content/VBoxContainer/SFXRow"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+value = 90.0
+
+[node name="HapticsRow" type="HBoxContainer" parent="Content/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Content/VBoxContainer/HapticsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Haptic Feedback"
+
+[node name="HapticsCheck" type="CheckBox" parent="Content/VBoxContainer/HapticsRow"]
+layout_mode = 2
+button_pressed = true
+
+[node name="AnimsRow" type="HBoxContainer" parent="Content/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Content/VBoxContainer/AnimsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Reduced Animations"
+
+[node name="AnimsCheck" type="CheckBox" parent="Content/VBoxContainer/AnimsRow"]
+layout_mode = 2
+
+[node name="Spacer" type="Control" parent="Content/VBoxContainer"]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+
+[node name="ResetButton" type="Button" parent="Content/VBoxContainer"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.392157, 0.486275, 1)
+text = "RESET PROGRESS"
+
+[node name="ResetConfirmDialog" type="ConfirmationDialog" parent="."]
+title = "Reset Progress"
+initial_position = 2
+size = Vector2i(340, 140)
+dialog_text = "Are you sure you want to reset all unlocked levels and records? This cannot be undone."
+ok_button_text = "RESET"
+

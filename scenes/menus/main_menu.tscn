@@ -1,0 +1,130 @@
+[gd_scene load_steps=2 format=3 uid="uid://menu00000001"]
+
+[ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_menu"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0431373, 0.0627451, 0.12549, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -320.0
+offset_right = 260.0
+offset_bottom = 320.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 40
+alignment = 1
+
+[node name="Header" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="VBoxContainer/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 46
+text = "TOMORROW'S YOU"
+horizontal_alignment = 1
+
+[node name="Tagline" type="Label" parent="VBoxContainer/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.654902, 0.690196, 0.768627, 1)
+theme_override_font_sizes/font_size = 18
+text = "Every failed attempt becomes your teammate."
+horizontal_alignment = 1
+
+[node name="Buttons" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="PlayButton" type="Button" parent="VBoxContainer/Buttons"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.960784, 0.968627, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "PLAY"
+
+[node name="LevelsButton" type="Button" parent="VBoxContainer/Buttons"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "LEVEL SELECT"
+
+[node name="SettingsButton" type="Button" parent="VBoxContainer/Buttons"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "SETTINGS"
+
+[node name="CreditsButton" type="Button" parent="VBoxContainer/Buttons"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "CREDITS"
+
+[node name="CreditsPopup" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -240.0
+offset_right = 280.0
+offset_bottom = 240.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CreditsPopup"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="CreditsTitle" type="Label" parent="CreditsPopup/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 26
+text = "CREDITS"
+horizontal_alignment = 1
+
+[node name="CreditsBody" type="Label" parent="CreditsPopup/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "TOMORROW'S YOU
+Lead Game Development & Architecture
+Engine: Godot Engine 4.7.2 Stable
+Offline Single-Player Mobile Experience
+
+All graphics and audio generated in-engine.
+Copyright © 2026. All rights reserved."
+horizontal_alignment = 1
+
+[node name="CloseCreditsButton" type="Button" parent="CreditsPopup/VBoxContainer"]
+custom_minimum_size = Vector2(160, 48)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "CLOSE"
+

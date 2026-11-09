@@ -1,0 +1,370 @@
+[gd_scene load_steps=3 format=3 uid="uid://gameplay0001"]
+
+[ext_resource type="Script" path="res://scripts/gameplay/gameplay_controller.gd" id="1_ctrl"]
+[ext_resource type="Script" path="res://scripts/gameplay/board_renderer.gd" id="2_rndr"]
+
+[node name="Gameplay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ctrl")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0431373, 0.0627451, 0.12549, 1)
+
+[node name="BoardRenderer" type="Node2D" parent="."]
+script = ExtResource("2_rndr")
+
+[node name="TopHUD" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 136.0
+grow_horizontal = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="TopHUD"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 14
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TopHUD/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HeaderRow" type="HBoxContainer" parent="TopHUD/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="LevelInfo" type="VBoxContainer" parent="TopHUD/MarginContainer/VBoxContainer/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SectorLabel" type="Label" parent="TopHUD/MarginContainer/VBoxContainer/HeaderRow/LevelInfo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.654902, 0.709804, 0.8, 1)
+theme_override_font_sizes/font_size = 13
+text = "SECTOR 01 — AWAKENING"
+
+[node name="LevelTitle" type="Label" parent="TopHUD/MarginContainer/VBoxContainer/HeaderRow/LevelInfo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 24
+text = "Level 1: First Steps"
+
+[node name="PauseButton" type="Button" parent="TopHUD/MarginContainer/VBoxContainer/HeaderRow"]
+custom_minimum_size = Vector2(54, 54)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 22
+text = "❚❚"
+
+[node name="StatsPillsRow" type="HBoxContainer" parent="TopHUD/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TurnPill" type="PanelContainer" parent="TopHUD/MarginContainer/VBoxContainer/StatsPillsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Margin" type="MarginContainer" parent="TopHUD/MarginContainer/VBoxContainer/StatsPillsRow/TurnPill"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 4
+
+[node name="TurnCountLabel" type="Label" parent="TopHUD/MarginContainer/VBoxContainer/StatsPillsRow/TurnPill/Margin"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 15
+text = "⏱ TURN: 00"
+horizontal_alignment = 1
+
+[node name="EchoPill" type="PanelContainer" parent="TopHUD/MarginContainer/VBoxContainer/StatsPillsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Margin" type="MarginContainer" parent="TopHUD/MarginContainer/VBoxContainer/StatsPillsRow/EchoPill"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 4
+
+[node name="EchoCountLabel" type="Label" parent="TopHUD/MarginContainer/VBoxContainer/StatsPillsRow/EchoPill/Margin"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.654902, 0.545098, 0.980392, 1)
+theme_override_font_sizes/font_size = 15
+text = "✦ ECHOES: 0 / 1"
+horizontal_alignment = 1
+
+[node name="BottomHUD" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -340.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 10
+
+[node name="HintContainer" type="MarginContainer" parent="BottomHUD"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_right = 20
+
+[node name="HintPanel" type="PanelContainer" parent="BottomHUD/HintContainer"]
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="BottomHUD/HintContainer/HintPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 6
+
+[node name="HintLabel" type="Label" parent="BottomHUD/HintContainer/HintPanel/Margin"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.745098, 0.333333, 1)
+theme_override_font_sizes/font_size = 14
+text = "💡 Hint text appears here"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="PrimaryActionContainer" type="MarginContainer" parent="BottomHUD"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_right = 20
+
+[node name="BtnCreateEcho" type="Button" parent="BottomHUD/PrimaryActionContainer"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.960784, 0.968627, 1, 1)
+theme_override_font_sizes/font_size = 17
+text = "✦ CREATE ECHO (+1 TEAMMATE)"
+
+[node name="ControlsRow" type="HBoxContainer" parent="BottomHUD"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="DPadContainer" type="CenterContainer" parent="BottomHUD/ControlsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Grid" type="GridContainer" parent="BottomHUD/ControlsRow/DPadContainer"]
+layout_mode = 2
+columns = 3
+
+[node name="Empty1" type="Control" parent="BottomHUD/ControlsRow/DPadContainer/Grid"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+
+[node name="BtnUp" type="Button" parent="BottomHUD/ControlsRow/DPadContainer/Grid"]
+custom_minimum_size = Vector2(72, 72)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 28
+text = "▲"
+
+[node name="Empty2" type="Control" parent="BottomHUD/ControlsRow/DPadContainer/Grid"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+
+[node name="BtnLeft" type="Button" parent="BottomHUD/ControlsRow/DPadContainer/Grid"]
+custom_minimum_size = Vector2(72, 72)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 28
+text = "◀"
+
+[node name="Empty3" type="Control" parent="BottomHUD/ControlsRow/DPadContainer/Grid"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+
+[node name="BtnRight" type="Button" parent="BottomHUD/ControlsRow/DPadContainer/Grid"]
+custom_minimum_size = Vector2(72, 72)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 28
+text = "▶"
+
+[node name="Empty4" type="Control" parent="BottomHUD/ControlsRow/DPadContainer/Grid"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+
+[node name="BtnDown" type="Button" parent="BottomHUD/ControlsRow/DPadContainer/Grid"]
+custom_minimum_size = Vector2(72, 72)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 28
+text = "▼"
+
+[node name="Empty5" type="Control" parent="BottomHUD/ControlsRow/DPadContainer/Grid"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+
+[node name="ActionButtons" type="VBoxContainer" parent="BottomHUD/ControlsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="BtnWait" type="Button" parent="BottomHUD/ControlsRow/ActionButtons"]
+custom_minimum_size = Vector2(160, 52)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 16
+text = "⏳ WAIT TURN"
+
+[node name="BtnRestart" type="Button" parent="BottomHUD/ControlsRow/ActionButtons"]
+custom_minimum_size = Vector2(160, 48)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.654902, 0.709804, 0.8, 1)
+theme_override_font_sizes/font_size = 14
+text = "↺ RESTART"
+
+[node name="BtnClearEchoes" type="Button" parent="BottomHUD/ControlsRow/ActionButtons"]
+custom_minimum_size = Vector2(160, 48)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.392157, 0.486275, 1)
+theme_override_font_sizes/font_size = 14
+text = "✕ CLEAR ALL"
+
+[node name="BottomSafeMargin" type="Control" parent="BottomHUD"]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+
+[node name="Modals" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PauseModal" type="PanelContainer" parent="Modals"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -210.0
+offset_top = -200.0
+offset_right = 210.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="Modals/PauseModal"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Modals/PauseModal/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="Title" type="Label" parent="Modals/PauseModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 28
+text = "PAUSED"
+horizontal_alignment = 1
+
+[node name="ResumeButton" type="Button" parent="Modals/PauseModal/Margin/VBoxContainer"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+text = "RESUME"
+
+[node name="RestartButton" type="Button" parent="Modals/PauseModal/Margin/VBoxContainer"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "RESTART ATTEMPT"
+
+[node name="LevelsButton" type="Button" parent="Modals/PauseModal/Margin/VBoxContainer"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "LEVEL SELECT"
+
+[node name="SettingsButton" type="Button" parent="Modals/PauseModal/Margin/VBoxContainer"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "SETTINGS"
+
+[node name="CompleteModal" type="PanelContainer" parent="Modals"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -230.0
+offset_top = -220.0
+offset_right = 230.0
+offset_bottom = 220.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="Modals/CompleteModal"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Modals/CompleteModal/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="VictoryTitle" type="Label" parent="Modals/CompleteModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 28
+text = "LEVEL COMPLETED!"
+horizontal_alignment = 1
+
+[node name="StatsLabel" type="Label" parent="Modals/CompleteModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Winning Attempt: 0 turns
+Echoes Used: 0"
+horizontal_alignment = 1
+
+[node name="NextButton" type="Button" parent="Modals/CompleteModal/Margin/VBoxContainer"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 18
+text = "NEXT LEVEL >"
+
+[node name="ReplayButton" type="Button" parent="Modals/CompleteModal/Margin/VBoxContainer"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "REPLAY PUZZLE"
+
+[node name="LevelsButton" type="Button" parent="Modals/CompleteModal/Margin/VBoxContainer"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "LEVEL SELECT"

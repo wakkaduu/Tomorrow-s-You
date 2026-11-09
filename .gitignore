@@ -1,0 +1,18 @@
+# Godot 4 .gitignore
+.godot/
+*.translation
+*.import
+
+# Mono/C# (not used, but good hygiene)
+.mono/
+*.csproj
+*.sln
+
+# Export artifacts
+/build/android/*.apk
+/build/android/*.aab
+
+# OS files
+.DS_Store
+Thumbs.db
+

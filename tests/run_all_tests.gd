@@ -1,0 +1,301 @@
+extends SceneTree
+
+# Preloads
+const LevelRegistryClass = preload("res://scripts/level/level_registry.gd")
+const PuzzleSimulationClass = preload("res://scripts/gameplay/puzzle_simulation.gd")
+
+func _init() -> void:
+	print("\n===================================================================")
+	print("       TOMORROW'S YOU — MASTER AUTOMATED TEST SUITE")
+	print("===================================================================")
+
+	var counters: Dictionary = {"total": 0, "passed": 0}
+
+	var run_test = func(suite: String, test_name: String, test_fn: Callable) -> void:
+		counters["total"] += 1
+		print("[%s | TEST %d] %s" % [suite, counters["total"], test_name])
+		var ok: bool = test_fn.call()
+		if ok:
+			counters["passed"] += 1
+			print("   --> PASSED [✓]")
+		else:
+			push_error("   --> FAILED [✗]: " + test_name)
+
+	# ==========================================================================
+	# SECTION 1: CORE MECHANICS
+	# ==========================================================================
+	var make_test_level = func(lines: Array, doors: Array, plates: Array, limit: int = 3) -> LevelDefinition:
+		var lvl: LevelDefinition = LevelDefinition.new()
+		lvl.level_id = "test_lvl"
+		lvl.level_name = "Test Level"
+		lvl.echo_limit = limit
+		var typed_lines: Array[String] = []
+		for l in lines: typed_lines.append(str(l))
+		lvl.map_lines = typed_lines
+		var typed_doors: Array[Dictionary] = []
+		for d in doors: if d is Dictionary: typed_doors.append(d)
+		lvl.doors_data = typed_doors
+		var typed_plates: Array[Dictionary] = []
+		for p in plates: if p is Dictionary: typed_plates.append(p)
+		lvl.plates_data = typed_plates
+		lvl.initialize_from_map()
+		return lvl
+
+	run_test.call("CORE", "Movement in all 4 directions & turn count", func() -> bool:
+		var lvl = make_test_level.call(["#####", "#...#", "#.P.#", "#...#", "###X#"], [], [])
+		var sim: PuzzleSimulation = PuzzleSimulationClass.new()
+		sim.load_level(lvl)
+		sim.step_move(Vector2i.UP)
+		sim.step_move(Vector2i.LEFT)
+		sim.step_move(Vector2i.DOWN)
+		sim.step_move(Vector2i.RIGHT)
+		return sim.player_pos == Vector2i(2, 2) and sim.current_turn == 4
+	)
+
+	run_test.call("CORE", "Wall collision does not consume turns", func() -> bool:
+		var lvl = make_test_level.call(["###", "#P#", "#X#"], [], [])
+		var sim: PuzzleSimulation = PuzzleSimulationClass.new()
+		sim.load_level(lvl)
+		var blocked = not sim.step_move(Vector2i.UP)
+		return blocked and sim.player_pos == Vector2i(1, 1) and sim.current_turn == 0
+	)
+
+	run_test.call("CORE", "WAIT advances turn without changing position", func() -> bool:
+		var lvl = make_test_level.call(["###", "#P#", "#X#"], [], [])
+		var sim: PuzzleSimulation = PuzzleSimulationClass.new()
+		sim.load_level(lvl)
+		sim.step_wait()
+		sim.step_wait()
+		return sim.player_pos == Vector2i(1, 1) and sim.current_turn == 2
+	)
+
+	run_test.call("CORE", "Echo recording and synchronous replay", func() -> bool:
+		var lvl = make_test_level.call(["#####", "#P..#", "#...#", "####X"], [], [])
+		var sim: PuzzleSimulation = PuzzleSimulationClass.new()
+		sim.load_level(lvl)
+		sim.step_move(Vector2i.RIGHT)
+		sim.step_move(Vector2i.RIGHT)
+		sim.create_echo()
+		sim.step_wait()
+		if sim.get_echo_position(0) != Vector2i(2, 1): return false
+		sim.step_wait()
+		if sim.get_echo_position(0) != Vector2i(3, 1): return false
+		return true
+	)
+
+	run_test.call("CORE", "Finished Echo remains at final tile indefinitely", func() -> bool:
+		var lvl = make_test_level.call(["#####", "#P..#", "#...#", "####X"], [], [])
+		var sim: PuzzleSimulation = PuzzleSimulationClass.new()
+		sim.load_level(lvl)
+		sim.step_move(Vector2i.RIGHT)
+		sim.step_move(Vector2i.RIGHT)
+		sim.create_echo()
+		for _i in range(10): sim.step_wait()
+		return sim.get_echo_position(0) == Vector2i(3, 1)
+	)
+
+	run_test.call("CORE", "Echo activates pressure plate to hold door open", func() -> bool:
+		var lvl = make_test_level.call([
+			"#######", "#P.1.A#", "#####X#"
+		], [{"id": "A", "pos": Vector2i(5, 1), "logic": "AND", "required_plates": ["1"]}], [{"id": "1", "pos": Vector2i(3, 1)}])
+		var sim: PuzzleSimulation = PuzzleSimulationClass.new()
+		sim.load_level(lvl)
+		sim.step_move(Vector2i.RIGHT)
+		sim.step_move(Vector2i.RIGHT)
+		sim.create_echo()
+		sim.step_wait()
+		sim.step_wait()
+		return sim.is_plate_active("1") and sim.is_door_open("A")
+	)
+
+	run_test.call("CORE", "AND logic door requires all specified plates", func() -> bool:
+		var lvl = make_test_level.call([
+			"#######", "#P.1.2#", "####.A#", "#####X#"
+		], [{"id": "A", "pos": Vector2i(5, 2), "logic": "AND", "required_plates": ["1", "2"]}], [{"id": "1", "pos": Vector2i(3, 1)}, {"id": "2", "pos": Vector2i(5, 1)}])
+		var sim: PuzzleSimulation = PuzzleSimulationClass.new()
+		sim.load_level(lvl)
+		sim.step_move(Vector2i.RIGHT)
+		sim.step_move(Vector2i.RIGHT)
+		sim.create_echo()
+		for _i in range(4): sim.step_move(Vector2i.RIGHT)
+		return sim.is_plate_active("1") and sim.is_plate_active("2") and sim.is_door_open("A")
+	)
+
+	run_test.call("CORE", "OR logic door opens if at least one plate active", func() -> bool:
+		var lvl = make_test_level.call([
+			"#######", "#P.1.2#", "####.A#", "#####X#"
+		], [{"id": "A", "pos": Vector2i(5, 2), "logic": "OR", "required_plates": ["1", "2"]}], [{"id": "1", "pos": Vector2i(3, 1)}, {"id": "2", "pos": Vector2i(5, 1)}])
+		var sim: PuzzleSimulation = PuzzleSimulationClass.new()
+		sim.load_level(lvl)
+		sim.step_move(Vector2i.RIGHT)
+		sim.step_move(Vector2i.RIGHT)
+		return sim.is_door_open("A")
+	)
+
+	run_test.call("CORE", "Safety rule: Never crush player inside physical door", func() -> bool:
+		var lvl = make_test_level.call([
+			"#######", "#P.1.A#", "#####X#"
+		], [{"id": "A", "pos": Vector2i(5, 1), "logic": "AND", "required_plates": ["1"]}], [{"id": "1", "pos": Vector2i(3, 1)}])
+		var sim: PuzzleSimulation = PuzzleSimulationClass.new()
+		sim.load_level(lvl)
+		sim.step_move(Vector2i.RIGHT)
+		sim.step_move(Vector2i.RIGHT)
+		sim.step_wait()
+		sim.step_wait()
+		sim.step_move(Vector2i.LEFT)
+		sim.create_echo()
+		for _i in range(4): sim.step_move(Vector2i.RIGHT)
+		sim.step_wait()
+		return sim.player_pos == Vector2i(5, 1) and sim.is_door_open("A") and not sim.is_plate_active("1")
+	)
+
+	run_test.call("CORE", "Echo reaching exit does NOT complete level (real player only)", func() -> bool:
+		var lvl = make_test_level.call(["###", "#P#", "#.#", "#X#"], [], [])
+		var sim: PuzzleSimulation = PuzzleSimulationClass.new()
+		sim.load_level(lvl)
+		sim.step_move(Vector2i.DOWN)
+		sim.create_echo()
+		sim.step_wait()
+		return not sim.is_completed
+	)
+
+	run_test.call("CORE", "Multiple simultaneous Echoes coordination", func() -> bool:
+		var lvl = make_test_level.call([
+			"#######", "#P....#", "#1.2.3#", "####..#", "#####X#"
+		], [], [{"id": "1", "pos": Vector2i(1, 2)}, {"id": "2", "pos": Vector2i(3, 2)}, {"id": "3", "pos": Vector2i(5, 2)}], 3)
+		var sim: PuzzleSimulation = PuzzleSimulationClass.new()
+		sim.load_level(lvl)
+		sim.step_move(Vector2i.DOWN)
+		sim.create_echo()
+		sim.step_move(Vector2i.RIGHT)
+		sim.step_move(Vector2i.RIGHT)
+		sim.step_move(Vector2i.DOWN)
+		sim.create_echo()
+		sim.step_wait()
+		sim.step_wait()
+		sim.step_wait()
+		return sim.is_plate_active("1") and sim.is_plate_active("2")
+	)
+
+	run_test.call("CORE", "Echo limit enforcement & Clear Echoes", func() -> bool:
+		var lvl = make_test_level.call(["#####", "#P..#", "###X#"], [], [], 2)
+		var sim: PuzzleSimulation = PuzzleSimulationClass.new()
+		sim.load_level(lvl)
+		sim.step_move(Vector2i.RIGHT)
+		sim.create_echo()
+		sim.step_move(Vector2i.RIGHT)
+		sim.create_echo()
+		var c3 = sim.create_echo()
+		if c3 or sim.echoes.size() != 2: return false
+		sim.clear_echoes()
+		return sim.echoes.is_empty() and sim.player_pos == Vector2i(1, 1) and sim.current_turn == 0
+	)
+
+	# ==========================================================================
+	# SECTION 2: 10 CAMPAIGN LEVELS VERIFICATION
+	# ==========================================================================
+	var run_actions = func(sim: PuzzleSimulation, actions: String) -> void:
+		for i in range(actions.length()):
+			var ch: String = actions[i]
+			match ch:
+				"U": sim.step_move(Vector2i.UP)
+				"D": sim.step_move(Vector2i.DOWN)
+				"L": sim.step_move(Vector2i.LEFT)
+				"R": sim.step_move(Vector2i.RIGHT)
+				"W": sim.step_wait()
+				" ": pass
+
+	var campaign_solvers = [
+		func(sim: PuzzleSimulation) -> bool:
+			run_actions.call(sim, "RRRRDDDDR")
+			return sim.is_completed,
+		func(sim: PuzzleSimulation) -> bool:
+			run_actions.call(sim, "DDR")
+			sim.create_echo()
+			run_actions.call(sim, "RRRDDRR")
+			return sim.is_completed,
+		func(sim: PuzzleSimulation) -> bool:
+			run_actions.call(sim, "DDD")
+			sim.create_echo()
+			run_actions.call(sim, "RRRRRRDDRD")
+			return sim.is_completed,
+		func(sim: PuzzleSimulation) -> bool:
+			run_actions.call(sim, "DD")
+			sim.create_echo()
+			run_actions.call(sim, "RRRRRRDD")
+			sim.create_echo()
+			run_actions.call(sim, "RRRDDWWWDDD")
+			return sim.is_completed,
+		func(sim: PuzzleSimulation) -> bool:
+			run_actions.call(sim, "RRRRR")
+			sim.create_echo()
+			run_actions.call(sim, "DDRWWRDL")
+			sim.create_echo()
+			run_actions.call(sim, "DDDDDRRWRRRRR")
+			return sim.is_completed,
+		func(sim: PuzzleSimulation) -> bool:
+			run_actions.call(sim, "RRRRRRR")
+			sim.create_echo()
+			run_actions.call(sim, "DDRRWWWRRRRR")
+			sim.create_echo()
+			run_actions.call(sim, "DDDDRRWWWWWW RRRRR")
+			return sim.is_completed,
+		func(sim: PuzzleSimulation) -> bool:
+			run_actions.call(sim, "RRRRR")
+			sim.create_echo()
+			run_actions.call(sim, "DDRRWRRDR")
+			sim.create_echo()
+			run_actions.call(sim, "DDDDRRWWW RRRRRRR")
+			return sim.is_completed,
+		func(sim: PuzzleSimulation) -> bool:
+			run_actions.call(sim, "RRR")
+			sim.create_echo()
+			run_actions.call(sim, "DDRRWRRUURRR")
+			sim.create_echo()
+			run_actions.call(sim, "DDRRWRRRRWWWRRRRR")
+			sim.create_echo()
+			run_actions.call(sim, "DDDDRRRRWWWWWWWWW RRRRRRR")
+			return sim.is_completed,
+		func(sim: PuzzleSimulation) -> bool:
+			run_actions.call(sim, "RRRRR")
+			sim.create_echo()
+			run_actions.call(sim, "DDRRWW RRRRR")
+			sim.create_echo()
+			run_actions.call(sim, "DDDDRRWWWWW RRRRR")
+			sim.create_echo()
+			run_actions.call(sim, "DDDDDDRRWWWWWWWW RRRRR")
+			return sim.is_completed,
+		func(sim: PuzzleSimulation) -> bool:
+			run_actions.call(sim, "RRRRRRR")
+			sim.create_echo()
+			run_actions.call(sim, "DDRRWWWRRRRR")
+			sim.create_echo()
+			run_actions.call(sim, "DDDDRRWWWWWWRRRRR")
+			sim.create_echo()
+			run_actions.call(sim, "DDDDDDRRWWWW RRRR DD W RRRRR")
+			return sim.is_completed
+	]
+
+	for i in range(10):
+		var lvl: LevelDefinition = LevelRegistryClass.get_level(i)
+		run_test.call("CAMPAIGN", "Level %d: %s (Sector %d)" % [i + 1, lvl.level_name, lvl.sector], func() -> bool:
+			var sim: PuzzleSimulation = PuzzleSimulationClass.new()
+			sim.load_level(lvl)
+			var solver: Callable = campaign_solvers[i]
+			return solver.call(sim)
+		)
+
+	# ==========================================================================
+	# FINAL SUMMARY
+	# ==========================================================================
+	print("\n===================================================================")
+	print(" MASTER SUITE SUMMARY: %d / %d TESTS PASSED" % [counters["passed"], counters["total"]])
+	print("===================================================================")
+
+	if counters["passed"] == counters["total"]:
+		print(" ALL %d TESTS PASSED WITH 100%% SUCCESS! " % counters["total"])
+		quit(0)
+	else:
+		push_error(" SOME TESTS FAILED!")
+		quit(1)
+
