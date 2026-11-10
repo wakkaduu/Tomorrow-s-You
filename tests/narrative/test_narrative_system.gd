@@ -126,6 +126,7 @@ func run_all_narrative_tests() -> void:
 	# TEST 6: SaveManager initial narrative defaults and unlock tracking
 	run_test("SaveManager properly initializes and tracks narrative state", func():
 		var sm = SaveManagerScript.new()
+		sm.set_custom_save_path("user://test_narrative_sandbox.cfg")
 		sm._set_default_save()
 
 		assert(sm.unlocked_transmissions.has("tr_lvl_01_intro"), "Level 1 intro must be unlocked by default")
@@ -149,6 +150,7 @@ func run_all_narrative_tests() -> void:
 	# TEST 7: Completing levels unlocks logs, outro transmissions, and next intros
 	run_test("Level completion unlocks corresponding chapter log and next transmissions", func():
 		var sm = SaveManagerScript.new()
+		sm.set_custom_save_path("user://test_narrative_sandbox.cfg")
 		sm._set_default_save()
 
 		# Complete Level 1
@@ -173,7 +175,9 @@ func run_all_narrative_tests() -> void:
 
 	# TEST 8: SaveManager narrative persistence roundtrip
 	run_test("Narrative tracking persists across save file write and load", func():
+		var sandbox_path = "user://test_narrative_sandbox.cfg"
 		var sm1 = SaveManagerScript.new()
+		sm1.set_custom_save_path(sandbox_path)
 		sm1._set_default_save()
 		sm1.unlock_narrative_on_level_completed("lvl_01")
 		sm1.unlock_narrative_on_level_completed("lvl_02")
@@ -182,6 +186,7 @@ func run_all_narrative_tests() -> void:
 		sm1.write_save()
 
 		var sm2 = SaveManagerScript.new()
+		sm2.set_custom_save_path(sandbox_path)
 		sm2.load_save()
 		assert(sm2.is_log_unlocked("log_001"), "Persisted log_001 should be unlocked")
 		assert(sm2.is_log_unlocked("log_002"), "Persisted log_002 should be unlocked")
@@ -190,12 +195,17 @@ func run_all_narrative_tests() -> void:
 
 		sm1.free()
 		sm2.free()
+
+		# Clean up sandbox file
+		if DirAccess.remove_absolute(sandbox_path) != OK:
+			pass
 		return true
 	)
 
 	# TEST 9: Archive progress calculation
 	run_test("Archive progress calculator correctly computes unlocked percentages", func():
 		var sm = SaveManagerScript.new()
+		sm.set_custom_save_path("user://test_narrative_sandbox.cfg")
 		sm._set_default_save()
 
 		var initial_prog = sm.get_archive_progress()

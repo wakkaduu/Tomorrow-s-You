@@ -16,6 +16,14 @@ const SAVE_PATH: String = "user://save.cfg"
 const CURRENT_VERSION: int = 3
 const DAILY_HINT_LIMIT: int = 3
 
+var save_path: String = SAVE_PATH
+
+func set_custom_save_path(custom_path: String) -> void:
+	save_path = custom_path
+
+func reset_save_path() -> void:
+	save_path = SAVE_PATH
+
 var save_version: int = 3
 var unlocked_levels: Array[String] = ["lvl_01"]
 var completed_levels: Array[String] = [] # Only stores valid/verified completions under current rules
@@ -61,9 +69,10 @@ func _ready() -> void:
 
 func load_save() -> void:
 	var config: ConfigFile = ConfigFile.new()
-	var err: Error = config.load(SAVE_PATH)
+	var err: Error = config.load(save_path)
 	if err != OK:
 		# First launch or no save file; set defaults
+		print("[SaveManager] No existing save found at %s. Initializing safe defaults." % save_path)
 		_set_default_save()
 		save_loaded.emit()
 		return
@@ -230,11 +239,11 @@ func write_save() -> void:
 	config.set_value("settings", "reduced_animations", reduced_animations)
 	config.set_value("settings", "tutorial_seen", tutorial_seen)
 
-	var err: Error = config.save(SAVE_PATH)
+	var err: Error = config.save(save_path)
 	if err == OK:
 		save_written.emit()
 	else:
-		push_error("Failed to write save file to: " + SAVE_PATH)
+		push_error("Failed to write save file to: " + save_path)
 
 func is_level_unlocked(level_id: String) -> bool:
 	return unlocked_levels.has(level_id)
@@ -478,6 +487,7 @@ func is_transmission_viewed(tr_id: String) -> bool:
 func mark_transmission_viewed(tr_id: String) -> void:
 	if not viewed_transmissions.has(tr_id):
 		viewed_transmissions.append(tr_id)
+		print("[SaveManager] Marked transmission '%s' as viewed (total viewed: %d)" % [tr_id, viewed_transmissions.size()])
 		write_save()
 
 func is_log_unlocked(log_id: String) -> bool:
@@ -489,6 +499,7 @@ func is_log_read(log_id: String) -> bool:
 func mark_log_read(log_id: String) -> void:
 	if not read_logs.has(log_id):
 		read_logs.append(log_id)
+		print("[SaveManager] Marked log '%s' as read (total read: %d)" % [log_id, read_logs.size()])
 		write_save()
 
 func is_record_unlocked(rec: Dictionary) -> bool:
@@ -507,17 +518,23 @@ func is_timeline_unlocked(entry: Dictionary) -> bool:
 
 func unlock_narrative_on_level_started(level_id: String) -> void:
 	var intro_id: String = "tr_%s_intro" % level_id
-	if NarrativeRegistryClass.TRANSMISSIONS.has(intro_id) and not unlocked_transmissions.has(intro_id):
-		unlocked_transmissions.append(intro_id)
-		write_save()
+	if NarrativeRegistryClass.TRANSMISSIONS.has(intro_id):
+		if not unlocked_transmissions.has(intro_id):
+			unlocked_transmissions.append(intro_id)
+			print("[SaveManager] Unlocked opening transmission: %s" % intro_id)
+			write_save()
+		else:
+			print("[SaveManager] Opening transmission already unlocked: %s" % intro_id)
 
 func unlock_narrative_on_level_completed(level_id: String) -> void:
+	print("[SaveManager] Processing narrative unlocks for completed level: %s" % level_id)
 	var modified: bool = false
 
 	# Unlock outro transmission if exists
 	var outro_id: String = "tr_%s_outro" % level_id
 	if NarrativeRegistryClass.TRANSMISSIONS.has(outro_id) and not unlocked_transmissions.has(outro_id):
 		unlocked_transmissions.append(outro_id)
+		print("[SaveManager] Unlocked completion transmission: %s" % outro_id)
 		modified = true
 
 	# Unlock research log for this chapter
@@ -525,6 +542,7 @@ func unlock_narrative_on_level_completed(level_id: String) -> void:
 	var log_id: String = chapter.get("log_id", "")
 	if not log_id.is_empty() and not unlocked_logs.has(log_id):
 		unlocked_logs.append(log_id)
+		print("[SaveManager] Unlocked recovered log: %s" % log_id)
 		narrative_log_unlocked.emit(log_id)
 		modified = true
 
@@ -534,9 +552,11 @@ func unlock_narrative_on_level_completed(level_id: String) -> void:
 		var next_intro: String = "tr_lvl_%02d_intro" % (idx + 1)
 		if NarrativeRegistryClass.TRANSMISSIONS.has(next_intro) and not unlocked_transmissions.has(next_intro):
 			unlocked_transmissions.append(next_intro)
+			print("[SaveManager] Unlocked next chapter opening transmission: %s" % next_intro)
 			modified = true
 	elif level_id == "lvl_10":
 		story_ending_unlocked = true
+		print("[SaveManager] Story ending unlocked!")
 		modified = true
 
 	if modified:

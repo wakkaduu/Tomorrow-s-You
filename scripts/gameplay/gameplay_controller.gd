@@ -62,6 +62,7 @@ const NarrativeRegistryClass = preload("res://scripts/narrative/narrative_regist
 # Modal buttons
 @onready var btn_resume: Button = $Modals/PauseModal/Margin/VBoxContainer/ResumeButton
 @onready var btn_modal_restart: Button = $Modals/PauseModal/Margin/VBoxContainer/RestartButton
+@onready var btn_modal_transmission: Button = $Modals/PauseModal/Margin/VBoxContainer/TransmissionButton
 @onready var btn_modal_levels: Button = $Modals/PauseModal/Margin/VBoxContainer/LevelsButton
 @onready var btn_modal_settings: Button = $Modals/PauseModal/Margin/VBoxContainer/SettingsButton
 
@@ -125,13 +126,23 @@ func _ready() -> void:
 	# Check and unlock opening transmission
 	if current_level_def:
 		var lid: String = current_level_def.level_id
+		print("[NARRATIVE] Initializing level %s (Chapter %s)" % [lid, NarrativeRegistryClass.get_chapter_info(lid).get("code", "CH")])
 		if SaveManager:
 			SaveManager.unlock_narrative_on_level_started(lid)
 		var intro_tr: Dictionary = NarrativeRegistryClass.get_opening_transmission(lid)
 		if not intro_tr.is_empty():
 			var tid: String = intro_tr.get("id", "")
-			if SaveManager and not SaveManager.is_transmission_viewed(tid):
+			var viewed: bool = SaveManager.is_transmission_viewed(tid) if SaveManager else false
+			print("[NARRATIVE] Found opening transmission '%s' (sender: %s, lines: %d, viewed: %s)" % [
+				tid, intro_tr.get("sender", ""), intro_tr.get("lines", []).size(), viewed
+			])
+			if not viewed:
+				print("[NARRATIVE] DISPLAYING opening transmission modal for '%s'" % tid)
 				show_transmission(intro_tr)
+			else:
+				print("[NARRATIVE] SKIPPING opening transmission '%s' (already viewed in save data)" % tid)
+		else:
+			print("[NARRATIVE] No opening transmission registered for level: %s" % lid)
 
 	get_viewport().size_changed.connect(_on_viewport_resized)
 
@@ -272,6 +283,15 @@ func _bind_ui_buttons() -> void:
 		_toggle_pause()
 		simulation.restart_attempt()
 	)
+	if btn_modal_transmission:
+		btn_modal_transmission.pressed.connect(func():
+			if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+			_toggle_pause()
+			var intro_tr = NarrativeRegistryClass.get_opening_transmission(current_level_def.level_id)
+			if not intro_tr.is_empty():
+				print("[NARRATIVE] Manually replaying transmission from Pause menu for %s" % current_level_def.level_id)
+				show_transmission(intro_tr)
+		)
 	btn_modal_levels.pressed.connect(func():
 		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
 		SceneRouter.go_to_level_select()
@@ -504,9 +524,11 @@ func _on_level_completed(turns: int, echoes: int, total_actions: int) -> void:
 	var log_id: String = chapter.get("log_id", "")
 	if not log_id.is_empty():
 		var log_data: Dictionary = NarrativeRegistryClass.get_log(log_id)
+		print("[NARRATIVE] Level %s complete -> Unlocking recovered log: %s (%s)" % [current_level_def.level_id, log_id, log_data.get("title", "")])
 		log_reward_label.text = "✦ ARCHIVE RECORD RESTORED: [%s %s]" % [log_id.to_upper(), log_data.get("title", "")]
 		log_reward_label.visible = true
 	else:
+		print("[NARRATIVE] Level %s complete -> No recovered log for this level" % current_level_def.level_id)
 		log_reward_label.visible = false
 
 	if GameManager and not GameManager.next_level_exists():
@@ -523,6 +545,7 @@ func _on_level_completed(turns: int, echoes: int, total_actions: int) -> void:
 
 	if current_level_def.level_id == "lvl_10":
 		# Level 10 ending sequence
+		print("[NARRATIVE] Level 10 completed! Initiating final sequence and ending transition.")
 		var on_outro_finished = func():
 			if background and background.has_method("set_ending_stabilized"):
 				background.set_ending_stabilized()
@@ -546,10 +569,13 @@ func _on_level_completed(turns: int, echoes: int, total_actions: int) -> void:
 		if background and background.has_method("set_level_complete"):
 			background.set_level_complete(true)
 		if not outro_tr.is_empty() and SaveManager and not SaveManager.is_transmission_viewed(outro_tr.get("id", "")):
+			print("[NARRATIVE] Outro transmission '%s' available and unviewed. Displaying before level completion modal." % outro_tr.get("id", ""))
 			show_transmission(outro_tr, func():
 				complete_modal.visible = true
 			)
 		else:
+			if not outro_tr.is_empty():
+				print("[NARRATIVE] Outro transmission '%s' already viewed; proceeding directly to complete modal." % outro_tr.get("id", ""))
 			complete_modal.visible = true
 
 	print("[SCENE] Level Complete sequence executed")
@@ -565,6 +591,9 @@ func show_transmission(trans: Dictionary, on_completed: Callable = Callable()) -
 	var lines: Array = trans.get("lines", [])
 	_current_transmission_line = 0
 
+	var tid = trans.get("id", "unknown")
+	print("[NARRATIVE] Displaying transmission modal '%s' (Lines: %d)" % [tid, lines.size()])
+
 	transmission_sender.text = trans.get("sender", "MORROW // FACILITY AI")
 	transmission_channel.text = trans.get("channel", "EMERGENCY CONTAINMENT LINK")
 
@@ -575,9 +604,6 @@ func show_transmission(trans: Dictionary, on_completed: Callable = Callable()) -
 
 	btn_proceed_transmission.text = "NEXT ▶" if lines.size() > 1 else "PROCEED ▶"
 	transmission_modal.visible = true
-
-	if SaveManager:
-		SaveManager.mark_transmission_viewed(trans.get("id", ""))
 
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
@@ -598,6 +624,10 @@ func _advance_transmission() -> void:
 		_close_transmission()
 
 func _close_transmission() -> void:
+	if SaveManager and not _active_transmission.is_empty():
+		var tid = _active_transmission.get("id", "")
+		print("[NARRATIVE] Closing transmission '%s' and marking as viewed in SaveManager." % tid)
+		SaveManager.mark_transmission_viewed(tid)
 	transmission_modal.visible = false
 	var cb = _transmission_callback
 	_active_transmission = {}

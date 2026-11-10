@@ -308,6 +308,11 @@ custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "RESTART ATTEMPT"
 
+[node name="TransmissionButton" type="Button" parent="Modals/PauseModal/Margin/VBoxContainer"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "COMM LOG / TRANSMISSION"
+
 [node name="LevelsButton" type="Button" parent="Modals/PauseModal/Margin/VBoxContainer"]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://test_opening_flow_001"]
+
+[ext_resource type="Script" path="res://tests/narrative/test_opening_transmission_flow.gd" id="1_test"]
+
+[node name="TestOpeningFlow" type="Node"]
+script = ExtResource("1_test")

@@ -387,3 +387,4 @@ func _style_components() -> void:
 	sb.shadow_offset = Vector2(0, 4)
 	if reader_modal:
 		reader_modal.add_theme_stylebox_override("panel", sb)
+

@@ -196,3 +196,4 @@ Throughout the campaign, the player may have perceived previous deaths or resets
 | **Dr. Sera Venn** | Chief Temporal Physicist and author of the Recovered Logs. | Author of the collectible research lore items. |
 | **Chrono-Weave** | The synthetic localized spacetime fabric inside the facility. | The puzzle grid and level topologies. |
 | **Tomorrow Protocol** | Emergency procedure reconciling all iterations to restore reality. | The campaign completion sequence. |
+
