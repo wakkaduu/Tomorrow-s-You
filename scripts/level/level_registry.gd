@@ -3,11 +3,13 @@ extends RefCounted
 
 ## Master Level Registry for Tomorrow's You.
 ## Contains 10 handcrafted, verified campaign levels across 3 sectors.
-## Every level physically and logically enforces Echo cooperation:
+## Intended Echo roles used by the bounded shortest-route solver:
 ## - Sector 1 (Levels 1–3): Minimum 1 Echo required
 ## - Sector 2 (Levels 4–7): Minimum 2 Echoes required
 ## - Sector 3 (Levels 8–10): Minimum 3 Echoes required
-## Zero-Echo bypass routes are completely eliminated via sealed chamber topology.
+## WAIT limits are proven within that intended domain; movement remains unrestricted.
+## A pre-existing two-Echo Nightmare sequence-latch route is documented in
+## docs/WAIT_BALANCING_REPORT.md; intended roles are not global minimum proofs.
 
 static func get_all_levels() -> Array[LevelDefinition]:
 	var levels: Array[LevelDefinition] = []
@@ -46,6 +48,7 @@ static func get_level_count() -> int:
 static func _create_level_01() -> LevelDefinition:
 	var lvl: LevelDefinition = LevelDefinition.new()
 	lvl.level_id = "lvl_01"
+	lvl.max_wait_actions = 3
 	lvl.level_name = "First Contact"
 	lvl.sector = 1
 	lvl.difficulty_tier = 1
@@ -76,6 +79,7 @@ static func _create_level_01() -> LevelDefinition:
 static func _create_level_02() -> LevelDefinition:
 	var lvl: LevelDefinition = LevelDefinition.new()
 	lvl.level_id = "lvl_02"
+	lvl.max_wait_actions = 2
 	lvl.level_name = "Stay Behind"
 	lvl.sector = 1
 	lvl.difficulty_tier = 1
@@ -107,6 +111,7 @@ static func _create_level_02() -> LevelDefinition:
 static func _create_level_03() -> LevelDefinition:
 	var lvl: LevelDefinition = LevelDefinition.new()
 	lvl.level_id = "lvl_03"
+	lvl.max_wait_actions = 1
 	lvl.level_name = "Double Perspective"
 	lvl.sector = 1
 	lvl.difficulty_tier = 1
@@ -141,6 +146,7 @@ static func _create_level_03() -> LevelDefinition:
 static func _create_level_04() -> LevelDefinition:
 	var lvl: LevelDefinition = LevelDefinition.new()
 	lvl.level_id = "lvl_04"
+	lvl.max_wait_actions = 2
 	lvl.level_name = "Sequential Relay"
 	lvl.sector = 2
 	lvl.difficulty_tier = 2
@@ -174,6 +180,7 @@ static func _create_level_04() -> LevelDefinition:
 static func _create_level_05() -> LevelDefinition:
 	var lvl: LevelDefinition = LevelDefinition.new()
 	lvl.level_id = "lvl_05"
+	lvl.max_wait_actions = 4
 	lvl.level_name = "Split Decision"
 	lvl.sector = 2
 	lvl.difficulty_tier = 2
@@ -206,6 +213,7 @@ static func _create_level_05() -> LevelDefinition:
 static func _create_level_06() -> LevelDefinition:
 	var lvl: LevelDefinition = LevelDefinition.new()
 	lvl.level_id = "lvl_06"
+	lvl.max_wait_actions = 4
 	lvl.level_name = "Crossed Signals"
 	lvl.sector = 2
 	lvl.difficulty_tier = 3
@@ -239,6 +247,7 @@ static func _create_level_06() -> LevelDefinition:
 static func _create_level_07() -> LevelDefinition:
 	var lvl: LevelDefinition = LevelDefinition.new()
 	lvl.level_id = "lvl_07"
+	lvl.max_wait_actions = 8
 	lvl.level_name = "No Turning Back"
 	lvl.sector = 2
 	lvl.difficulty_tier = 3
@@ -276,6 +285,7 @@ static func _create_level_07() -> LevelDefinition:
 static func _create_level_08() -> LevelDefinition:
 	var lvl: LevelDefinition = LevelDefinition.new()
 	lvl.level_id = "lvl_08"
+	lvl.max_wait_actions = 8
 	lvl.level_name = "Temporal Interlock"
 	lvl.sector = 3
 	lvl.difficulty_tier = 4
@@ -313,6 +323,7 @@ static func _create_level_08() -> LevelDefinition:
 static func _create_level_09() -> LevelDefinition:
 	var lvl: LevelDefinition = LevelDefinition.new()
 	lvl.level_id = "lvl_09"
+	lvl.max_wait_actions = 20
 	lvl.level_name = "Parallel Existence"
 	lvl.sector = 3
 	lvl.difficulty_tier = 4
@@ -350,6 +361,7 @@ static func _create_level_09() -> LevelDefinition:
 static func _create_level_10() -> LevelDefinition:
 	var lvl: LevelDefinition = LevelDefinition.new()
 	lvl.level_id = "lvl_10"
+	lvl.max_wait_actions = 9
 	lvl.level_name = "The Last Tomorrow"
 	lvl.sector = 3
 	lvl.difficulty_tier = 5

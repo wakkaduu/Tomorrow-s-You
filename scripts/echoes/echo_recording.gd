@@ -23,6 +23,34 @@ func record_step(action: String, direction: Vector2i, position: Vector2i) -> voi
 		"position": position
 	})
 
+func has_valid_actions() -> bool:
+	var previous: Vector2i = spawn_pos
+	for i in range(steps.size()):
+		var step: Dictionary = steps[i]
+		var action: String = str(step.get("action", ""))
+		var direction = step.get("direction")
+		var position = step.get("position")
+		if not (direction is Vector2i) or not (position is Vector2i) or step.get("turn", -1) != i + 1:
+			return false
+		if action == "MOVE":
+			if direction not in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT] or position != previous + direction:
+				return false
+		elif action in ["WAIT", "INTERACT"]:
+			if direction != Vector2i.ZERO or position != previous:
+				return false
+		else:
+			return false
+		previous = position
+	return true
+
+func get_wait_action_count() -> int:
+	var count: int = 0
+	for step: Dictionary in steps:
+		# Legacy idle INTERACT recordings must not bypass the shared allowance.
+		if str(step.get("action", "")).to_upper() in ["WAIT", "INTERACT"]:
+			count += 1
+	return count
+
 func get_step_count() -> int:
 	return steps.size()
 

@@ -438,6 +438,8 @@ func _init() -> void:
 			{"id": "2", "pos": Vector2i(3, 2)},
 			{"id": "3", "pos": Vector2i(5, 2)}
 		], 3)
+		# This synthetic coordination fixture records 19 WAITs across all attempts.
+		lvl.max_wait_actions = 19
 		var sim: PuzzleSimulation = PuzzleSimulation.new()
 		sim.load_level(lvl)
 
@@ -531,6 +533,8 @@ func _init() -> void:
 			"#...#",
 			"####X"
 		], [], [], 3)
+		# 2 committed + 5 committed + 7 playback-driver WAITs.
+		lvl.max_wait_actions = 14
 		var sim: PuzzleSimulation = PuzzleSimulation.new()
 		sim.load_level(lvl)
 

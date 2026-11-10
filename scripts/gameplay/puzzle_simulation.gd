@@ -4,6 +4,8 @@ extends RefCounted
 ## Pure, deterministic simulation of the Tomorrow's You gameplay mechanics.
 ## Fully decoupled from visual rendering and UI for automated testing and rock-solid determinism.
 
+signal wait_limit_reached()
+
 signal turn_completed(turn_index: int)
 signal player_moved(from_pos: Vector2i, to_pos: Vector2i, action: String)
 signal echo_stepped(echo_index: int, pos: Vector2i, action: String)
@@ -21,6 +23,8 @@ signal sequence_reset(door_id: String)
 
 enum GameState { PLAYING, PAUSED, COMPLETED, FAILED }
 var game_state: GameState = GameState.PLAYING
+
+var debug_turn_logging: bool = false
 
 var level_def: LevelDefinition = null
 var current_turn: int = 0
@@ -55,6 +59,8 @@ func restart_attempt() -> void:
 	sequence_progress.clear()
 	sequence_unlocked.clear()
 
+	plates_state.clear()
+	doors_state.clear()
 	# Initialize states at turn 0
 	_recalculate_plates_and_doors()
 	attempt_restarted.emit()
@@ -65,6 +71,15 @@ func create_echo() -> bool:
 	if current_recording == null or current_recording.get_step_count() == 0:
 		# Empty attempt, just restart without creating echo
 		restart_attempt()
+		return false
+
+	for recording: EchoRecording in echoes + [current_recording]:
+		if not recording.has_valid_actions():
+			move_blocked.emit(player_pos, "INVALID_RECORDING")
+			return false
+
+	if get_wait_actions_used() > level_def.max_wait_actions:
+		wait_limit_reached.emit()
 		return false
 
 	if echoes.size() >= level_def.echo_limit:
@@ -125,6 +140,10 @@ func step_move(dir: Vector2i) -> bool:
 	if game_state == GameState.COMPLETED or is_completed or level_def == null:
 		return false
 
+	if dir not in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+		move_blocked.emit(player_pos, "INVALID_DIRECTION")
+		return false
+
 	var target_pos: Vector2i = player_pos + dir
 
 	# 1. Check wall collision
@@ -147,60 +166,68 @@ func step_move(dir: Vector2i) -> bool:
 	current_turn += 1
 	total_actions_taken += 1
 	current_recording.record_step("MOVE", dir, player_pos)
-	player_moved.emit(from_pos, player_pos, "MOVE")
-
-	_advance_turn()
+	_advance_turn(from_pos, "MOVE")
 	return true
 
 func step_wait() -> bool:
 	if game_state == GameState.COMPLETED or is_completed or level_def == null:
 		return false
 
-	current_turn += 1
-	total_actions_taken += 1
-	current_recording.record_step("WAIT", Vector2i.ZERO, player_pos)
-	player_moved.emit(player_pos, player_pos, "WAIT")
-
-	_advance_turn()
-	return true
-
-func step_interact() -> bool:
-	if game_state == GameState.COMPLETED or is_completed or level_def == null:
+	if get_remaining_wait_actions() <= 0:
+		wait_limit_reached.emit()
 		return false
 
 	current_turn += 1
 	total_actions_taken += 1
-	current_recording.record_step("INTERACT", Vector2i.ZERO, player_pos)
-	player_moved.emit(player_pos, player_pos, "INTERACT")
-
-	_advance_turn()
+	current_recording.record_step("WAIT", Vector2i.ZERO, player_pos)
+	_advance_turn(player_pos, "WAIT")
 	return true
 
-func _advance_turn() -> void:
-	print("[TURN] Global turn: %d" % current_turn)
+func step_interact() -> bool:
+	# There is no separate interactable mechanic: stationary time advancement is WAIT.
+	return step_wait()
 
-	# 1. Advance echoes & emit stepped or expired
+func get_wait_actions_used() -> int:
+	var used: int = 0
+	for echo: EchoRecording in echoes:
+		used += echo.get_wait_action_count()
+	if current_recording != null:
+		used += current_recording.get_wait_action_count()
+	return used
+
+func get_remaining_wait_actions() -> int:
+	return maxi(0, level_def.max_wait_actions - get_wait_actions_used()) if level_def else 0
+
+func get_turn_snapshot() -> Dictionary:
+	var actors: Array[Dictionary] = []
+	for i in range(echoes.size()):
+		actors.append({"index": i, "active": is_echo_active(i), "position": get_echo_position(i)})
+	var next_doors: Dictionary = {}
+	for door: Dictionary in level_def.doors_data if level_def else []:
+		var did: String = str(door.get("id", ""))
+		next_doors[did] = is_door_open_at_turn(did, current_turn + 1)
+	return {"turn": current_turn, "player": player_pos, "echoes": actors,
+		"plates": plates_state.duplicate(), "doors": doors_state.duplicate(),
+		"next_doors": next_doors, "wait_used": get_wait_actions_used(),
+		"wait_remaining": get_remaining_wait_actions()}
+
+func _advance_turn(from_pos: Vector2i, action: String) -> void:
+	# Commit order: accepted player action -> Echo positions at current_turn ->
+	# plates/door/sequence resolution -> presentation signals -> exit -> HUD.
+	# Door entry is validated BEFORE commit using upcoming Echo positions and the
+	# player's pre-move position (is_door_open_at_turn). Historical Echoes never collide.
+	_recalculate_plates_and_doors()
+	player_moved.emit(from_pos, player_pos, action)
 	for i in range(echoes.size()):
 		var echo: EchoRecording = echoes[i]
 		var echo_pos: Vector2i = echo.get_position_at_turn(current_turn)
-		var echo_action: String = echo.get_action_at_turn(current_turn)
 		if current_turn == echo.get_step_count() + 1:
-			print("[ECHO] Echo %d expired." % (i + 1))
 			echo_expired.emit(i, echo_pos)
-		echo_stepped.emit(i, echo_pos, echo_action)
-
-	print("[PLAYER] Current position: %s" % str(player_pos))
-	if level_def:
-		print("[EXIT] Exit position: %s" % str(level_def.exit_pos))
-		print("[EXIT] Exit available: %s" % str(is_exit_available()).to_lower())
-
-	# 2. Recalculate environment (plates & doors)
-	_recalculate_plates_and_doors()
-
-	# 3. Check level completion (REAL PLAYER ONLY)
+		echo_stepped.emit(i, echo_pos, echo.get_action_at_turn(current_turn))
 	check_level_completion()
-
 	turn_completed.emit(current_turn)
+	if OS.is_debug_build() and debug_turn_logging:
+		print("[RESOLVED TURN] ", get_turn_snapshot())
 
 func _recalculate_plates_and_doors() -> void:
 	if level_def == null:
@@ -214,6 +241,7 @@ func _recalculate_plates_and_doors() -> void:
 			active_positions.append(echo.get_position_at_turn(current_turn))
 
 	var newly_pressed_plates: Array[String] = []
+	var notifications: Array[Array] = []
 
 	# 1. Update plates
 	for p: Dictionary in level_def.plates_data:
@@ -227,7 +255,7 @@ func _recalculate_plates_and_doors() -> void:
 
 		if old_state != is_pressed or not plates_state.has(pid):
 			plates_state[pid] = is_pressed
-			plate_state_changed.emit(pid, is_pressed)
+			notifications.append(["plate_state_changed", pid, is_pressed])
 
 	# 2. Update doors
 	for d: Dictionary in level_def.doors_data:
@@ -260,13 +288,13 @@ func _recalculate_plates_and_doors() -> void:
 						if curr_step < seq.size() and pid == str(seq[curr_step]):
 							curr_step += 1
 							sequence_progress[did] = curr_step
-							sequence_advanced.emit(did, curr_step, seq.size())
+							notifications.append(["sequence_advanced", did, curr_step, seq.size()])
 							if curr_step >= seq.size():
 								sequence_unlocked[did] = true
 								condition_met = true
 						else:
 							sequence_progress[did] = 0
-							sequence_reset.emit(did)
+							notifications.append(["sequence_reset", did])
 
 		# CRITICAL SAFETY RULE:
 		# Never close a physical door on the real player standing inside its tile!
@@ -276,7 +304,11 @@ func _recalculate_plates_and_doors() -> void:
 		var old_door: bool = doors_state.get(did, false)
 		if old_door != condition_met or not doors_state.has(did):
 			doors_state[did] = condition_met
-			door_state_changed.emit(did, condition_met)
+			notifications.append(["door_state_changed", did, condition_met])
+
+	# Observers only receive notifications after all environment tables are committed.
+	for notification: Array in notifications:
+		callv("emit_signal", notification)
 
 func get_echo_position(echo_index: int) -> Vector2i:
 	if echo_index < 0 or echo_index >= echoes.size():

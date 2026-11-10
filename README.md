@@ -9,7 +9,7 @@
 ## Features
 
 - **Unique Temporal Echo Mechanic**: Save your current attempt as an Echo. On each new attempt, previous Echoes replay their movements step-by-step alongside you.
-- **Deterministic Historical Playback**: Echoes follow their recorded positions and remain at their final destination to hold pressure plates.
+- **Deterministic Historical Playback**: Echoes follow their recorded positions through the final recorded turn, then expire before the next playback turn.
 - **10 Handcrafted Campaign Levels**:
   - **Sector 1 — Awakening**: Core movement and your first temporal teammate.
   - **Sector 2 — Synchronization**: AND-doors, relay doors, and strategic WAIT timing.
@@ -123,6 +123,21 @@ godot --headless tests/visual/test_temporal_background.tscn
 - **CREATE ECHO**: Store current attempt as a teammate and restart from spawn.
 - **RESTART**: Reset current attempt without creating an Echo.
 - **CLEAR ECHOES**: Clear all Echoes and start fresh.
+
+### Shared WAIT allowance
+Each level has a finite `max_wait_actions` budget shared by all committed Echo
+recordings and the current attempt. Echo playback never spends it again. The WAIT
+button shows the remaining allowance; exhausted requests do not advance time.
+Restart Attempt refunds only the discarded current recording. Clear Echoes resets
+the full puzzle allowance. The stationary Interact shortcut also uses WAIT validation.
+
+Campaign allowances are verified minima within the intended shortest-route domain;
+movement timing detours remain legal. See [WAIT balancing report](docs/WAIT_BALANCING_REPORT.md)
+for proofs, limits, and the known Nightmare two-Echo sequence-latch route.
+
+Doors display their resolved state immediately. Door entry retains the simultaneous
+turn rule: it uses the Echo positions on the proposed next turn. An amber cross and
+`NEXT: SHUT` warn when an open door will block that next move.
 
 ### Desktop
 | Action | Keybinding |

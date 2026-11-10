@@ -52,136 +52,14 @@ func _init() -> void:
 		quit(1)
 
 func _solve_level(idx: int, sim: PuzzleSimulation) -> bool:
-	match idx:
-		0: return _solve_lvl_01(sim)
-		1: return _solve_lvl_02(sim)
-		2: return _solve_lvl_03(sim)
-		3: return _solve_lvl_04(sim)
-		4: return _solve_lvl_05(sim)
-		5: return _solve_lvl_06(sim)
-		6: return _solve_lvl_07(sim)
-		7: return _solve_lvl_08(sim)
-		8: return _solve_lvl_09(sim)
-		9: return _solve_lvl_10(sim)
-	return false
-
-func _run_actions(sim: PuzzleSimulation, actions: String) -> void:
-	for i in range(actions.length()):
-		var ch: String = actions[i]
-		match ch:
-			"U": sim.step_move(Vector2i.UP)
-			"D": sim.step_move(Vector2i.DOWN)
-			"L": sim.step_move(Vector2i.LEFT)
-			"R": sim.step_move(Vector2i.RIGHT)
-			"W": sim.step_wait()
-			" ": pass
-
-# ------------------------------------------------------------------------------
-# LEVEL 1: First Contact (Sector 1, Min 1 Echo)
-# ------------------------------------------------------------------------------
-func _solve_lvl_01(sim: PuzzleSimulation) -> bool:
-	_run_actions(sim, "DDDWWWWW")
-	sim.create_echo()
-	_run_actions(sim, "RRRDDDRR")
-	return sim.is_completed
-
-# ------------------------------------------------------------------------------
-# LEVEL 2: Stay Behind (Sector 1, Min 1 Echo)
-# ------------------------------------------------------------------------------
-func _solve_lvl_02(sim: PuzzleSimulation) -> bool:
-	_run_actions(sim, "DDDDWWWW")
-	sim.create_echo()
-	_run_actions(sim, "RRRDDRRR")
-	return sim.is_completed
-
-# ------------------------------------------------------------------------------
-# LEVEL 3: Double Perspective (Sector 1, Min 1 Echo)
-# ------------------------------------------------------------------------------
-func _solve_lvl_03(sim: PuzzleSimulation) -> bool:
-	_run_actions(sim, "RRRRRRWWWW")
-	sim.create_echo()
-	_run_actions(sim, "RRRDWWDD RRR")
-	return sim.is_completed
-
-# ------------------------------------------------------------------------------
-# LEVEL 4: Sequential Relay (Sector 2, Min 2 Echoes)
-# ------------------------------------------------------------------------------
-func _solve_lvl_04(sim: PuzzleSimulation) -> bool:
-	_run_actions(sim, "RRWWWWWWWW")
-	sim.create_echo()
-	_run_actions(sim, "DRRRRURRWWWWWW")
-	sim.create_echo()
-	_run_actions(sim, "DRRRRDD W LLLD")
-	return sim.is_completed
-
-# ------------------------------------------------------------------------------
-# LEVEL 5: Split Decision (Sector 2, Min 2 Echoes, AND Door A)
-# ------------------------------------------------------------------------------
-func _solve_lvl_05(sim: PuzzleSimulation) -> bool:
-	_run_actions(sim, "LLLUUWWWW")
-	sim.create_echo()
-	_run_actions(sim, "RRRUUWWWW")
-	sim.create_echo()
-	_run_actions(sim, "WWWWW DD")
-	return sim.is_completed
-
-# ------------------------------------------------------------------------------
-# LEVEL 6: Crossed Signals (Sector 2, Min 2 Echoes)
-# ------------------------------------------------------------------------------
-func _solve_lvl_06(sim: PuzzleSimulation) -> bool:
-	_run_actions(sim, "DDWWWWWWWW")
-	sim.create_echo()
-	_run_actions(sim, "DRRRRRURRWWWWWW")
-	sim.create_echo()
-	_run_actions(sim, "DRRRRRDDDRRR")
-	return sim.is_completed
-
-# ------------------------------------------------------------------------------
-# LEVEL 7: No Turning Back (Sector 2, Min 2 Echoes, AND Door B)
-# ------------------------------------------------------------------------------
-func _solve_lvl_07(sim: PuzzleSimulation) -> bool:
-	_run_actions(sim, "RRRWWWWWWWW")
-	sim.create_echo()
-	_run_actions(sim, "DRRRRRURRWWWWWW")
-	sim.create_echo()
-	_run_actions(sim, "DRRRRRDDDRRR")
-	return sim.is_completed
-
-# ------------------------------------------------------------------------------
-# LEVEL 8: Temporal Interlock (Sector 3, Min 3 Echoes)
-# ------------------------------------------------------------------------------
-func _solve_lvl_08(sim: PuzzleSimulation) -> bool:
-	_run_actions(sim, "RRRWWWWWWWWWWWW")
-	sim.create_echo()
-	_run_actions(sim, "RRRRDDRRRWWWWWW")
-	sim.create_echo()
-	_run_actions(sim, "RRRRDD WWW D DLLL WWWW")
-	sim.create_echo()
-	_run_actions(sim, "RRRRDD WWW DD WWW DD")
-	return sim.is_completed
-
-# ------------------------------------------------------------------------------
-# LEVEL 9: Parallel Existence (Sector 3, Min 3 Echoes, Cumulative AND Matrix)
-# ------------------------------------------------------------------------------
-func _solve_lvl_09(sim: PuzzleSimulation) -> bool:
-	_run_actions(sim, "RRRWWWWWWWWWWWW")
-	sim.create_echo()
-	_run_actions(sim, "RRRRDDRRRWWWWWW")
-	sim.create_echo()
-	_run_actions(sim, "RRRRDD WWW D DLLL WWWW")
-	sim.create_echo()
-	_run_actions(sim, "RRRRDD WWW DD WWW DD")
-	return sim.is_completed
-
-# ------------------------------------------------------------------------------
-# LEVEL 10: The Last Tomorrow (Sector 3, Min 3 Echoes, 4-Quadrant Synchronization)
-# ------------------------------------------------------------------------------
-func _solve_lvl_10(sim: PuzzleSimulation) -> bool:
-	_run_actions(sim, "DRWWWWWWWWWWWWWW")
-	sim.create_echo()
-	_run_actions(sim, "DRRRRRURRRWWWWWWWW")
-	sim.create_echo()
-	_run_actions(sim, "DRRRRRDWWWWDDDRRWWWW")
-	sim.create_echo()
-	_run_actions(sim, "DRRRRRDWWWWDDD WW LLDL")
-	return sim.is_completed
+	var solutions = preload("res://scripts/level/campaign_solutions.gd")
+	var directions: Dictionary = {"U": Vector2i.UP, "D": Vector2i.DOWN, "L": Vector2i.LEFT, "R": Vector2i.RIGHT}
+	for action in solutions.get_actions(sim.level_def.level_id):
+		var accepted: bool = false
+		if action == "ECHO": accepted = sim.create_echo()
+		elif action == "W": accepted = sim.step_wait()
+		else: accepted = sim.step_move(directions[action])
+		if not accepted:
+			push_error("Verified solution action rejected: %s at %d" % [action, sim.current_turn])
+			return false
+	return sim.is_completed and sim.echoes.size() == sim.level_def.min_echoes_required and sim.get_wait_actions_used() == sim.level_def.max_wait_actions and sim.total_actions_taken <= sim.level_def.target_3_stars

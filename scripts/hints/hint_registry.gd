@@ -8,6 +8,8 @@ extends RefCounted
 
 const HintDefinitionClass = preload("res://scripts/hints/hint_definition.gd")
 
+const CampaignSolutionsClass = preload("res://scripts/level/campaign_solutions.gd")
+
 const DAILY_HINT_LIMIT: int = 3
 
 static func get_hints_for_level(level_id: String) -> HintDefinitionClass:
@@ -62,7 +64,7 @@ static func _create_lvl_01_hints() -> HintDefinitionClass:
 		{
 			"stage": 2,
 			"title": "Stage 3 — Solution",
-			"text": "Echo 1: Move DOWN 3 times to Plate 1, press WAIT 5 times, then tap CREATE ECHO.\nPlayer Run: Move RIGHT 3 times, DOWN 3 times through Door A before Echo 1 expires, and RIGHT 2 times to reach the exit."
+			"text": CampaignSolutionsClass.get_solution_text("lvl_01")
 		}
 	]
 	return def
@@ -79,12 +81,12 @@ static func _create_lvl_02_hints() -> HintDefinitionClass:
 		{
 			"stage": 1,
 			"title": "Stage 2 — Strategy",
-			"text": "The journey to Door A takes 5 turns from spawn. An Echo reaching Plate 1 after 4 steps will expire on turn 5 unless you record explicit WAIT turns on the plate to hold the door open."
+			"text": "Door A is six moves from spawn. Record four DOWN moves and two WAITs so your Echo still holds Plate 1 when you enter the door on turn six."
 		},
 		{
 			"stage": 2,
 			"title": "Stage 3 — Solution",
-			"text": "Echo 1: Move DOWN 4 times to step on Plate 1, then WAIT 4 times to keep Door A held open. Tap CREATE ECHO.\nPlayer Run: Move RIGHT 3 times, DOWN 2 times through Door A, and RIGHT 3 times to the exit."
+			"text": CampaignSolutionsClass.get_solution_text("lvl_02")
 		}
 	]
 	return def
@@ -101,12 +103,12 @@ static func _create_lvl_03_hints() -> HintDefinitionClass:
 		{
 			"stage": 1,
 			"title": "Stage 2 — Strategy",
-			"text": "Echo 1 requires 6 steps to reach Plate 1, but your path to Door A only takes 4 steps. You must deliberately WAIT at the door until Echo 1 arrives to unlock it, and Echo 1 must record extra WAITs to avoid expiring too early."
+			"text": "Echo 1 reaches Plate 1 on turn six. Commit that six-move recording without extra WAITs. In the player run, use one WAIT before entering Door A on turn six; its safety interlock protects you after entry."
 		},
 		{
 			"stage": 2,
 			"title": "Stage 3 — Solution",
-			"text": "Echo 1: Move RIGHT 6 times to Plate 1, record 4 WAITs, and CREATE ECHO.\nPlayer Run: Move RIGHT 3, DOWN 1 to face Door A. Press WAIT 2 times until Echo 1 reaches Plate 1 to open Door A, then step DOWN 2 times and RIGHT 3 times to exit."
+			"text": CampaignSolutionsClass.get_solution_text("lvl_03")
 		}
 	]
 	return def
@@ -128,7 +130,7 @@ static func _create_lvl_04_hints() -> HintDefinitionClass:
 		{
 			"stage": 2,
 			"title": "Stage 3 — Solution",
-			"text": "Echo 1: Move RIGHT 2 to Plate 1, WAIT 8 times, and tap CREATE ECHO.\nEcho 2: Move DOWN 1, RIGHT 4 through Door A, UP 1, RIGHT 2 onto Plate 2, WAIT 6 times, and CREATE ECHO.\nPlayer Run: Move DOWN 1, RIGHT 4 through Door A, DOWN 2, WAIT 1 turn for Door B to unlock, then LEFT 3 and DOWN 1 to exit."
+			"text": CampaignSolutionsClass.get_solution_text("lvl_04")
 		}
 	]
 	return def
@@ -145,12 +147,12 @@ static func _create_lvl_05_hints() -> HintDefinitionClass:
 		{
 			"stage": 1,
 			"title": "Stage 2 — Strategy",
-			"text": "Neither plate can be held by you during your final escape run. You must deploy Echo 1 to the west plate and Echo 2 to the east plate, both recording WAITs so their activations synchronize while you wait near Door A."
+			"text": "Deploy an Echo to each wing plate using five moves per recording, without extra WAITs. In the final run, WAIT four times at spawn, then enter Door A on turn five while both Echoes occupy their final recorded positions."
 		},
 		{
 			"stage": 2,
 			"title": "Stage 3 — Solution",
-			"text": "Echo 1: Move LEFT 3, UP 2 to Plate 1, WAIT 4 times, and tap CREATE ECHO.\nEcho 2: Move RIGHT 3, UP 2 to Plate 2, WAIT 4 times, and tap CREATE ECHO.\nPlayer Run: WAIT 5 turns at spawn while both Echoes reach their plates; when Door A opens, move DOWN 2 times to exit."
+			"text": CampaignSolutionsClass.get_solution_text("lvl_05")
 		}
 	]
 	return def
@@ -172,7 +174,7 @@ static func _create_lvl_06_hints() -> HintDefinitionClass:
 		{
 			"stage": 2,
 			"title": "Stage 3 — Solution",
-			"text": "Echo 1: Move DOWN 2 to Plate 1, WAIT 8 times, and tap CREATE ECHO.\nEcho 2: Move DOWN 1, RIGHT 5 through Door A, UP 1, RIGHT 2 to Plate 2, WAIT 6 times, and CREATE ECHO.\nPlayer Run: Move DOWN 1, RIGHT 5 through Door A, DOWN 3, and RIGHT 3 through Door B directly to the exit."
+			"text": CampaignSolutionsClass.get_solution_text("lvl_06")
 		}
 	]
 	return def
@@ -194,7 +196,7 @@ static func _create_lvl_07_hints() -> HintDefinitionClass:
 		{
 			"stage": 2,
 			"title": "Stage 3 — Solution",
-			"text": "Echo 1: Move RIGHT 3 to Plate 1, WAIT 8 times, and tap CREATE ECHO.\nEcho 2: Move DOWN 1, RIGHT 5 through Door A, UP 1, RIGHT 2 to Plate 2, WAIT 6 times, and CREATE ECHO.\nPlayer Run: Move DOWN 1, RIGHT 5 through Door A, DOWN 3, and RIGHT 3 through Door B to the exit before Echo 1 expires."
+			"text": CampaignSolutionsClass.get_solution_text("lvl_07")
 		}
 	]
 	return def
@@ -211,12 +213,12 @@ static func _create_lvl_08_hints() -> HintDefinitionClass:
 		{
 			"stage": 1,
 			"title": "Stage 2 — Strategy",
-			"text": "Coordinate a 3-stage temporal relay. Echo 1 holds Door A for Echoes 2, 3, and yourself. Echo 2 rushes to Chamber 2's Plate 2 to open Door B. Echo 3 waits for Door B, rushes to Plate 3, and opens Door C. Echo 1 and Echo 2 must record generous WAIT counts."
+			"text": "Coordinate a 3-stage temporal relay. Echo 1 holds Door A for Echoes 2, 3, and yourself. Echo 2 rushes to Chamber 2's Plate 2 to open Door B. Echo 3 waits for Door B, rushes to Plate 3, and opens Door C. Echo 1 needs two WAITs. Echo 2 can end as soon as it reaches Plate 2. Time the remaining two recordings with the exact shared allowance shown below."
 		},
 		{
 			"stage": 2,
 			"title": "Stage 3 — Solution",
-			"text": "Echo 1: Move RIGHT 3 to Plate 1, WAIT 12 times, tap CREATE ECHO.\nEcho 2: Move RIGHT 4, DOWN 2, RIGHT 3 to Plate 2, WAIT 6 times, tap CREATE ECHO.\nEcho 3: Move RIGHT 4, DOWN 2, WAIT 3 times at Door B, move DOWN 2, LEFT 3 to Plate 3, WAIT 4 times, tap CREATE ECHO.\nPlayer Run: Move RIGHT 4, DOWN 2, WAIT 3 times at Door B, DOWN 2, WAIT 3 times at Door C, and DOWN 2 to exit."
+			"text": CampaignSolutionsClass.get_solution_text("lvl_08")
 		}
 	]
 	return def
@@ -238,7 +240,7 @@ static func _create_lvl_09_hints() -> HintDefinitionClass:
 		{
 			"stage": 2,
 			"title": "Stage 3 — Solution",
-			"text": "Echo 1: Move RIGHT 3 to Plate 1, WAIT 12 times, and CREATE ECHO.\nEcho 2: Move RIGHT 4, DOWN 2, RIGHT 3 to Plate 2, WAIT 6 times, and CREATE ECHO.\nEcho 3: Move RIGHT 4, DOWN 2, WAIT 3 times, DOWN 2, LEFT 3 to Plate 3, WAIT 4 times, and CREATE ECHO.\nPlayer Run: Follow behind: RIGHT 4, DOWN 2, WAIT 3 times at Door B, DOWN 2, WAIT 3 times at Door C, and DOWN 2 to exit."
+			"text": CampaignSolutionsClass.get_solution_text("lvl_09")
 		}
 	]
 	return def
@@ -260,7 +262,7 @@ static func _create_lvl_10_hints() -> HintDefinitionClass:
 		{
 			"stage": 2,
 			"title": "Stage 3 — Solution",
-			"text": "Echo 1: Move DOWN 1, RIGHT 1 onto Plate 1, WAIT 14 times, and CREATE ECHO.\nEcho 2: Move DOWN 1, RIGHT 5, UP 1, RIGHT 3 onto Plate 2, WAIT 8 times, and CREATE ECHO.\nEcho 3: Move DOWN 1, RIGHT 5, DOWN 1, WAIT 4 times at Door B, move DOWN 3, RIGHT 2 onto Plate 3, WAIT 4 times, and CREATE ECHO.\nPlayer Run: Move DOWN 1, RIGHT 5, DOWN 1, WAIT 4 times, DOWN 3, WAIT 2 times for Door C to unlock, then move LEFT 2, DOWN 1, and LEFT 1 to the exit."
+			"text": CampaignSolutionsClass.get_solution_text("lvl_10")
 		}
 	]
 	return def

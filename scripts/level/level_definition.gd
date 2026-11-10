@@ -9,6 +9,7 @@ extends Resource
 @export var difficulty_tier: int = 1 # 1: Easy, 2: Normal, 3: Hard, 4: Expert, 5: Nightmare
 @export var target_3_stars: int = 0 # Max moves for 3 stars
 @export var target_2_stars: int = 0 # Max moves for 2 stars
+@export var max_wait_actions: int = 12 # Shared by committed Echoes and current attempt
 @export var echo_limit: int = 3
 @export var min_echoes_required: int = 1
 @export var intended_mechanic: String = ""
@@ -125,6 +126,9 @@ func validate() -> Array[String]:
 	if echo_limit <= 0 or echo_limit > 5:
 		errors.append("Echo limit must be between 1 and 5 (got %d)" % echo_limit)
 
+	if max_wait_actions < 0:
+		errors.append("WAIT allowance must be nonnegative")
+
 	# Validate plates
 	var plate_ids: Dictionary = {}
 	for p: Dictionary in plates_data:
@@ -159,3 +163,9 @@ func validate() -> Array[String]:
 				errors.append("Door %s references non-existent plate %s" % [did, str(rpid)])
 
 	return errors
+
+func get_rules_fingerprint() -> String:
+	# WAIT is excluded: the optimization result supplies that value.
+	return JSON.stringify({"id": level_id, "map": map_lines, "doors": doors_data,
+		"plates": plates_data, "echo_limit": echo_limit, "minimum_echoes": min_echoes_required,
+		"action_bound": target_3_stars, "rules": "simultaneous-entry/final-turn-active/v1"}).sha256_text()

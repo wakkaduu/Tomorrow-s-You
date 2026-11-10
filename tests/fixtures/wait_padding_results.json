@@ -1,0 +1,302 @@
+[
+	{
+		"action_bound": 40,
+		"actions": [
+			"D",
+			"U",
+			"R",
+			"R",
+			"ECHO",
+			"D",
+			"R",
+			"R",
+			"R",
+			"R",
+			"U",
+			"R",
+			"R",
+			"ECHO",
+			"D",
+			"R",
+			"R",
+			"R",
+			"R",
+			"D",
+			"D",
+			"L",
+			"L",
+			"D",
+			"L"
+		],
+		"domain": "shortest spatial routes + 2 movement slack per attempt; all distinct plate orders; WAIT anywhere; exactly intended Echo count",
+		"level_fingerprint": "4e447849d9d8176d6f42ba682459ad2ac35b0a8bc1d416ce7788360e962f4df3",
+		"level_id": "lvl_04",
+		"minimum_wait": 0,
+		"states_explored": 179,
+		"status": "PADDING_WITNESS",
+		"total_actions": 23,
+		"trials": [
+			{
+				"complete": true,
+				"found": true,
+				"states_explored": 179,
+				"wait_limit": 0
+			}
+		]
+	},
+	{
+		"action_bound": 18,
+		"actions": [],
+		"domain": "shortest spatial routes + 4 movement slack per attempt; all distinct plate orders; WAIT anywhere; exactly intended Echo count",
+		"level_fingerprint": "f5fadf1881eb46f4c08550b6fd111bf3c03615cf7ac73b522fdf14e1a56b0e87",
+		"level_id": "lvl_01",
+		"minimum_wait": null,
+		"states_explored": 436,
+		"status": "INCONCLUSIVE_GLOBAL",
+		"total_actions": null,
+		"trials": [
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 436,
+				"wait_limit": 0
+			}
+		]
+	},
+	{
+		"action_bound": 18,
+		"actions": [
+			"D",
+			"U",
+			"D",
+			"U",
+			"D",
+			"D",
+			"D",
+			"D",
+			"ECHO",
+			"D",
+			"U",
+			"D",
+			"D",
+			"R",
+			"R",
+			"R",
+			"R",
+			"R",
+			"R"
+		],
+		"domain": "shortest spatial routes + 4 movement slack per attempt; all distinct plate orders; WAIT anywhere; exactly intended Echo count",
+		"level_fingerprint": "de5c3433837686a1430c00b361bebe5b5c97958fe291d574bcdb90cc098ed8ae",
+		"level_id": "lvl_02",
+		"minimum_wait": 0,
+		"states_explored": 35,
+		"status": "PADDING_WITNESS",
+		"total_actions": 18,
+		"trials": [
+			{
+				"complete": true,
+				"found": true,
+				"states_explored": 35,
+				"wait_limit": 0
+			}
+		]
+	},
+	{
+		"action_bound": 24,
+		"actions": [],
+		"domain": "shortest spatial routes + 4 movement slack per attempt; all distinct plate orders; WAIT anywhere; exactly intended Echo count",
+		"level_fingerprint": "e6678f66278be7e7ebca8d74a047b462b640bae8eed6fab4d95c14ba397ed877",
+		"level_id": "lvl_03",
+		"minimum_wait": null,
+		"states_explored": 269,
+		"status": "INCONCLUSIVE_GLOBAL",
+		"total_actions": null,
+		"trials": [
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 269,
+				"wait_limit": 0
+			}
+		]
+	},
+	{
+		"action_bound": 28,
+		"actions": [
+			"L",
+			"U",
+			"U",
+			"L",
+			"L",
+			"ECHO",
+			"R",
+			"U",
+			"U",
+			"R",
+			"R",
+			"ECHO",
+			"L",
+			"U",
+			"D",
+			"R",
+			"D",
+			"D"
+		],
+		"domain": "shortest spatial routes + 4 movement slack per attempt; all distinct plate orders; WAIT anywhere; exactly intended Echo count",
+		"level_fingerprint": "b217e79da402c6c8f3674669cfe127793609df0dbe0332e952130dcc983c1e7a",
+		"level_id": "lvl_05",
+		"minimum_wait": 0,
+		"states_explored": 788,
+		"status": "PADDING_WITNESS",
+		"total_actions": 16,
+		"trials": [
+			{
+				"complete": true,
+				"found": true,
+				"states_explored": 788,
+				"wait_limit": 0
+			}
+		]
+	},
+	{
+		"action_bound": 42,
+		"actions": [],
+		"domain": "shortest spatial routes + 4 movement slack per attempt; all distinct plate orders; WAIT anywhere; exactly intended Echo count",
+		"level_fingerprint": "35615aa5241be47f0ef93309b61256f1277699a93b7d255c3df9aa16db00dcd1",
+		"level_id": "lvl_06",
+		"minimum_wait": null,
+		"states_explored": 1103,
+		"status": "INCONCLUSIVE_GLOBAL",
+		"total_actions": null,
+		"trials": [
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 1103,
+				"wait_limit": 0
+			}
+		]
+	},
+	{
+		"action_bound": 42,
+		"actions": [],
+		"domain": "shortest spatial routes + 4 movement slack per attempt; all distinct plate orders; WAIT anywhere; exactly intended Echo count",
+		"level_fingerprint": "b6dfae02505a6491c175e5d5189c9400aa99011e6f1b52b3420dacdb58cb1379",
+		"level_id": "lvl_07",
+		"minimum_wait": null,
+		"states_explored": 18545,
+		"status": "INCONCLUSIVE_GLOBAL",
+		"total_actions": null,
+		"trials": [
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 18545,
+				"wait_limit": 0
+			}
+		]
+	},
+	{
+		"action_bound": 70,
+		"actions": [
+			"R",
+			"L",
+			"R",
+			"R",
+			"R",
+			"ECHO",
+			"R",
+			"R",
+			"R",
+			"R",
+			"D",
+			"D",
+			"R",
+			"R",
+			"R",
+			"ECHO",
+			"R",
+			"R",
+			"R",
+			"R",
+			"D",
+			"D",
+			"L",
+			"R",
+			"D",
+			"D",
+			"L",
+			"L",
+			"L",
+			"ECHO",
+			"R",
+			"R",
+			"R",
+			"R",
+			"D",
+			"D",
+			"L",
+			"R",
+			"D",
+			"D",
+			"L",
+			"R",
+			"D",
+			"D"
+		],
+		"domain": "shortest spatial routes + 4 movement slack per attempt; all distinct plate orders; WAIT anywhere; exactly intended Echo count",
+		"level_fingerprint": "580ba4b9f13113d3ceab2e6c53bf2c1d1f9aae11f47e591d0e5ed9f446a3bc98",
+		"level_id": "lvl_08",
+		"minimum_wait": 0,
+		"states_explored": 2804,
+		"status": "PADDING_WITNESS",
+		"total_actions": 41,
+		"trials": [
+			{
+				"complete": true,
+				"found": true,
+				"states_explored": 2804,
+				"wait_limit": 0
+			}
+		]
+	},
+	{
+		"action_bound": 70,
+		"actions": [],
+		"domain": "shortest spatial routes + 4 movement slack per attempt; all distinct plate orders; WAIT anywhere; exactly intended Echo count",
+		"level_fingerprint": "4b3287182052ce4015fab4a179d9031b783fe2b621ab64cc0b5f84961dff91d1",
+		"level_id": "lvl_09",
+		"minimum_wait": null,
+		"states_explored": 5462,
+		"status": "INCONCLUSIVE_GLOBAL",
+		"total_actions": null,
+		"trials": [
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 5462,
+				"wait_limit": 0
+			}
+		]
+	},
+	{
+		"action_bound": 80,
+		"actions": [],
+		"domain": "shortest spatial routes + 4 movement slack per attempt; all distinct plate orders; WAIT anywhere; exactly intended Echo count",
+		"level_fingerprint": "b1454675b5b21156af1dda0a2861d01b60984103d16055f2f16b35b988de5681",
+		"level_id": "lvl_10",
+		"minimum_wait": null,
+		"states_explored": 3312,
+		"status": "INCONCLUSIVE_GLOBAL",
+		"total_actions": null,
+		"trials": [
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 3312,
+				"wait_limit": 0
+			}
+		]
+	}
+]

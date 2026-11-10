@@ -1,0 +1,522 @@
+{
+	"echo_count": [
+		{
+			"actions": [
+				"D",
+				"R",
+				"W",
+				"W",
+				"W",
+				"ECHO",
+				"D",
+				"R",
+				"R",
+				"R",
+				"R",
+				"R",
+				"U",
+				"R",
+				"R",
+				"R",
+				"ECHO",
+				"D",
+				"R",
+				"R",
+				"R",
+				"R",
+				"R",
+				"U",
+				"D",
+				"D",
+				"D",
+				"D",
+				"D",
+				"R",
+				"R",
+				"L",
+				"L",
+				"L",
+				"L",
+				"D",
+				"L"
+			],
+			"complete": true,
+			"constructive_explicit_wait_witness": {
+				"actions": [
+					"D",
+					"R",
+					"W",
+					"W",
+					"W",
+					"ECHO",
+					"D",
+					"R",
+					"R",
+					"R",
+					"R",
+					"R",
+					"U",
+					"R",
+					"R",
+					"R",
+					"ECHO",
+					"D",
+					"R",
+					"R",
+					"R",
+					"R",
+					"R",
+					"D",
+					"W",
+					"W",
+					"D",
+					"D",
+					"D",
+					"R",
+					"R",
+					"L",
+					"L",
+					"L",
+					"L",
+					"L",
+					"D"
+				],
+				"replay": {
+					"completed": true,
+					"echoes_used": 2,
+					"exit_state": {
+						"completed": true,
+						"doors": {
+							"A": false,
+							"B": false,
+							"C": true
+						},
+						"exit": [
+							3,
+							7
+						],
+						"player": [
+							3,
+							7
+						]
+					},
+					"turns": 35,
+					"wait_used": 5
+				},
+				"source": "derived route, authoritative replay verified; no optimality claim"
+			},
+			"intended_echoes": 3,
+			"level_fingerprint": "b1454675b5b21156af1dda0a2861d01b60984103d16055f2f16b35b988de5681",
+			"level_id": "lvl_10",
+			"path_found": true,
+			"replay": {
+				"completed": true,
+				"echoes_used": 2,
+				"exit_state": {
+					"completed": true,
+					"doors": {
+						"A": false,
+						"B": false,
+						"C": true
+					},
+					"exit": [
+						3,
+						7
+					],
+					"player": [
+						3,
+						7
+					]
+				},
+				"turns": 35,
+				"wait_used": 3
+			},
+			"scope": "fixed canonical Echo prefix; star action bound",
+			"states_explored": 2600
+		}
+	],
+	"movement_padding": [
+		{
+			"action_bound": 40,
+			"actions": [
+				"D",
+				"U",
+				"R",
+				"R",
+				"ECHO",
+				"D",
+				"R",
+				"R",
+				"R",
+				"R",
+				"U",
+				"R",
+				"R",
+				"ECHO",
+				"D",
+				"R",
+				"R",
+				"R",
+				"R",
+				"D",
+				"D",
+				"L",
+				"L",
+				"D",
+				"L"
+			],
+			"level_fingerprint": "4e447849d9d8176d6f42ba682459ad2ac35b0a8bc1d416ce7788360e962f4df3",
+			"level_id": "lvl_04",
+			"replay": {
+				"completed": true,
+				"echoes_used": 2,
+				"exit_state": {
+					"completed": true,
+					"doors": {
+						"A": false,
+						"B": false
+					},
+					"exit": [
+						2,
+						5
+					],
+					"player": [
+						2,
+						5
+					]
+				},
+				"turns": 23,
+				"wait_used": 0
+			},
+			"route_analysis": {
+				"attempts": [
+					{
+						"endpoint": [
+							3,
+							1
+						],
+						"movement_loop": true,
+						"movement_padding": 2,
+						"moves": 4,
+						"plate": "1",
+						"shortest_moves": 2,
+						"waits": 0
+					},
+					{
+						"endpoint": [
+							7,
+							1
+						],
+						"movement_loop": false,
+						"movement_padding": 0,
+						"moves": 8,
+						"plate": "2",
+						"shortest_moves": 8,
+						"waits": 0
+					},
+					{
+						"endpoint": [
+							2,
+							5
+						],
+						"movement_loop": false,
+						"movement_padding": 0,
+						"moves": 11,
+						"plate": "",
+						"shortest_moves": 11,
+						"waits": 0
+					}
+				],
+				"intended_route": false
+			}
+		},
+		{
+			"action_bound": 18,
+			"actions": [
+				"D",
+				"U",
+				"D",
+				"U",
+				"D",
+				"D",
+				"D",
+				"D",
+				"ECHO",
+				"D",
+				"U",
+				"D",
+				"D",
+				"R",
+				"R",
+				"R",
+				"R",
+				"R",
+				"R"
+			],
+			"level_fingerprint": "de5c3433837686a1430c00b361bebe5b5c97958fe291d574bcdb90cc098ed8ae",
+			"level_id": "lvl_02",
+			"replay": {
+				"completed": true,
+				"echoes_used": 1,
+				"exit_state": {
+					"completed": true,
+					"doors": {
+						"A": false
+					},
+					"exit": [
+						7,
+						3
+					],
+					"player": [
+						7,
+						3
+					]
+				},
+				"turns": 18,
+				"wait_used": 0
+			},
+			"route_analysis": {
+				"attempts": [
+					{
+						"endpoint": [
+							1,
+							5
+						],
+						"movement_loop": true,
+						"movement_padding": 4,
+						"moves": 8,
+						"plate": "1",
+						"shortest_moves": 4,
+						"waits": 0
+					},
+					{
+						"endpoint": [
+							7,
+							3
+						],
+						"movement_loop": true,
+						"movement_padding": 2,
+						"moves": 10,
+						"plate": "",
+						"shortest_moves": 8,
+						"waits": 0
+					}
+				],
+				"intended_route": false
+			}
+		},
+		{
+			"action_bound": 28,
+			"actions": [
+				"L",
+				"U",
+				"U",
+				"L",
+				"L",
+				"ECHO",
+				"R",
+				"U",
+				"U",
+				"R",
+				"R",
+				"ECHO",
+				"L",
+				"U",
+				"D",
+				"R",
+				"D",
+				"D"
+			],
+			"level_fingerprint": "b217e79da402c6c8f3674669cfe127793609df0dbe0332e952130dcc983c1e7a",
+			"level_id": "lvl_05",
+			"replay": {
+				"completed": true,
+				"echoes_used": 2,
+				"exit_state": {
+					"completed": true,
+					"doors": {
+						"A": false
+					},
+					"exit": [
+						4,
+						5
+					],
+					"player": [
+						4,
+						5
+					]
+				},
+				"turns": 16,
+				"wait_used": 0
+			},
+			"route_analysis": {
+				"attempts": [
+					{
+						"endpoint": [
+							1,
+							1
+						],
+						"movement_loop": false,
+						"movement_padding": 0,
+						"moves": 5,
+						"plate": "1",
+						"shortest_moves": 5,
+						"waits": 0
+					},
+					{
+						"endpoint": [
+							7,
+							1
+						],
+						"movement_loop": false,
+						"movement_padding": 0,
+						"moves": 5,
+						"plate": "2",
+						"shortest_moves": 5,
+						"waits": 0
+					},
+					{
+						"endpoint": [
+							4,
+							5
+						],
+						"movement_loop": true,
+						"movement_padding": 4,
+						"moves": 6,
+						"plate": "",
+						"shortest_moves": 2,
+						"waits": 0
+					}
+				],
+				"intended_route": false
+			}
+		},
+		{
+			"action_bound": 70,
+			"actions": [
+				"R",
+				"L",
+				"R",
+				"R",
+				"R",
+				"ECHO",
+				"R",
+				"R",
+				"R",
+				"R",
+				"D",
+				"D",
+				"R",
+				"R",
+				"R",
+				"ECHO",
+				"R",
+				"R",
+				"R",
+				"R",
+				"D",
+				"D",
+				"L",
+				"R",
+				"D",
+				"D",
+				"L",
+				"L",
+				"L",
+				"ECHO",
+				"R",
+				"R",
+				"R",
+				"R",
+				"D",
+				"D",
+				"L",
+				"R",
+				"D",
+				"D",
+				"L",
+				"R",
+				"D",
+				"D"
+			],
+			"level_fingerprint": "580ba4b9f13113d3ceab2e6c53bf2c1d1f9aae11f47e591d0e5ed9f446a3bc98",
+			"level_id": "lvl_08",
+			"replay": {
+				"completed": true,
+				"echoes_used": 3,
+				"exit_state": {
+					"completed": true,
+					"doors": {
+						"A": false,
+						"B": false,
+						"C": false
+					},
+					"exit": [
+						5,
+						7
+					],
+					"player": [
+						5,
+						7
+					]
+				},
+				"turns": 41,
+				"wait_used": 0
+			},
+			"route_analysis": {
+				"attempts": [
+					{
+						"endpoint": [
+							4,
+							1
+						],
+						"movement_loop": true,
+						"movement_padding": 2,
+						"moves": 5,
+						"plate": "1",
+						"shortest_moves": 3,
+						"waits": 0
+					},
+					{
+						"endpoint": [
+							8,
+							3
+						],
+						"movement_loop": false,
+						"movement_padding": 0,
+						"moves": 9,
+						"plate": "2",
+						"shortest_moves": 9,
+						"waits": 0
+					},
+					{
+						"endpoint": [
+							2,
+							5
+						],
+						"movement_loop": true,
+						"movement_padding": 2,
+						"moves": 13,
+						"plate": "3",
+						"shortest_moves": 11,
+						"waits": 0
+					},
+					{
+						"endpoint": [
+							5,
+							7
+						],
+						"movement_loop": true,
+						"movement_padding": 4,
+						"moves": 14,
+						"plate": "",
+						"shortest_moves": 10,
+						"waits": 0
+					}
+				],
+				"intended_route": false
+			}
+		}
+	],
+	"scope": "replayed counterexamples, not absence proofs"
+}

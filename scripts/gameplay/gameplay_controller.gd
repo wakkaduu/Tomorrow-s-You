@@ -29,6 +29,9 @@ const MorrowVisualizerClass = preload("res://scripts/ui/components/morrow_visual
 @onready var btn_clear_echoes: Button = $BottomHUD/ControlsRow/ActionButtons/BtnClearEchoes
 @onready var btn_hint: Button = $BottomHUD/HintContainer/BtnHint
 
+var wait_meter: ProgressBar
+var wait_feedback: Label
+
 # Dialogs & Modals
 @onready var pause_modal: PanelContainer = $Modals/PauseModal
 @onready var complete_modal: PanelContainer = $Modals/CompleteModal
@@ -215,6 +218,8 @@ func _apply_safe_area() -> void:
 	var bottom_hud = $BottomHUD
 	if bottom_hud:
 		bottom_hud.offset_bottom = -float(bottom_margin)
+		bottom_hud.offset_left = float(left_margin)
+		bottom_hud.offset_right = -float(right_margin)
 
 func _on_viewport_resized() -> void:
 	_apply_safe_area()
@@ -223,6 +228,7 @@ func _on_viewport_resized() -> void:
 		board_renderer.queue_redraw()
 
 func _bind_simulation_signals() -> void:
+	simulation.wait_limit_reached.connect(_show_wait_limit)
 	simulation.turn_completed.connect(func(_turn): _update_hud())
 	simulation.attempt_restarted.connect(func():
 		_level_completed_handled = false
@@ -502,6 +508,7 @@ func _update_hud() -> void:
 	var at_echo_limit: bool = simulation.echoes.size() >= current_level_def.echo_limit
 	var has_steps: bool = (simulation.current_recording != null and simulation.current_recording.get_step_count() > 0)
 
+	_update_wait_control()
 	btn_create_echo.disabled = at_echo_limit or not has_steps
 	btn_clear_echoes.disabled = simulation.echoes.is_empty()
 
@@ -517,6 +524,41 @@ func _update_hud() -> void:
 		btn_create_echo.modulate = Color(1.0, 1.0, 1.0)
 	else:
 		btn_create_echo.modulate = Color(0.7, 0.7, 0.75, 0.65)
+
+func _update_wait_control() -> void:
+	if wait_meter == null:
+		var indicator = VBoxContainer.new()
+		indicator.name = "WaitAllowance"
+		indicator.add_theme_constant_override("separation", 2)
+		btn_wait.get_parent().add_child(indicator)
+		btn_wait.get_parent().move_child(indicator, btn_wait.get_index() + 1)
+		wait_meter = ProgressBar.new()
+		wait_meter.custom_minimum_size = Vector2(0, 6)
+		wait_meter.show_percentage = false
+		wait_meter.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		indicator.add_child(wait_meter)
+		wait_feedback = Label.new()
+		wait_feedback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		UIDesignSystemClass.apply_body_text(wait_feedback, 14, UIDesignSystemClass.COLOR_AMBER_WARN)
+		indicator.add_child(wait_feedback)
+		btn_wait.gui_input.connect(func(event: InputEvent):
+			if btn_wait.disabled and not _is_modal_active():
+				if (event is InputEventScreenTouch or event is InputEventMouseButton) and event.pressed:
+					_show_wait_limit()
+		)
+	var remaining: int = simulation.get_remaining_wait_actions()
+	btn_wait.text = "WAIT · %d LEFT" % remaining
+	btn_wait.disabled = remaining == 0 or simulation.is_completed
+	btn_wait.tooltip_text = "Shared by all Echoes and this attempt. Restart refunds this attempt; Clear Echoes resets all."
+	wait_meter.max_value = maxi(1, current_level_def.max_wait_actions)
+	wait_meter.value = remaining
+	wait_feedback.text = "TEMPORAL WAIT LIMIT REACHED" if remaining == 0 else ""
+	wait_feedback.visible = remaining == 0
+
+func _show_wait_limit() -> void:
+	_update_wait_control()
+	if AudioManager: AudioManager.play_sfx("blocked")
+	if AndroidSystemManager: AndroidSystemManager.trigger_haptic("error")
 
 func _update_echo_timeline() -> void:
 	if not echo_timeline_row:
@@ -730,7 +772,7 @@ func show_transmission(trans: Dictionary, on_completed: Callable = Callable()) -
 		UIDesignSystemClass.apply_technical_text(transmission_line_progress, 12, UIDesignSystemClass.COLOR_TEXT_MUTED, "SemiBold")
 	if transmission_content:
 		transmission_content.add_theme_font_override("font", UIDesignSystemClass.get_interface_font("Medium"))
-		transmission_content.add_theme_font_size_override("font_size", 16)
+		transmission_content.add_theme_font_size_override("font_size", 18)
 		transmission_content.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_PRIMARY)
 
 	if btn_proceed_transmission:
@@ -769,7 +811,7 @@ func _display_transmission_line(line_idx: int) -> void:
 	if transmission_line_progress:
 		transmission_line_progress.text = "LINE %02d / %02d" % [line_idx + 1, lines.size()]
 
-	btn_proceed_transmission.text = "NEXT ▶" if (line_idx < lines.size() - 1) else "PROCEED ▶"
+	btn_proceed_transmission.text = "Next" if (line_idx < lines.size() - 1) else "Continue"
 
 func _advance_transmission() -> void:
 	var lines: Array = _active_transmission.get("lines", [])
@@ -909,11 +951,11 @@ func _style_holographic_modals() -> void:
 	if sector_label:
 		UIDesignSystemClass.apply_technical_text(sector_label, UIDesignSystemClass.FONT_SIZE_METADATA, UIDesignSystemClass.COLOR_TEXT_MUTED, "SemiBold")
 	if turn_count_label:
-		UIDesignSystemClass.apply_technical_text(turn_count_label, 14, UIDesignSystemClass.COLOR_CYAN_PRIMARY, "SemiBold")
+		UIDesignSystemClass.apply_technical_text(turn_count_label, 16, UIDesignSystemClass.COLOR_CYAN_PRIMARY, "SemiBold")
 	if echo_count_label:
-		UIDesignSystemClass.apply_technical_text(echo_count_label, 14, UIDesignSystemClass.COLOR_VIOLET_ECHO, "SemiBold")
+		UIDesignSystemClass.apply_technical_text(echo_count_label, 16, UIDesignSystemClass.COLOR_VIOLET_ECHO, "SemiBold")
 	if budget_label:
-		UIDesignSystemClass.apply_technical_text(budget_label, 13, UIDesignSystemClass.COLOR_AMBER_WARN, "SemiBold")
+		UIDesignSystemClass.apply_technical_text(budget_label, 15, UIDesignSystemClass.COLOR_AMBER_WARN, "SemiBold")
 
 	# Top HUD Pills styling
 	var turn_pill = $TopHUD/MarginContainer/VBoxContainer/StatsPillsRow/TurnPill
@@ -945,12 +987,12 @@ func _style_holographic_modals() -> void:
 
 	# Primary Gameplay Action (Create Echo)
 	if btn_create_echo:
-		UIDesignSystemClass.apply_primary_button(btn_create_echo, "Create Echo (+1 Teammate)", "icon_echo")
+		UIDesignSystemClass.apply_primary_button(btn_create_echo, "Create Echo", "icon_echo")
 		btn_create_echo.custom_minimum_size = Vector2(0, UIDesignSystemClass.PRIMARY_ACTION_HEIGHT)
 
 	# Utility Actions
 	if btn_wait:
-		UIDesignSystemClass.apply_utility_button(btn_wait, "Wait Turn", "icon_wait", UIDesignSystemClass.COLOR_CYAN_PRIMARY)
+		UIDesignSystemClass.apply_utility_button(btn_wait, "Wait", "icon_wait", UIDesignSystemClass.COLOR_CYAN_PRIMARY)
 
 	if btn_hint:
 		UIDesignSystemClass.apply_utility_button(btn_hint, "Hint · 3 Left", "icon_hint", UIDesignSystemClass.COLOR_AMBER_WARN)
@@ -1147,6 +1189,7 @@ func _toggle_dev_mode() -> void:
 	if not OS.is_debug_build():
 		return
 	board_renderer.show_debug_connections = not board_renderer.show_debug_connections
+	simulation.debug_turn_logging = board_renderer.show_debug_connections
 	board_renderer.queue_redraw()
 
 	if _dev_panel == null:
@@ -1207,6 +1250,7 @@ func _refresh_dev_panel() -> void:
 	text += "Level: %s (%s)\n" % [current_level_def.level_name, current_level_def.level_id]
 	text += "Sector: %d | Grid: %dx%d\n" % [current_level_def.sector, current_level_def.grid_width, current_level_def.grid_height]
 	text += "Spawn: %s | Exit: %s\n" % [str(current_level_def.spawn_pos), str(current_level_def.exit_pos)]
+	text += "WAIT: %d / %d used | %d left\n" % [simulation.get_wait_actions_used(), current_level_def.max_wait_actions, simulation.get_remaining_wait_actions()]
 	text += "Min Echoes Req: %d | Limit: %d\n" % [current_level_def.min_echoes_required, current_level_def.echo_limit]
 	text += "Plates (%d): %s\n" % [current_level_def.plates_data.size(), str(current_level_def.plates_data.map(func(p): return "%s@%s" % [p.id, str(p.pos)]))]
 	text += "Doors (%d): %s\n" % [current_level_def.doors_data.size(), str(current_level_def.doors_data.map(func(d): return "%s@%s(%s)" % [d.id, str(d.pos), d.logic]))]

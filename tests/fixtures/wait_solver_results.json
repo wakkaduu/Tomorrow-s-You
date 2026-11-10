@@ -1,0 +1,1613 @@
+[
+	{
+		"action_bound": 18,
+		"actions": [
+			"D",
+			"D",
+			"D",
+			"W",
+			"W",
+			"W",
+			"ECHO",
+			"D",
+			"R",
+			"R",
+			"R",
+			"D",
+			"D",
+			"R",
+			"R"
+		],
+		"attempts": [
+			{
+				"accepted_actions": 6,
+				"actions": [
+					"D",
+					"D",
+					"D",
+					"W",
+					"W",
+					"W"
+				],
+				"role": "Echo 1",
+				"wait_actions": 3
+			},
+			{
+				"accepted_actions": 8,
+				"actions": [
+					"D",
+					"R",
+					"R",
+					"R",
+					"D",
+					"D",
+					"R",
+					"R"
+				],
+				"role": "Player",
+				"wait_actions": 0
+			}
+		],
+		"domain": "shortest spatial routes + 0 movement slack per attempt; all distinct plate orders; WAIT anywhere; exactly intended Echo count",
+		"level_fingerprint": "f5fadf1881eb46f4c08550b6fd111bf3c03615cf7ac73b522fdf14e1a56b0e87",
+		"level_id": "lvl_01",
+		"minimum_wait": 3,
+		"previous_wait": 12.0,
+		"proof_scope": "BOUNDED intended shortest-route domain; not an unrestricted minimum",
+		"states_explored": 38,
+		"status": "BOUNDED_EXACT",
+		"total_actions": 14,
+		"trials": [
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 1,
+				"wait_limit": 0
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 1,
+				"wait_limit": 1
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 1,
+				"wait_limit": 2
+			},
+			{
+				"complete": true,
+				"found": true,
+				"states_explored": 35,
+				"wait_limit": 3
+			}
+		],
+		"verification": {
+			"completed": true,
+			"echoes_used": 1,
+			"exit_state": {
+				"completed": true,
+				"doors": {
+					"A": false
+				},
+				"exit": [
+					6,
+					4
+				],
+				"player": [
+					6,
+					4
+				]
+			},
+			"turns": 14,
+			"wait_used": 3
+		}
+	},
+	{
+		"action_bound": 18,
+		"actions": [
+			"D",
+			"D",
+			"D",
+			"D",
+			"W",
+			"W",
+			"ECHO",
+			"D",
+			"D",
+			"R",
+			"R",
+			"R",
+			"R",
+			"R",
+			"R"
+		],
+		"attempts": [
+			{
+				"accepted_actions": 6,
+				"actions": [
+					"D",
+					"D",
+					"D",
+					"D",
+					"W",
+					"W"
+				],
+				"role": "Echo 1",
+				"wait_actions": 2
+			},
+			{
+				"accepted_actions": 8,
+				"actions": [
+					"D",
+					"D",
+					"R",
+					"R",
+					"R",
+					"R",
+					"R",
+					"R"
+				],
+				"role": "Player",
+				"wait_actions": 0
+			}
+		],
+		"domain": "shortest spatial routes + 0 movement slack per attempt; all distinct plate orders; WAIT anywhere; exactly intended Echo count",
+		"level_fingerprint": "de5c3433837686a1430c00b361bebe5b5c97958fe291d574bcdb90cc098ed8ae",
+		"level_id": "lvl_02",
+		"minimum_wait": 2,
+		"previous_wait": 12.0,
+		"proof_scope": "BOUNDED intended shortest-route domain; not an unrestricted minimum",
+		"states_explored": 33,
+		"status": "BOUNDED_EXACT",
+		"total_actions": 14,
+		"trials": [
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 1,
+				"wait_limit": 0
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 1,
+				"wait_limit": 1
+			},
+			{
+				"complete": true,
+				"found": true,
+				"states_explored": 31,
+				"wait_limit": 2
+			}
+		],
+		"verification": {
+			"completed": true,
+			"echoes_used": 1,
+			"exit_state": {
+				"completed": true,
+				"doors": {
+					"A": false
+				},
+				"exit": [
+					7,
+					3
+				],
+				"player": [
+					7,
+					3
+				]
+			},
+			"turns": 14,
+			"wait_used": 2
+		}
+	},
+	{
+		"action_bound": 24,
+		"actions": [
+			"R",
+			"R",
+			"R",
+			"R",
+			"R",
+			"R",
+			"ECHO",
+			"R",
+			"R",
+			"R",
+			"D",
+			"W",
+			"D",
+			"D",
+			"R",
+			"R",
+			"R"
+		],
+		"attempts": [
+			{
+				"accepted_actions": 6,
+				"actions": [
+					"R",
+					"R",
+					"R",
+					"R",
+					"R",
+					"R"
+				],
+				"role": "Echo 1",
+				"wait_actions": 0
+			},
+			{
+				"accepted_actions": 10,
+				"actions": [
+					"R",
+					"R",
+					"R",
+					"D",
+					"W",
+					"D",
+					"D",
+					"R",
+					"R",
+					"R"
+				],
+				"role": "Player",
+				"wait_actions": 1
+			}
+		],
+		"domain": "shortest spatial routes + 0 movement slack per attempt; all distinct plate orders; WAIT anywhere; exactly intended Echo count",
+		"level_fingerprint": "e6678f66278be7e7ebca8d74a047b462b640bae8eed6fab4d95c14ba397ed877",
+		"level_id": "lvl_03",
+		"minimum_wait": 1,
+		"previous_wait": 12.0,
+		"proof_scope": "BOUNDED intended shortest-route domain; not an unrestricted minimum",
+		"states_explored": 30,
+		"status": "BOUNDED_EXACT",
+		"total_actions": 16,
+		"trials": [
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 1,
+				"wait_limit": 0
+			},
+			{
+				"complete": true,
+				"found": true,
+				"states_explored": 29,
+				"wait_limit": 1
+			}
+		],
+		"verification": {
+			"completed": true,
+			"echoes_used": 1,
+			"exit_state": {
+				"completed": true,
+				"doors": {
+					"A": false
+				},
+				"exit": [
+					7,
+					4
+				],
+				"player": [
+					7,
+					4
+				]
+			},
+			"turns": 16,
+			"wait_used": 1
+		}
+	},
+	{
+		"action_bound": 40,
+		"actions": [
+			"R",
+			"R",
+			"W",
+			"W",
+			"ECHO",
+			"D",
+			"R",
+			"R",
+			"R",
+			"R",
+			"U",
+			"R",
+			"R",
+			"ECHO",
+			"D",
+			"R",
+			"R",
+			"R",
+			"R",
+			"D",
+			"D",
+			"L",
+			"L",
+			"D",
+			"L"
+		],
+		"attempts": [
+			{
+				"accepted_actions": 4,
+				"actions": [
+					"R",
+					"R",
+					"W",
+					"W"
+				],
+				"role": "Echo 1",
+				"wait_actions": 2
+			},
+			{
+				"accepted_actions": 8,
+				"actions": [
+					"D",
+					"R",
+					"R",
+					"R",
+					"R",
+					"U",
+					"R",
+					"R"
+				],
+				"role": "Echo 2",
+				"wait_actions": 0
+			},
+			{
+				"accepted_actions": 11,
+				"actions": [
+					"D",
+					"R",
+					"R",
+					"R",
+					"R",
+					"D",
+					"D",
+					"L",
+					"L",
+					"D",
+					"L"
+				],
+				"role": "Player",
+				"wait_actions": 0
+			}
+		],
+		"domain": "shortest spatial routes + 0 movement slack per attempt; all distinct plate orders; WAIT anywhere; exactly intended Echo count",
+		"level_fingerprint": "4e447849d9d8176d6f42ba682459ad2ac35b0a8bc1d416ce7788360e962f4df3",
+		"level_id": "lvl_04",
+		"minimum_wait": 2,
+		"previous_wait": 16.0,
+		"proof_scope": "BOUNDED intended shortest-route domain; not an unrestricted minimum",
+		"states_explored": 56,
+		"status": "BOUNDED_EXACT",
+		"total_actions": 23,
+		"trials": [
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 2,
+				"wait_limit": 0
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 2,
+				"wait_limit": 1
+			},
+			{
+				"complete": true,
+				"found": true,
+				"states_explored": 52,
+				"wait_limit": 2
+			}
+		],
+		"verification": {
+			"completed": true,
+			"echoes_used": 2,
+			"exit_state": {
+				"completed": true,
+				"doors": {
+					"A": false,
+					"B": false
+				},
+				"exit": [
+					2,
+					5
+				],
+				"player": [
+					2,
+					5
+				]
+			},
+			"turns": 23,
+			"wait_used": 2
+		}
+	},
+	{
+		"action_bound": 28,
+		"actions": [
+			"L",
+			"U",
+			"U",
+			"L",
+			"L",
+			"ECHO",
+			"R",
+			"U",
+			"U",
+			"R",
+			"R",
+			"ECHO",
+			"W",
+			"W",
+			"W",
+			"W",
+			"D",
+			"D"
+		],
+		"attempts": [
+			{
+				"accepted_actions": 5,
+				"actions": [
+					"L",
+					"U",
+					"U",
+					"L",
+					"L"
+				],
+				"role": "Echo 1",
+				"wait_actions": 0
+			},
+			{
+				"accepted_actions": 5,
+				"actions": [
+					"R",
+					"U",
+					"U",
+					"R",
+					"R"
+				],
+				"role": "Echo 2",
+				"wait_actions": 0
+			},
+			{
+				"accepted_actions": 6,
+				"actions": [
+					"W",
+					"W",
+					"W",
+					"W",
+					"D",
+					"D"
+				],
+				"role": "Player",
+				"wait_actions": 4
+			}
+		],
+		"domain": "shortest spatial routes + 0 movement slack per attempt; all distinct plate orders; WAIT anywhere; exactly intended Echo count",
+		"level_fingerprint": "b217e79da402c6c8f3674669cfe127793609df0dbe0332e952130dcc983c1e7a",
+		"level_id": "lvl_05",
+		"minimum_wait": 4,
+		"previous_wait": 14.0,
+		"proof_scope": "BOUNDED intended shortest-route domain; not an unrestricted minimum",
+		"states_explored": 116,
+		"status": "BOUNDED_EXACT",
+		"total_actions": 16,
+		"trials": [
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 2,
+				"wait_limit": 0
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 2,
+				"wait_limit": 1
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 2,
+				"wait_limit": 2
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 2,
+				"wait_limit": 3
+			},
+			{
+				"complete": true,
+				"found": true,
+				"states_explored": 108,
+				"wait_limit": 4
+			}
+		],
+		"verification": {
+			"completed": true,
+			"echoes_used": 2,
+			"exit_state": {
+				"completed": true,
+				"doors": {
+					"A": false
+				},
+				"exit": [
+					4,
+					5
+				],
+				"player": [
+					4,
+					5
+				]
+			},
+			"turns": 16,
+			"wait_used": 4
+		}
+	},
+	{
+		"action_bound": 42,
+		"actions": [
+			"D",
+			"D",
+			"W",
+			"W",
+			"W",
+			"ECHO",
+			"D",
+			"R",
+			"R",
+			"R",
+			"R",
+			"R",
+			"U",
+			"R",
+			"R",
+			"W",
+			"ECHO",
+			"D",
+			"R",
+			"R",
+			"R",
+			"R",
+			"R",
+			"D",
+			"D",
+			"D",
+			"R",
+			"R",
+			"R"
+		],
+		"attempts": [
+			{
+				"accepted_actions": 5,
+				"actions": [
+					"D",
+					"D",
+					"W",
+					"W",
+					"W"
+				],
+				"role": "Echo 1",
+				"wait_actions": 3
+			},
+			{
+				"accepted_actions": 10,
+				"actions": [
+					"D",
+					"R",
+					"R",
+					"R",
+					"R",
+					"R",
+					"U",
+					"R",
+					"R",
+					"W"
+				],
+				"role": "Echo 2",
+				"wait_actions": 1
+			},
+			{
+				"accepted_actions": 12,
+				"actions": [
+					"D",
+					"R",
+					"R",
+					"R",
+					"R",
+					"R",
+					"D",
+					"D",
+					"D",
+					"R",
+					"R",
+					"R"
+				],
+				"role": "Player",
+				"wait_actions": 0
+			}
+		],
+		"domain": "shortest spatial routes + 0 movement slack per attempt; all distinct plate orders; WAIT anywhere; exactly intended Echo count",
+		"level_fingerprint": "35615aa5241be47f0ef93309b61256f1277699a93b7d255c3df9aa16db00dcd1",
+		"level_id": "lvl_06",
+		"minimum_wait": 4,
+		"previous_wait": 15.0,
+		"proof_scope": "BOUNDED intended shortest-route domain; not an unrestricted minimum",
+		"states_explored": 226,
+		"status": "BOUNDED_EXACT",
+		"total_actions": 27,
+		"trials": [
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 2,
+				"wait_limit": 0
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 2,
+				"wait_limit": 1
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 2,
+				"wait_limit": 2
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 2,
+				"wait_limit": 3
+			},
+			{
+				"complete": true,
+				"found": true,
+				"states_explored": 218,
+				"wait_limit": 4
+			}
+		],
+		"verification": {
+			"completed": true,
+			"echoes_used": 2,
+			"exit_state": {
+				"completed": true,
+				"doors": {
+					"A": false,
+					"B": false
+				},
+				"exit": [
+					9,
+					5
+				],
+				"player": [
+					9,
+					5
+				]
+			},
+			"turns": 27,
+			"wait_used": 4
+		}
+	},
+	{
+		"action_bound": 42,
+		"actions": [
+			"R",
+			"R",
+			"R",
+			"W",
+			"W",
+			"W",
+			"W",
+			"W",
+			"W",
+			"W",
+			"ECHO",
+			"D",
+			"R",
+			"R",
+			"R",
+			"R",
+			"R",
+			"U",
+			"R",
+			"R",
+			"W",
+			"ECHO",
+			"D",
+			"R",
+			"R",
+			"R",
+			"R",
+			"R",
+			"D",
+			"D",
+			"D",
+			"R",
+			"R",
+			"R"
+		],
+		"attempts": [
+			{
+				"accepted_actions": 10,
+				"actions": [
+					"R",
+					"R",
+					"R",
+					"W",
+					"W",
+					"W",
+					"W",
+					"W",
+					"W",
+					"W"
+				],
+				"role": "Echo 1",
+				"wait_actions": 7
+			},
+			{
+				"accepted_actions": 10,
+				"actions": [
+					"D",
+					"R",
+					"R",
+					"R",
+					"R",
+					"R",
+					"U",
+					"R",
+					"R",
+					"W"
+				],
+				"role": "Echo 2",
+				"wait_actions": 1
+			},
+			{
+				"accepted_actions": 12,
+				"actions": [
+					"D",
+					"R",
+					"R",
+					"R",
+					"R",
+					"R",
+					"D",
+					"D",
+					"D",
+					"R",
+					"R",
+					"R"
+				],
+				"role": "Player",
+				"wait_actions": 0
+			}
+		],
+		"domain": "shortest spatial routes + 0 movement slack per attempt; all distinct plate orders; WAIT anywhere; exactly intended Echo count",
+		"level_fingerprint": "b6dfae02505a6491c175e5d5189c9400aa99011e6f1b52b3420dacdb58cb1379",
+		"level_id": "lvl_07",
+		"minimum_wait": 8,
+		"previous_wait": 15.0,
+		"proof_scope": "BOUNDED intended shortest-route domain; not an unrestricted minimum",
+		"states_explored": 415,
+		"status": "BOUNDED_EXACT",
+		"total_actions": 32,
+		"trials": [
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 2,
+				"wait_limit": 0
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 2,
+				"wait_limit": 1
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 2,
+				"wait_limit": 2
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 2,
+				"wait_limit": 3
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 2,
+				"wait_limit": 4
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 2,
+				"wait_limit": 5
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 2,
+				"wait_limit": 6
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 2,
+				"wait_limit": 7
+			},
+			{
+				"complete": true,
+				"found": true,
+				"states_explored": 399,
+				"wait_limit": 8
+			}
+		],
+		"verification": {
+			"completed": true,
+			"echoes_used": 2,
+			"exit_state": {
+				"completed": true,
+				"doors": {
+					"A": false,
+					"B": false
+				},
+				"exit": [
+					9,
+					5
+				],
+				"player": [
+					9,
+					5
+				]
+			},
+			"turns": 32,
+			"wait_used": 8
+		}
+	},
+	{
+		"action_bound": 70,
+		"actions": [
+			"R",
+			"R",
+			"R",
+			"W",
+			"W",
+			"ECHO",
+			"R",
+			"R",
+			"R",
+			"R",
+			"D",
+			"D",
+			"R",
+			"R",
+			"R",
+			"ECHO",
+			"R",
+			"R",
+			"R",
+			"R",
+			"D",
+			"D",
+			"W",
+			"W",
+			"D",
+			"D",
+			"L",
+			"L",
+			"L",
+			"ECHO",
+			"R",
+			"R",
+			"R",
+			"R",
+			"D",
+			"D",
+			"W",
+			"W",
+			"D",
+			"D",
+			"W",
+			"W",
+			"D",
+			"D"
+		],
+		"attempts": [
+			{
+				"accepted_actions": 5,
+				"actions": [
+					"R",
+					"R",
+					"R",
+					"W",
+					"W"
+				],
+				"role": "Echo 1",
+				"wait_actions": 2
+			},
+			{
+				"accepted_actions": 9,
+				"actions": [
+					"R",
+					"R",
+					"R",
+					"R",
+					"D",
+					"D",
+					"R",
+					"R",
+					"R"
+				],
+				"role": "Echo 2",
+				"wait_actions": 0
+			},
+			{
+				"accepted_actions": 13,
+				"actions": [
+					"R",
+					"R",
+					"R",
+					"R",
+					"D",
+					"D",
+					"W",
+					"W",
+					"D",
+					"D",
+					"L",
+					"L",
+					"L"
+				],
+				"role": "Echo 3",
+				"wait_actions": 2
+			},
+			{
+				"accepted_actions": 14,
+				"actions": [
+					"R",
+					"R",
+					"R",
+					"R",
+					"D",
+					"D",
+					"W",
+					"W",
+					"D",
+					"D",
+					"W",
+					"W",
+					"D",
+					"D"
+				],
+				"role": "Player",
+				"wait_actions": 4
+			}
+		],
+		"domain": "shortest spatial routes + 0 movement slack per attempt; all distinct plate orders; WAIT anywhere; exactly intended Echo count",
+		"level_fingerprint": "580ba4b9f13113d3ceab2e6c53bf2c1d1f9aae11f47e591d0e5ed9f446a3bc98",
+		"level_id": "lvl_08",
+		"minimum_wait": 8,
+		"previous_wait": 32.0,
+		"proof_scope": "BOUNDED intended shortest-route domain; not an unrestricted minimum",
+		"states_explored": 853,
+		"status": "BOUNDED_EXACT",
+		"total_actions": 41,
+		"trials": [
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 0
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 1
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 2
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 3
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 4
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 5
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 6
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 7
+			},
+			{
+				"complete": true,
+				"found": true,
+				"states_explored": 805,
+				"wait_limit": 8
+			}
+		],
+		"verification": {
+			"completed": true,
+			"echoes_used": 3,
+			"exit_state": {
+				"completed": true,
+				"doors": {
+					"A": false,
+					"B": false,
+					"C": false
+				},
+				"exit": [
+					5,
+					7
+				],
+				"player": [
+					5,
+					7
+				]
+			},
+			"turns": 41,
+			"wait_used": 8
+		}
+	},
+	{
+		"action_bound": 70,
+		"actions": [
+			"R",
+			"R",
+			"R",
+			"W",
+			"W",
+			"W",
+			"W",
+			"W",
+			"W",
+			"W",
+			"W",
+			"W",
+			"W",
+			"ECHO",
+			"R",
+			"R",
+			"R",
+			"R",
+			"D",
+			"D",
+			"R",
+			"R",
+			"R",
+			"W",
+			"W",
+			"W",
+			"W",
+			"ECHO",
+			"R",
+			"R",
+			"R",
+			"R",
+			"D",
+			"D",
+			"W",
+			"W",
+			"D",
+			"D",
+			"L",
+			"L",
+			"L",
+			"ECHO",
+			"R",
+			"R",
+			"R",
+			"R",
+			"D",
+			"D",
+			"W",
+			"W",
+			"D",
+			"D",
+			"W",
+			"W",
+			"D",
+			"D"
+		],
+		"attempts": [
+			{
+				"accepted_actions": 13,
+				"actions": [
+					"R",
+					"R",
+					"R",
+					"W",
+					"W",
+					"W",
+					"W",
+					"W",
+					"W",
+					"W",
+					"W",
+					"W",
+					"W"
+				],
+				"role": "Echo 1",
+				"wait_actions": 10
+			},
+			{
+				"accepted_actions": 13,
+				"actions": [
+					"R",
+					"R",
+					"R",
+					"R",
+					"D",
+					"D",
+					"R",
+					"R",
+					"R",
+					"W",
+					"W",
+					"W",
+					"W"
+				],
+				"role": "Echo 2",
+				"wait_actions": 4
+			},
+			{
+				"accepted_actions": 13,
+				"actions": [
+					"R",
+					"R",
+					"R",
+					"R",
+					"D",
+					"D",
+					"W",
+					"W",
+					"D",
+					"D",
+					"L",
+					"L",
+					"L"
+				],
+				"role": "Echo 3",
+				"wait_actions": 2
+			},
+			{
+				"accepted_actions": 14,
+				"actions": [
+					"R",
+					"R",
+					"R",
+					"R",
+					"D",
+					"D",
+					"W",
+					"W",
+					"D",
+					"D",
+					"W",
+					"W",
+					"D",
+					"D"
+				],
+				"role": "Player",
+				"wait_actions": 4
+			}
+		],
+		"domain": "shortest spatial routes + 0 movement slack per attempt; all distinct plate orders; WAIT anywhere; exactly intended Echo count",
+		"level_fingerprint": "4b3287182052ce4015fab4a179d9031b783fe2b621ab64cc0b5f84961dff91d1",
+		"level_id": "lvl_09",
+		"minimum_wait": 20,
+		"previous_wait": 32.0,
+		"proof_scope": "BOUNDED intended shortest-route domain; not an unrestricted minimum",
+		"states_explored": 24390,
+		"status": "BOUNDED_EXACT",
+		"total_actions": 53,
+		"trials": [
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 0
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 1
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 2
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 3
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 4
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 5
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 6
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 7
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 8
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 9
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 10
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 11
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 12
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 13
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 14
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 15
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 16
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 17
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 18
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 19
+			},
+			{
+				"complete": true,
+				"found": true,
+				"states_explored": 24270,
+				"wait_limit": 20
+			}
+		],
+		"verification": {
+			"completed": true,
+			"echoes_used": 3,
+			"exit_state": {
+				"completed": true,
+				"doors": {
+					"A": false,
+					"B": false,
+					"C": false
+				},
+				"exit": [
+					5,
+					7
+				],
+				"player": [
+					5,
+					7
+				]
+			},
+			"turns": 53,
+			"wait_used": 20
+		}
+	},
+	{
+		"action_bound": 80,
+		"actions": [
+			"D",
+			"R",
+			"W",
+			"W",
+			"W",
+			"ECHO",
+			"D",
+			"R",
+			"R",
+			"R",
+			"R",
+			"R",
+			"U",
+			"R",
+			"R",
+			"R",
+			"ECHO",
+			"D",
+			"R",
+			"R",
+			"R",
+			"R",
+			"R",
+			"D",
+			"W",
+			"W",
+			"D",
+			"D",
+			"D",
+			"R",
+			"R",
+			"ECHO",
+			"D",
+			"R",
+			"R",
+			"R",
+			"R",
+			"R",
+			"D",
+			"W",
+			"W",
+			"D",
+			"D",
+			"D",
+			"W",
+			"W",
+			"L",
+			"L",
+			"D",
+			"L"
+		],
+		"attempts": [
+			{
+				"accepted_actions": 5,
+				"actions": [
+					"D",
+					"R",
+					"W",
+					"W",
+					"W"
+				],
+				"role": "Echo 1",
+				"wait_actions": 3
+			},
+			{
+				"accepted_actions": 10,
+				"actions": [
+					"D",
+					"R",
+					"R",
+					"R",
+					"R",
+					"R",
+					"U",
+					"R",
+					"R",
+					"R"
+				],
+				"role": "Echo 2",
+				"wait_actions": 0
+			},
+			{
+				"accepted_actions": 14,
+				"actions": [
+					"D",
+					"R",
+					"R",
+					"R",
+					"R",
+					"R",
+					"D",
+					"W",
+					"W",
+					"D",
+					"D",
+					"D",
+					"R",
+					"R"
+				],
+				"role": "Echo 3",
+				"wait_actions": 2
+			},
+			{
+				"accepted_actions": 18,
+				"actions": [
+					"D",
+					"R",
+					"R",
+					"R",
+					"R",
+					"R",
+					"D",
+					"W",
+					"W",
+					"D",
+					"D",
+					"D",
+					"W",
+					"W",
+					"L",
+					"L",
+					"D",
+					"L"
+				],
+				"role": "Player",
+				"wait_actions": 4
+			}
+		],
+		"domain": "shortest spatial routes + 0 movement slack per attempt; all distinct plate orders; WAIT anywhere; exactly intended Echo count",
+		"level_fingerprint": "b1454675b5b21156af1dda0a2861d01b60984103d16055f2f16b35b988de5681",
+		"level_id": "lvl_10",
+		"minimum_wait": 9,
+		"previous_wait": 37.0,
+		"proof_scope": "BOUNDED intended shortest-route domain; not an unrestricted minimum",
+		"states_explored": 5695,
+		"status": "BOUNDED_EXACT",
+		"total_actions": 47,
+		"trials": [
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 0
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 1
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 2
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 3
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 4
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 5
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 6
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 7
+			},
+			{
+				"complete": true,
+				"found": false,
+				"states_explored": 6,
+				"wait_limit": 8
+			},
+			{
+				"complete": true,
+				"found": true,
+				"states_explored": 5641,
+				"wait_limit": 9
+			}
+		],
+		"verification": {
+			"completed": true,
+			"echoes_used": 3,
+			"exit_state": {
+				"completed": true,
+				"doors": {
+					"A": false,
+					"B": false,
+					"C": true
+				},
+				"exit": [
+					3,
+					7
+				],
+				"player": [
+					3,
+					7
+				]
+			},
+			"turns": 47,
+			"wait_used": 9
+		}
+	}
+]

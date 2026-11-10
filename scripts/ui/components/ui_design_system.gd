@@ -69,10 +69,10 @@ const FONT_SIZE_SCREEN_HEADING: int = 28
 const FONT_SIZE_LEVEL_TITLE: int = 24
 const FONT_SIZE_DIFFICULTY_TITLE: int = 22
 const FONT_SIZE_SECTION_HEADING: int = 20
-const FONT_SIZE_BUTTON: int = 15
-const FONT_SIZE_BODY: int = 14
-const FONT_SIZE_SUPPORTING: int = 13
-const FONT_SIZE_METADATA: int = 12
+const FONT_SIZE_BUTTON: int = 18
+const FONT_SIZE_BODY: int = 16
+const FONT_SIZE_SUPPORTING: int = 14
+const FONT_SIZE_METADATA: int = 13
 
 # Geometry & Spacing Tokens
 const CORNER_RADIUS_BUTTON: int = 8
@@ -198,7 +198,7 @@ static func create_card_style(
 		sb.shadow_offset = Vector2(0, 2)
 	else:
 		sb.bg_color = Color(0.070, 0.098, 0.165, 0.94)
-		sb.border_color = Color(accent_color.r, accent_color.g, accent_color.b, 0.30)
+		sb.border_color = COLOR_BORDER_SUBTLE
 		sb.set_border_width_all(1)
 
 	return sb
@@ -291,7 +291,7 @@ static func apply_button_style(
 	match type:
 		ButtonType.PRIMARY:
 			# Solid Cyan Fill, Deep Navy Text, Subtle Bloom
-			font = get_display_font("SemiBold")
+			font = get_interface_font("SemiBold")
 			font_color = COLOR_CYAN_DARK
 			font_hover = COLOR_CYAN_DARK
 			font_pressed = COLOR_CYAN_DARK
@@ -306,7 +306,7 @@ static func apply_button_style(
 			sb_normal.border_color = COLOR_CYAN_HOVER
 			sb_normal.set_border_width_all(1)
 			sb_normal.shadow_color = COLOR_CYAN_GLOW
-			sb_normal.shadow_size = 6
+			sb_normal.shadow_size = 0
 			sb_normal.shadow_offset = Vector2(0, 2)
 
 			sb_hover.bg_color = COLOR_CYAN_HOVER
@@ -339,7 +339,7 @@ static func apply_button_style(
 			icon_disabled = COLOR_TEXT_DIM
 
 			sb_normal.bg_color = COLOR_BG_SURFACE
-			sb_normal.border_color = Color(accent.r, accent.g, accent.b, 0.35)
+			sb_normal.border_color = COLOR_BORDER_SUBTLE
 			sb_normal.set_border_width_all(1)
 
 			sb_hover.bg_color = COLOR_BG_HOVER
@@ -399,7 +399,7 @@ static func apply_button_style(
 			icon_disabled = COLOR_TEXT_DIM
 
 			sb_normal.bg_color = COLOR_BG_ELEVATED
-			sb_normal.border_color = Color(accent.r, accent.g, accent.b, 0.40)
+			sb_normal.border_color = COLOR_BORDER_SUBTLE
 			sb_normal.set_border_width_all(1)
 
 			sb_hover.bg_color = COLOR_BG_HOVER
@@ -462,7 +462,7 @@ static func apply_button_style(
 			icon_disabled = COLOR_TEXT_DIM
 
 			sb_normal.bg_color = COLOR_BG_SURFACE
-			sb_normal.border_color = Color(accent.r, accent.g, accent.b, 0.30)
+			sb_normal.border_color = COLOR_BORDER_SUBTLE
 			sb_normal.set_border_width_all(1)
 
 			sb_hover.bg_color = COLOR_BG_HOVER
@@ -476,6 +476,11 @@ static func apply_button_style(
 			sb_disabled.bg_color = Color(0.04, 0.06, 0.10, 0.50)
 			sb_disabled.border_color = Color(0.18, 0.24, 0.32, 0.20)
 			sb_disabled.set_border_width_all(1)
+
+	# Every semantic button shares readable type and a minimum touch target.
+	btn.custom_minimum_size.y = maxf(btn.custom_minimum_size.y, MIN_TOUCH_SIZE)
+	btn.add_theme_constant_override("icon_max_width", 24)
+	btn.add_theme_constant_override("h_separation", 10)
 
 	# Apply overrides
 	btn.add_theme_stylebox_override("normal", sb_normal)
@@ -535,9 +540,11 @@ static func apply_destructive_button(btn: Button, text: String = "", icon_name: 
 
 static func apply_icon_button(btn: Button, icon_name: String, min_size: Vector2 = Vector2(48, 48), accent: Variant = null) -> void:
 	apply_button_style(btn, ButtonType.ICON, accent)
+	if btn.tooltip_text.is_empty():
+		btn.tooltip_text = btn.text if not btn.text.is_empty() else icon_name.trim_prefix("icon_").replace("_", " ").capitalize()
 	btn.text = ""
 	apply_button_icon(btn, icon_name, HORIZONTAL_ALIGNMENT_CENTER)
-	btn.custom_minimum_size = min_size
+	btn.custom_minimum_size = Vector2(maxf(min_size.x, MIN_TOUCH_SIZE), maxf(min_size.y, MIN_TOUCH_SIZE))
 
 ## Backwards-compatibility wrapper for existing screens
 static func apply_button_skin(btn: Button, accent_color: Color = COLOR_CYAN_PRIMARY, is_primary: bool = false) -> void:
@@ -602,7 +609,7 @@ static func create_master_theme() -> Theme:
 	# Button defaults
 	var btn_normal: StyleBoxFlat = StyleBoxFlat.new()
 	btn_normal.bg_color = COLOR_BG_SURFACE
-	btn_normal.border_color = Color(COLOR_CYAN_PRIMARY.r, COLOR_CYAN_PRIMARY.g, COLOR_CYAN_PRIMARY.b, 0.5)
+	btn_normal.border_color = COLOR_BORDER_SUBTLE
 	btn_normal.set_border_width_all(1)
 	btn_normal.set_corner_radius_all(CORNER_RADIUS_BUTTON)
 	btn_normal.content_margin_left = 12

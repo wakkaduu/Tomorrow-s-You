@@ -1,16 +1,11 @@
 extends SceneTree
 
-# Preloads
-const BootScreenClass = preload("res://scripts/ui/boot_screen.gd")
-const MainMenuClass = preload("res://scripts/ui/main_menu.gd")
-const LevelSelectClass = preload("res://scripts/ui/level_select.gd")
-const SettingsMenuClass = preload("res://scripts/ui/settings_menu.gd")
-const GameplayControllerClass = preload("res://scripts/gameplay/gameplay_controller.gd")
-
-const SaveManagerClass = preload("res://scripts/autoload/save_manager.gd")
-const AudioManagerClass = preload("res://scripts/autoload/audio_manager.gd")
-
 func _init() -> void:
+	call_deferred("_run")
+
+func _run() -> void:
+	var SaveManagerClass = load("res://scripts/autoload/save_manager.gd")
+	var AudioManagerClass = load("res://scripts/autoload/audio_manager.gd")
 	print("\n=======================================================")
 	print(" RUNNING TOMORROW'S YOU - UI & SCREEN TESTS")
 	print("=======================================================")
@@ -110,7 +105,7 @@ func _init() -> void:
 	# --------------------------------------------------------------------------
 	run_test.call("AudioManager sound synthesis and playback triggers", func() -> bool:
 		var audio_mgr = AudioManagerClass.new()
-		audio_mgr._ready()
+		root.add_child(audio_mgr)
 		audio_mgr.play_sfx("move")
 		audio_mgr.play_sfx("wait")
 		audio_mgr.play_sfx("echo_create")

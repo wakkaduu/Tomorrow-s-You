@@ -63,6 +63,7 @@ func setup(p_sim: PuzzleSimulation, viewport_size: Vector2) -> void:
 	simulation.attempt_restarted.connect(_on_attempt_restarted)
 	simulation.plate_state_changed.connect(_on_plate_state_changed)
 	simulation.door_state_changed.connect(_on_door_state_changed)
+	simulation.turn_completed.connect(_on_turn_committed)
 
 	_init_particles()
 	calculate_layout(viewport_size)
@@ -139,26 +140,14 @@ func _process(delta: float) -> void:
 
 	# Interpolation speed (instant if reduced animations enabled)
 	var lerp_speed: float = 20.0 * delta
-	var anim_speed: float = 12.0 * delta
 	var save_mgr = get_node_or_null("/root/SaveManager")
 	if save_mgr and bool(save_mgr.get("reduced_animations")):
 		lerp_speed = 1.0
-		anim_speed = 1.0
 
 	player_visual_pos = player_visual_pos.lerp(player_target_pos, lerp_speed)
 	for i in range(echo_visual_positions.size()):
 		if i < echo_target_positions.size():
 			echo_visual_positions[i] = echo_visual_positions[i].lerp(echo_target_positions[i], lerp_speed)
-
-	# Interpolate plate animation weights
-	for pid in plate_anim_weights.keys():
-		var target: float = 1.0 if simulation.is_plate_active(pid) else 0.0
-		plate_anim_weights[pid] = move_toward(plate_anim_weights[pid], target, anim_speed)
-
-	# Interpolate door animation weights
-	for did in door_anim_weights.keys():
-		var target: float = 1.0 if simulation.is_door_open(did) else 0.0
-		door_anim_weights[did] = move_toward(door_anim_weights[did], target, anim_speed)
 
 	queue_redraw()
 
@@ -231,12 +220,26 @@ func _on_attempt_restarted() -> void:
 	_reset_visual_positions()
 
 func _on_plate_state_changed(plate_id: String, is_active: bool) -> void:
-	if not plate_anim_weights.has(plate_id):
-		plate_anim_weights[plate_id] = 1.0 if is_active else 0.0
+	plate_anim_weights[plate_id] = 1.0 if is_active else 0.0
+	queue_redraw()
 
 func _on_door_state_changed(door_id: String, is_open: bool) -> void:
-	if not door_anim_weights.has(door_id):
-		door_anim_weights[door_id] = 1.0 if is_open else 0.0
+	door_anim_weights[door_id] = 1.0 if is_open else 0.0
+	queue_redraw()
+
+func get_door_presentation(door_id: String) -> Dictionary:
+	return {"open": simulation.is_door_open(door_id),
+		"next_open": simulation.is_door_open_at_turn(door_id, simulation.current_turn + 1)}
+
+func _on_turn_committed(_turn: int) -> void:
+	if OS.is_debug_build() and simulation.debug_turn_logging:
+		for door: Dictionary in level_def.doors_data:
+			var did: String = str(door.get("id", ""))
+			var state: Dictionary = get_door_presentation(did)
+			print("[DOOR] ", did, " logical/rendered=", state.open, " next-entry=", state.next_open)
+			if door_anim_weights.get(did) != (1.0 if state.open else 0.0):
+				push_error("Door presentation cache disagrees with resolved state: " + did)
+	queue_redraw()
 
 func grid_to_world(grid_pos: Vector2i) -> Vector2:
 	return board_offset + Vector2(grid_pos.x * tile_size + tile_size * 0.5, grid_pos.y * tile_size + tile_size * 0.5)
@@ -319,7 +322,7 @@ func _draw_pressure_plates() -> void:
 		var pid: String = str(p.get("id", ""))
 		var ppos: Vector2i = p.get("pos", Vector2i(-1, -1))
 		var center: Vector2 = grid_to_world(ppos)
-		var weight: float = plate_anim_weights.get(pid, 0.0)
+		var weight: float = 1.0 if simulation.is_plate_active(pid) else 0.0
 
 		# Outer recessed basin
 		var outer_r: float = tile_size * 0.42
@@ -350,7 +353,7 @@ func _draw_doors() -> void:
 	for d: Dictionary in level_def.doors_data:
 		var did: String = str(d.get("id", ""))
 		var dpos: Vector2i = d.get("pos", Vector2i(-1, -1))
-		var weight: float = door_anim_weights.get(did, 0.0)
+		var weight: float = 1.0 if simulation.is_door_open(did) else 0.0
 		var logic: String = str(d.get("logic", "AND")).to_upper()
 		var center: Vector2 = grid_to_world(dpos)
 		var rect: Rect2 = Rect2(board_offset.x + dpos.x * tile_size, board_offset.y + dpos.y * tile_size, tile_size, tile_size)
@@ -397,6 +400,19 @@ func _draw_doors() -> void:
 			draw_line(center + Vector2(6, -4), center + Vector2(0, 0), COLOR_AMBER_ACTIVE, 2.0)
 			draw_line(center - Vector2(6, 4), center + Vector2(0, 8), COLOR_AMBER_ACTIVE, 2.0)
 			draw_line(center + Vector2(6, 4), center + Vector2(0, 8), COLOR_AMBER_ACTIVE, 2.0)
+
+		# Entry uses the NEXT turn's Echo positions. Explicitly show impending changes
+		# without altering the committed open/closed gate or its collision rules.
+		var next_open: bool = simulation.is_door_open_at_turn(did, simulation.current_turn + 1)
+		if next_open != simulation.is_door_open(did):
+			if not next_open:
+				# A large amber cross warns that entry on the upcoming turn is blocked.
+				var arm: float = tile_size * 0.19
+				draw_line(center - Vector2(arm, arm), center + Vector2(arm, arm), COLOR_AMBER_ACTIVE, 3.0)
+				draw_line(center + Vector2(-arm, arm), center + Vector2(arm, -arm), COLOR_AMBER_ACTIVE, 3.0)
+			var forecast: String = "NEXT: OPEN" if next_open else "NEXT: SHUT"
+			draw_rect(Rect2(rect.position + Vector2(0, 2), Vector2(tile_size, 16)), COLOR_BG, true)
+			draw_string(ThemeDB.fallback_font, rect.position + Vector2(2, 14), forecast, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, COLOR_AMBER_ACTIVE)
 
 func _draw_exit_portal() -> void:
 	var center: Vector2 = grid_to_world(level_def.exit_pos)

@@ -296,7 +296,7 @@ func _run_all_tests() -> void:
 		sim.step_move(Vector2i.DOWN)
 		sim.step_move(Vector2i.DOWN)
 		sim.step_move(Vector2i.DOWN)
-		for _w in range(5): sim.step_wait()
+		for _w in range(3): sim.step_wait()
 		sim.create_echo()
 
 		sim.step_move(Vector2i.RIGHT)
@@ -308,6 +308,9 @@ func _run_all_tests() -> void:
 		sim.step_move(Vector2i.RIGHT)
 		sim.step_move(Vector2i.RIGHT)
 
+		# Completion presentation follows the existing narrative outro.
+		if gameplay.transmission_modal.visible:
+			gameplay.btn_skip_transmission.pressed.emit()
 		var completed: bool = SaveManager.is_level_completed("lvl_01")
 		var stars: int = SaveManager.get_level_stars("lvl_01")
 		var next_unlocked: bool = SaveManager.is_level_unlocked("lvl_02")
@@ -329,6 +332,8 @@ func _run_all_tests() -> void:
 		sim.step_move(Vector2i.DOWN)
 		sim.create_echo()
 		sim.complete_level() # Trigger completion
+		if gameplay.transmission_modal.visible:
+			gameplay.btn_skip_transmission.pressed.emit()
 		if not gameplay.complete_modal.visible:
 			gameplay.queue_free()
 			return false
@@ -356,6 +361,8 @@ func _run_all_tests() -> void:
 		sim.step_move(Vector2i.DOWN)
 		sim.create_echo()
 		sim.complete_level()
+		if gameplay.transmission_modal.visible:
+			gameplay.btn_skip_transmission.pressed.emit()
 		if not gameplay.complete_modal.visible:
 			gameplay.queue_free()
 			return false

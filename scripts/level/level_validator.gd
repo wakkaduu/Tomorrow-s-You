@@ -4,9 +4,13 @@ extends RefCounted
 ## Automated Level Solvability & Echo-Dependency Validator for Tomorrow's You.
 ## Verifies that:
 ## 1. Zero-Echo solutions do NOT exist (Zero-Echo Bypass Test passes).
-## 2. Puzzles cannot be solved with fewer Echoes than `min_echoes_required`.
+## 2. Screen for sub-minimum Echo counterexamples (not an exhaustive absence proof).
 ## 3. The level has a verified solvable path with `min_echoes_required` Echoes.
 
+const CampaignSolutionsClass = preload("res://scripts/level/campaign_solutions.gd")
+static var _counterexample_cache: Dictionary = {}
+
+const SolverClass = preload("res://scripts/solver/campaign_wait_solver.gd")
 const PuzzleSimulationClass = preload("res://scripts/gameplay/puzzle_simulation.gd")
 
 ## Result dictionary returned by validate_level():
@@ -14,14 +18,14 @@ const PuzzleSimulationClass = preload("res://scripts/gameplay/puzzle_simulation.
 ##   "level_id": String,
 ##   "min_echoes_required": int,
 ##   "zero_echo_passed": bool,       # True if 0 Echoes cannot reach exit
-##   "sub_min_echoes_passed": bool,  # True if < min_echoes cannot reach exit
+##   "sub_min_echoes_passed": bool,  # True if topology screen and prefix audit found no bypass
 ##   "solvable_with_min": bool,      # True if min_echoes solves the level
 ##   "is_valid": bool,               # True if all pass
 ##   "states_explored_0_echo": int,
 ##   "log": Array[String],
 ##   "report": String
 ## }
-static func validate_level(level_def: LevelDefinition, verified_solution: Array = []) -> Dictionary:
+static func validate_level(level_def: LevelDefinition, verified_solution: Array = [], action_bound: int = -1, proof: Dictionary = {}) -> Dictionary:
 	var result: Dictionary = {
 		"level_id": level_def.level_id,
 		"level_name": level_def.level_name,
@@ -30,6 +34,12 @@ static func validate_level(level_def: LevelDefinition, verified_solution: Array 
 		"sub_min_echoes_passed": false,
 		"solvable_with_min": false,
 		"is_valid": false,
+		"optimization_valid": false,
+		"optimization_status": "INCONCLUSIVE",
+		"structural_errors": level_def.validate(),
+		"counterexamples": [],
+		"intended_solution_valid": false,
+		"global_echo_status": "TOPOLOGY_SCREEN_ONLY",
 		"states_explored_0_echo": 0,
 		"log": [],
 		"report": ""
@@ -41,6 +51,7 @@ static func validate_level(level_def: LevelDefinition, verified_solution: Array 
 	report_lines.append("===================================================================")
 	report_lines.append("Minimum Echo requirement: %d" % level_def.min_echoes_required)
 	report_lines.append("Echo capacity limit:      %d" % level_def.echo_limit)
+	report_lines.append("Shared WAIT allowance:    %d" % level_def.max_wait_actions)
 	report_lines.append("")
 
 	# --------------------------------------------------------------------------
@@ -55,7 +66,7 @@ static func validate_level(level_def: LevelDefinition, verified_solution: Array 
 		result["zero_echo_passed"] = false
 	else:
 		report_lines.append("0 Echoes: FAILED — No solution found. (Explored %d states)" % result["states_explored_0_echo"])
-		result["zero_echo_passed"] = true
+		result["zero_echo_passed"] = zero_echo_search.get("complete", false)
 
 	# --------------------------------------------------------------------------
 	# 2. SUB-MINIMUM ECHO VALIDATION (for levels requiring >= 2 echoes)
@@ -64,6 +75,9 @@ static func validate_level(level_def: LevelDefinition, verified_solution: Array 
 	for echo_count in range(1, level_def.min_echoes_required):
 		var partial_search: Dictionary = _search_partial_echo_path(level_def, echo_count)
 		if partial_search.get("path_found", false):
+			if partial_search.has("actions"):
+				result["counterexamples"].append(partial_search)
+				result["global_echo_status"] = "VIOLATED_BY_REPLAYED_WITNESS"
 			report_lines.append("%d Echo(es): CRITICAL FAILURE — Solvable with only %d Echo(es) (requires %d)!" % [
 				echo_count, echo_count, level_def.min_echoes_required
 			])
@@ -77,7 +91,9 @@ static func validate_level(level_def: LevelDefinition, verified_solution: Array 
 	# 3. VERIFIED SOLUTION REPLAY
 	# --------------------------------------------------------------------------
 	if not verified_solution.is_empty():
-		var replay_result: Dictionary = _replay_solution(level_def, verified_solution)
+		var replay_result: Dictionary = _replay_solution(level_def, verified_solution, action_bound)
+		result["replay"] = replay_result
+		result["route_analysis"] = SolverClass.inspect_routes(level_def, verified_solution)
 		if replay_result.get("completed", false):
 			var turns: int = replay_result.get("turns", 0)
 			var echoes_used: int = replay_result.get("echoes_used", 0)
@@ -92,7 +108,7 @@ static func validate_level(level_def: LevelDefinition, verified_solution: Array 
 			result["solvable_with_min"] = false
 	else:
 		report_lines.append("%d Echoes: SKIPPED (No verified solution provided for replay)" % level_def.min_echoes_required)
-		result["solvable_with_min"] = true # Neutral if not provided
+		result["solvable_with_min"] = false # No witness means INCONCLUSIVE, never a pass.
 
 	# --------------------------------------------------------------------------
 	# SUMMARY
@@ -101,10 +117,10 @@ static func validate_level(level_def: LevelDefinition, verified_solution: Array 
 	if result["zero_echo_passed"]:
 		report_lines.append("Zero-Echo bypass test:   PASSED [✓] (Cannot be solved without Echoes)")
 	else:
-		report_lines.append("Zero-Echo bypass test:   FAILED [✗] (Player can walk to exit!)")
+		report_lines.append("Zero-Echo bypass test:   FAILED/INCONCLUSIVE (See search result above)")
 
 	if result["sub_min_echoes_passed"]:
-		report_lines.append("Sub-minimum Echo test:   PASSED [✓] (Cannot be solved with fewer Echoes)")
+		report_lines.append("Sub-minimum Echo screen: PASSED [✓] (No counterexample; not a global proof)")
 	else:
 		report_lines.append("Sub-minimum Echo test:   FAILED [✗] (Solved with too few Echoes)")
 
@@ -113,92 +129,59 @@ static func validate_level(level_def: LevelDefinition, verified_solution: Array 
 	else:
 		report_lines.append("Level solvability:       FAILED [✗]")
 
-	result["is_valid"] = result["zero_echo_passed"] and result["sub_min_echoes_passed"] and result["solvable_with_min"]
-	report_lines.append("OVERALL STATUS:          %s" % ("VALIDATED [✓]" if result["is_valid"] else "INVALID [✗]"))
+	result["intended_solution_valid"] = result["structural_errors"].is_empty() and result["zero_echo_passed"] and result["solvable_with_min"]
+	result["is_valid"] = result["intended_solution_valid"] and result["sub_min_echoes_passed"]
+	report_lines.append("OVERALL SCREEN STATUS:   %s" % ("VALIDATED [✓]" if result["is_valid"] else "INVALID [✗]"))
 	report_lines.append("===================================================================")
 
+	if not proof.is_empty():
+		var complete: bool = proof.get("status", "") == "BOUNDED_EXACT" and proof.get("level_id", "") == level_def.level_id
+		complete = complete and proof.get("level_fingerprint", "") == level_def.get_rules_fingerprint()
+		complete = complete and int(proof.get("minimum_wait", -1)) == level_def.max_wait_actions
+		complete = complete and int(proof.get("action_bound", -1)) == action_bound
+		complete = complete and proof.get("actions", []) == verified_solution
+		complete = complete and result.get("route_analysis", {}).get("intended_route", false)
+		var trials: Array = proof.get("trials", [])
+		complete = complete and trials.size() == level_def.max_wait_actions + 1
+		for index in range(trials.size()):
+			var trial: Dictionary = trials[index]
+			complete = complete and int(trial.get("wait_limit", -1)) == index and trial.get("complete", false)
+			complete = complete and bool(trial.get("found", false)) == (index == level_def.max_wait_actions)
+		result["optimization_valid"] = complete and result["intended_solution_valid"]
+		result["optimization_status"] = "BOUNDED_EXACT" if result["optimization_valid"] else "INCONCLUSIVE"
 	result["report"] = "\n".join(report_lines)
 	return result
 
 ## Simulates state-space BFS with 0 Echoes to find if exit is reachable.
 static func _search_zero_echo_path(level_def: LevelDefinition) -> Dictionary:
-	var queue: Array[Vector2i] = [level_def.spawn_pos]
-	var visited: Dictionary = {level_def.spawn_pos: true}
-	var parent: Dictionary = {}
-	var states_explored: int = 0
-
-	var directions: Array[Vector2i] = [
-		Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT
-	]
-
-	while not queue.is_empty():
-		var curr: Vector2i = queue.pop_front()
-		states_explored += 1
-
-		if curr == level_def.exit_pos:
-			# Path found! Construct path
-			var path: Array[Vector2i] = []
-			var trace: Vector2i = curr
-			while parent.has(trace):
-				path.push_front(trace)
-				trace = parent[trace]
-			path.push_front(level_def.spawn_pos)
-			return {"path_found": true, "path": path, "states_explored": states_explored}
-
-		# Compute doors state if player is at curr
-		# In zero-echo, only a plate at curr is active!
-		var active_plates: Dictionary = {}
-		for p: Dictionary in level_def.plates_data:
-			if p.get("pos", Vector2i(-1, -1)) == curr:
-				active_plates[str(p.get("id", ""))] = true
-
-		var open_doors: Dictionary = {}
-		for d: Dictionary in level_def.doors_data:
-			var did: String = str(d.get("id", ""))
-			var logic: String = str(d.get("logic", "AND"))
-			var req: Array = d.get("required_plates", [])
-			var opened: bool = false
-			if logic == "AND":
-				opened = true
-				for r in req:
-					if not active_plates.has(str(r)):
-						opened = false
-						break
-			elif logic == "OR":
-				opened = false
-				for r in req:
-					if active_plates.has(str(r)):
-						opened = true
-						break
-			open_doors[did] = opened
-
-		for dir in directions:
-			var nxt: Vector2i = curr + dir
-
-			# 1. Bounds check
-			if not level_def.is_in_bounds(nxt):
-				continue
-
-			# 2. Wall check
-			if level_def.is_wall(nxt):
-				continue
-
-			# 3. Door check
-			var door_info: Dictionary = level_def.get_door_at(nxt)
-			if not door_info.is_empty():
-				var did: String = str(door_info.get("id", ""))
-				if not open_doors.get(did, false):
-					continue # Closed door blocks movement
-
-			if not visited.has(nxt):
-				visited[nxt] = true
-				parent[nxt] = curr
-				queue.append(nxt)
-
-	return {"path_found": false, "states_explored": states_explored}
+	var initial = PuzzleSimulationClass.new()
+	initial.load_level(level_def)
+	var pending: Array = [{"sim": initial, "path": [level_def.spawn_pos]}]
+	var visited: Dictionary = {}
+	var head: int = 0
+	while head < pending.size():
+		if head >= 50000:
+			return {"path_found": false, "complete": false, "states_explored": head}
+		var node: Dictionary = pending[head]
+		head += 1
+		var sim: PuzzleSimulation = node.sim
+		if sim.is_completed:
+			return {"path_found": true, "complete": true, "states_explored": head, "path": node.path}
+		# With no Echoes, stationary WAIT cannot change occupancy or sequence edges;
+		# it is dominated by omitting it. Histories/clocks do not affect future legality.
+		for direction: Vector2i in SolverClass.DIRECTIONS:
+			var next: PuzzleSimulation = SolverClass.fork(sim)
+			if not next.step_move(direction): continue
+			var signature: String = str([next.player_pos, next.sequence_progress, next.sequence_unlocked, next.plates_state])
+			if visited.has(signature): continue
+			visited[signature] = true
+			pending.append({"sim": next, "path": node.path + [next.player_pos]})
+	return {"path_found": false, "complete": true, "states_explored": head}
 
 ## Checks if exit can be reached when fewer than min_echoes hold plates
 static func _search_partial_echo_path(level_def: LevelDefinition, echo_count: int) -> Dictionary:
+	var witness: Dictionary = find_prefix_counterexample(level_def, echo_count)
+	if witness.get("path_found", false): return witness
 	# Enumerate all combinations of `echo_count` plates held permanently by echoes
 	var plates: Array[Dictionary] = level_def.plates_data
 	if plates.is_empty():
@@ -291,7 +274,7 @@ static func _get_combinations(arr: Array, k: int) -> Array[Array]:
 	return result
 
 ## Replays an action sequence in PuzzleSimulation to verify completion
-static func _replay_solution(level_def: LevelDefinition, solution_steps: Array) -> Dictionary:
+static func _replay_solution(level_def: LevelDefinition, solution_steps: Array, action_bound: int = -1) -> Dictionary:
 	var sim: PuzzleSimulation = PuzzleSimulationClass.new()
 	sim.load_level(level_def)
 
@@ -302,7 +285,8 @@ static func _replay_solution(level_def: LevelDefinition, solution_steps: Array) 
 		"R": Vector2i.RIGHT
 	}
 
-	for step in solution_steps:
+	for index in range(solution_steps.size()):
+		var step = solution_steps[index]
 		var act: String = str(step).strip_edges().to_upper()
 		match act:
 			"U", "D", "L", "R":
@@ -313,7 +297,8 @@ static func _replay_solution(level_def: LevelDefinition, solution_steps: Array) 
 						"error": "Move %s blocked at turn %d (player at %s)" % [act, sim.current_turn, str(sim.player_pos)]
 					}
 			"W":
-				sim.step_wait()
+				if not sim.step_wait():
+					return {"completed": false, "error": "WAIT rejected at turn %d (limit %d, used %d)" % [sim.current_turn, level_def.max_wait_actions, sim.get_wait_actions_used()]}
 			"ECHO":
 				var ok: bool = sim.create_echo()
 				if not ok:
@@ -329,16 +314,102 @@ static func _replay_solution(level_def: LevelDefinition, solution_steps: Array) 
 					"error": "Unrecognized action '%s'" % act
 				}
 
+		if action_bound >= 0 and sim.total_actions_taken > action_bound:
+			return {"completed": false, "error": "Action bound exceeded"}
+		var state_error: String = _resolved_state_error(sim)
+		if not state_error.is_empty():
+			return {"completed": false, "error": state_error}
 		if sim.is_completed:
+			if index != solution_steps.size() - 1:
+				return {"completed": false, "error": "Trailing actions after completion"}
 			return {
 				"completed": true,
 				"turns": sim.total_actions_taken,
-				"echoes_used": sim.echoes.size()
+				"echoes_used": sim.echoes.size(),
+				"wait_used": sim.get_wait_actions_used(),
+				"exit_state": {"completed": sim.is_completed, "player": [sim.player_pos.x, sim.player_pos.y],
+					"exit": [level_def.exit_pos.x, level_def.exit_pos.y], "doors": sim.doors_state.duplicate()}
 			}
 
 	return {
 		"completed": sim.is_completed,
 		"error": "Solution ended without reaching exit",
 		"turns": sim.total_actions_taken,
-		"echoes_used": sim.echoes.size()
+		"echoes_used": sim.echoes.size(),
+		"wait_used": sim.get_wait_actions_used()
 	}
+
+static func _resolved_state_error(sim: PuzzleSimulation) -> String:
+	var actors: Array[Vector2i] = [sim.player_pos]
+	for i in range(sim.echoes.size()):
+		var rec: EchoRecording = sim.echoes[i]
+		var active: bool = not rec.steps.is_empty() and sim.current_turn <= rec.steps.size()
+		if sim.is_echo_active(i) != active: return "Echo expiration disagrees with recording duration"
+		if active:
+			var pos: Vector2i = rec.spawn_pos if sim.current_turn == 0 else rec.steps[sim.current_turn - 1].position
+			if sim.get_echo_position(i) != pos: return "Echo playback position mismatch"
+			actors.append(pos)
+		elif sim.get_echo_position(i) != Vector2i(-1, -1): return "Expired Echo occupies a tile"
+	for plate: Dictionary in sim.level_def.plates_data:
+		if sim.is_plate_active(plate.id) != (plate.pos in actors): return "Pressure plate occupancy mismatch"
+	for door: Dictionary in sim.level_def.doors_data:
+		var logic: String = door.get("logic", "AND")
+		var expected: bool = logic == "AND"
+		if logic == "SEQUENCE": expected = sim.is_sequence_unlocked(door.id)
+		else:
+			for pid in door.get("required_plates", []):
+				if logic == "AND": expected = expected and sim.is_plate_active(pid)
+				else: expected = expected or sim.is_plate_active(pid)
+		if sim.player_pos == door.pos: expected = true
+		if sim.is_door_open(door.id) != expected: return "Resolved door condition mismatch"
+	if sim.get_wait_actions_used() > sim.level_def.max_wait_actions: return "Shared WAIT allowance exceeded"
+	return ""
+
+## Counterexample search, NOT a proof of absence. Build the first k canonical
+## recordings legally, then search every final-player action within the star bound.
+## This catches sequence-latch shortcuts hidden by the old static plate screen.
+static func find_prefix_counterexample(level: LevelDefinition, echo_count: int, max_states: int = 30000) -> Dictionary:
+	var key: String = str([level.get_rules_fingerprint(), level.max_wait_actions, echo_count, max_states])
+	if _counterexample_cache.has(key): return _counterexample_cache[key].duplicate(true)
+	var seed = PuzzleSimulationClass.new()
+	seed.load_level(level)
+	var prefix: Array = []
+	var directions: Dictionary = {"U": Vector2i.UP, "D": Vector2i.DOWN, "L": Vector2i.LEFT, "R": Vector2i.RIGHT}
+	for action in CampaignSolutionsClass.get_actions(level.level_id):
+		if seed.echoes.size() >= echo_count: break
+		var accepted: bool = false
+		if action == "ECHO": accepted = seed.create_echo()
+		elif action == "W": accepted = seed.step_wait()
+		else: accepted = seed.step_move(directions[action])
+		if not accepted: return {"path_found": false, "complete": false, "reason": "Canonical seed rejected"}
+		prefix.append(action)
+	if seed.echoes.size() != echo_count:
+		return {"path_found": false, "complete": false, "reason": "No canonical seed"}
+	var pending: Array = [{"sim": seed, "actions": prefix}]
+	var visited: Dictionary = {}
+	var head: int = 0
+	var result: Dictionary = {"path_found": false, "complete": true, "states_explored": 0, "scope": "fixed canonical Echo prefix; star action bound"}
+	while head < pending.size():
+		if head >= max_states:
+			result["complete"] = false
+			break
+		var node: Dictionary = pending[head]
+		head += 1
+		var sim: PuzzleSimulation = node.sim
+		if sim.is_completed:
+			result["path_found"] = true
+			result["actions"] = node.actions
+			result["replay"] = _replay_solution(level, node.actions, level.target_3_stars)
+			break
+		if sim.total_actions_taken >= level.target_3_stars: continue
+		for action in ["U", "D", "L", "R", "W"]:
+			var next: PuzzleSimulation = SolverClass.fork(sim)
+			var accepted: bool = next.step_wait() if action == "W" else next.step_move(directions[action])
+			if not accepted: continue
+			var signature: String = str([next.player_pos, next.current_turn, next.sequence_progress, next.sequence_unlocked, next.plates_state, next.get_wait_actions_used()])
+			if visited.has(signature): continue
+			visited[signature] = true
+			pending.append({"sim": next, "actions": node.actions + [action]})
+	result["states_explored"] = head
+	_counterexample_cache[key] = result.duplicate(true)
+	return result

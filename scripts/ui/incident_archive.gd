@@ -220,7 +220,8 @@ func _create_locked_row(message: String) -> HBoxContainer:
 	var locked_lbl = Label.new()
 	locked_lbl.text = message
 	locked_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	UIDesignSystemClass.apply_technical_text(locked_lbl, 12, UIDesignSystemClass.COLOR_TEXT_DIM)
+	locked_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UIDesignSystemClass.apply_technical_text(locked_lbl, 12, UIDesignSystemClass.COLOR_TEXT_SECONDARY)
 	hbox.add_child(locked_lbl)
 	return hbox
 
@@ -262,7 +263,7 @@ func _render_transmissions() -> void:
 			var num_badge = Label.new()
 			num_badge.text = "COMM #%02d" % idx
 			num_badge.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_MUTED)
-			num_badge.add_theme_font_size_override("font_size", 11)
+			num_badge.add_theme_font_size_override("font_size", 13)
 			top_row.add_child(num_badge)
 
 			var spacer = Control.new()
@@ -276,13 +277,15 @@ func _render_transmissions() -> void:
 			var title_lbl = Label.new()
 			title_lbl.text = "%s // %s" % [ch_name, type_str]
 			title_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_CYAN_PRIMARY)
-			title_lbl.add_theme_font_size_override("font_size", 15)
+			UIDesignSystemClass.apply_display_heading(title_lbl, 20, UIDesignSystemClass.COLOR_TEXT_PRIMARY)
+			title_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			vbox.add_child(title_lbl)
 
 			var sub_lbl = Label.new()
 			sub_lbl.text = "Speaker: %s  •  Channel: %s" % [trans.get("sender", "MORROW"), trans.get("channel", "LINK")]
 			sub_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_MUTED)
-			sub_lbl.add_theme_font_size_override("font_size", 12)
+			sub_lbl.add_theme_font_size_override("font_size", 14)
+			sub_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			vbox.add_child(sub_lbl)
 
 			var btn_row = HBoxContainer.new()
@@ -305,17 +308,9 @@ func _render_transmissions() -> void:
 			)
 			btn_row.add_child(btn_view)
 
-			var btn_play = Button.new()
-			btn_play.custom_minimum_size = Vector2(110, 44)
-			UIDesignSystemClass.apply_primary_button(btn_play, "Replay", "icon_play")
-			btn_play.pressed.connect(func():
-				_show_cinematic_transmission(captured_trans)
-			)
-			btn_row.add_child(btn_play)
-
 			vbox.add_child(btn_row)
 		else:
-			vbox.add_child(_create_locked_row("Restricted Transmission // Complete %s to Decrypt" % ch_name))
+			vbox.add_child(_create_locked_row("COMM #%02d · Restricted Transmission // Complete %s to Decrypt" % [idx, ch_name]))
 
 		entries_list.add_child(card)
 		idx += 1
@@ -337,7 +332,7 @@ func _render_logs() -> void:
 			var num_lbl = Label.new()
 			num_lbl.text = "RECORD #%s" % log_entry.get("number", "000")
 			num_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_MUTED)
-			num_lbl.add_theme_font_size_override("font_size", 11)
+			num_lbl.add_theme_font_size_override("font_size", 13)
 			top_row.add_child(num_lbl)
 
 			var spacer = Control.new()
@@ -351,19 +346,21 @@ func _render_logs() -> void:
 			var title_lbl = Label.new()
 			title_lbl.text = log_entry.get("title", "")
 			title_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_CYAN_PRIMARY)
-			title_lbl.add_theme_font_size_override("font_size", 15)
+			UIDesignSystemClass.apply_display_heading(title_lbl, 20, UIDesignSystemClass.COLOR_TEXT_PRIMARY)
+			title_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			vbox.add_child(title_lbl)
 
 			var meta_lbl = Label.new()
-			meta_lbl.text = "Author: %s  •  Date: %s" % [log_entry.get("author", "Unknown"), log_entry.get("date", "Unknown")]
+			meta_lbl.text = "%s · %s\n%s" % [log_entry.get("author", "Unknown"), log_entry.get("date", "Unknown"), log_entry.get("classification", "RESEARCH")]
 			meta_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_MUTED)
-			meta_lbl.add_theme_font_size_override("font_size", 12)
+			meta_lbl.add_theme_font_size_override("font_size", 14)
+			meta_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			vbox.add_child(meta_lbl)
 
 			var btn = Button.new()
 			btn.custom_minimum_size = Vector2(0, 44)
 			if not is_read:
-				UIDesignSystemClass.apply_primary_button(btn, "Read Research Log", "icon_logs")
+				UIDesignSystemClass.apply_secondary_button(btn, "Read Research Log", "icon_logs")
 			else:
 				UIDesignSystemClass.apply_secondary_button(btn, "Read Research Log", "icon_logs")
 			var captured_log = log_entry
@@ -403,7 +400,7 @@ func _render_records() -> void:
 			var num_lbl = Label.new()
 			num_lbl.text = "FACILITY RECORD #%02d" % idx
 			num_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_MUTED)
-			num_lbl.add_theme_font_size_override("font_size", 11)
+			num_lbl.add_theme_font_size_override("font_size", 13)
 			top_row.add_child(num_lbl)
 
 			var spacer = Control.new()
@@ -417,13 +414,15 @@ func _render_records() -> void:
 			var title_lbl = Label.new()
 			title_lbl.text = rec.get("title", "")
 			title_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
-			title_lbl.add_theme_font_size_override("font_size", 15)
+			UIDesignSystemClass.apply_display_heading(title_lbl, 20, UIDesignSystemClass.COLOR_TEXT_PRIMARY)
+			title_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			vbox.add_child(title_lbl)
 
 			var cat_lbl = Label.new()
 			cat_lbl.text = "Category: %s" % rec.get("category", "")
 			cat_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_MUTED)
-			cat_lbl.add_theme_font_size_override("font_size", 12)
+			cat_lbl.add_theme_font_size_override("font_size", 14)
+			cat_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			vbox.add_child(cat_lbl)
 
 			var btn = Button.new()
@@ -463,7 +462,7 @@ func _render_timeline() -> void:
 			var time_lbl = Label.new()
 			time_lbl.text = entry.get("timestamp", "")
 			time_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_AMBER_WARN)
-			time_lbl.add_theme_font_size_override("font_size", 12)
+			time_lbl.add_theme_font_size_override("font_size", 14)
 			top_row.add_child(time_lbl)
 
 			var spacer = Control.new()
@@ -477,14 +476,15 @@ func _render_timeline() -> void:
 			var title_lbl = Label.new()
 			title_lbl.text = entry.get("title", "")
 			title_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_PRIMARY)
-			title_lbl.add_theme_font_size_override("font_size", 15)
+			UIDesignSystemClass.apply_display_heading(title_lbl, 20, UIDesignSystemClass.COLOR_TEXT_PRIMARY)
+			title_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			vbox.add_child(title_lbl)
 
 			var summary_lbl = Label.new()
 			summary_lbl.text = entry.get("summary", "")
 			summary_lbl.add_theme_color_override("font_color", Color("#CBD5E1"))
-			summary_lbl.add_theme_font_size_override("font_size", 13)
-			summary_lbl.theme_override_constants_set("line_spacing", 4)
+			UIDesignSystemClass.apply_body_text(summary_lbl, 16)
+			summary_lbl.add_theme_constant_override("line_spacing", 4)
 			summary_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			vbox.add_child(summary_lbl)
 		else:
@@ -597,7 +597,7 @@ func _display_transmission_line(idx: int) -> void:
 	if transmission_line_progress:
 		transmission_line_progress.text = "LINE %02d / %02d" % [idx + 1, lines.size()]
 
-	btn_proceed_transmission.text = "NEXT ▶" if (idx < lines.size() - 1) else "PROCEED ▶"
+	btn_proceed_transmission.text = "Next" if (idx < lines.size() - 1) else "Continue"
 
 func _advance_transmission() -> void:
 	var lines: Array = _active_transmission.get("lines", [])
@@ -655,7 +655,7 @@ func _style_components() -> void:
 	if reader_integrity_label:
 		UIDesignSystemClass.apply_technical_text(reader_integrity_label, 11, UIDesignSystemClass.COLOR_EMERALD_SUCCESS, "Bold")
 	if reader_text_label:
-		UIDesignSystemClass.apply_body_text(reader_text_label, 15, Color("#E2E8F0"))
+		UIDesignSystemClass.apply_body_text(reader_text_label, 18, Color("#E2E8F0"))
 
 	# Embedded transmission modal buttons
 	if btn_proceed_transmission:
