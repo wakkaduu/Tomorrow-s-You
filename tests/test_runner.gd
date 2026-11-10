@@ -145,6 +145,10 @@ func _ready() -> void:
 		var scene = load("res://scenes/gameplay/gameplay.tscn").instantiate()
 		add_child(scene)
 
+		# Dismiss opening transmission if showing
+		if scene.transmission_modal and scene.transmission_modal.visible:
+			scene.handle_back_button()
+
 		var btn_hint: Button = scene.btn_hint
 		var hint_modal: PanelContainer = scene.hint_modal
 		var btn_close: Button = scene.btn_close_hint
@@ -176,10 +180,18 @@ func _ready() -> void:
 		var scene = load("res://scenes/gameplay/gameplay.tscn").instantiate()
 		add_child(scene)
 
+		# Dismiss opening transmission if showing
+		if scene.transmission_modal and scene.transmission_modal.visible:
+			scene.handle_back_button()
+
 		var sim: PuzzleSimulation = GameManager.current_simulation
 		sim.step_move(Vector2i.DOWN)
 		sim.create_echo()
 		sim.complete_level()
+
+		# Dismiss outro transmission if showing before complete modal
+		if scene.transmission_modal and scene.transmission_modal.visible:
+			scene.handle_back_button()
 
 		if not scene.complete_modal.visible:
 			scene.queue_free()

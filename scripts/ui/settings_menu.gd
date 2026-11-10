@@ -2,6 +2,8 @@ extends Control
 
 ## Settings screen: audio, haptics, and accessibility controls.
 
+const UIDesignSystemClass = preload("res://scripts/ui/components/ui_design_system.gd")
+
 @onready var music_slider: HSlider = $Content/VBoxContainer/MusicRow/MusicSlider
 @onready var sfx_slider: HSlider = $Content/VBoxContainer/SFXRow/SFXSlider
 @onready var haptics_check: CheckBox = $Content/VBoxContainer/HapticsRow/HapticsCheck
@@ -13,6 +15,9 @@ extends Control
 
 func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
+	UIDesignSystemClass.apply_button_skin(back_button, UIDesignSystemClass.COLOR_CYAN_PRIMARY, false)
+	UIDesignSystemClass.apply_button_skin(reset_button, UIDesignSystemClass.COLOR_ROSE_ALERT, false)
+
 	reset_button.pressed.connect(func(): reset_confirm_dialog.popup_centered())
 	reset_confirm_dialog.confirmed.connect(_on_reset_confirmed)
 
@@ -85,4 +90,3 @@ func _on_reset_confirmed() -> void:
 		SaveManager.reset_progress()
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
-

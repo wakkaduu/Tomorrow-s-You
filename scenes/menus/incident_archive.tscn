@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://archive0000001"]
+[gd_scene load_steps=4 format=3 uid="uid://archive0000001"]
 
 [ext_resource type="Script" path="res://scripts/ui/incident_archive.gd" id="1_archive"]
 [ext_resource type="PackedScene" path="res://scenes/background/temporal_background.tscn" id="2_bg"]
+[ext_resource type="Script" path="res://scripts/ui/components/morrow_visualizer.gd" id="3_morrow"]
 
 [node name="IncidentArchive" type="Control"]
 layout_mode = 3
@@ -34,41 +35,57 @@ theme_override_constants/separation = 12
 
 [node name="Header" type="VBoxContainer" parent="MainContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 8
 
 [node name="TopRow" type="HBoxContainer" parent="MainContainer/VBoxContainer/Header"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
 [node name="BackButton" type="Button" parent="MainContainer/VBoxContainer/Header/TopRow"]
-custom_minimum_size = Vector2(96, 46)
+custom_minimum_size = Vector2(96, 48)
 layout_mode = 2
 text = "< BACK"
 
-[node name="Title" type="Label" parent="MainContainer/VBoxContainer/Header/TopRow"]
+[node name="TitleBox" type="VBoxContainer" parent="MainContainer/VBoxContainer/Header/TopRow"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="Title" type="Label" parent="MainContainer/VBoxContainer/Header/TopRow/TitleBox"]
+layout_mode = 2
 theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
 theme_override_font_sizes/font_size = 24
 text = "INCIDENT ARCHIVE"
-vertical_alignment = 1
 
-[node name="ProgressBarContainer" type="HBoxContainer" parent="MainContainer/VBoxContainer/Header"]
+[node name="FacilitySubtitle" type="Label" parent="MainContainer/VBoxContainer/Header/TopRow/TitleBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.58, 0.64, 0.72, 1)
+theme_override_font_sizes/font_size = 11
+text = "MERIDIAN TEMPORAL RESEARCH FACILITY"
+
+[node name="ProgressBarContainer" type="VBoxContainer" parent="MainContainer/VBoxContainer/Header"]
+layout_mode = 2
+theme_override_constants/separation = 4
 
 [node name="ArchiveStatusLabel" type="Label" parent="MainContainer/VBoxContainer/Header/ProgressBarContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.580392, 0.639216, 0.721569, 1)
 theme_override_font_sizes/font_size = 13
-text = "ARCHIVE STATUS: 0% RESTORED (0 / 31 RECORDS)"
+text = "ARCHIVE RESTORATION: 0% RESTORED (0 / 31 RECORDS)"
+
+[node name="RestorationBar" type="ProgressBar" parent="MainContainer/VBoxContainer/Header/ProgressBarContainer"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+max_value = 100.0
+step = 0.1
+show_percentage = false
 
 [node name="TabBar" type="HBoxContainer" parent="MainContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 6
 
 [node name="TabTransmissions" type="Button" parent="MainContainer/VBoxContainer/TabBar"]
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 12
@@ -77,7 +94,7 @@ button_pressed = true
 text = "TRANSMISSIONS"
 
 [node name="TabLogs" type="Button" parent="MainContainer/VBoxContainer/TabBar"]
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 12
@@ -85,7 +102,7 @@ toggle_mode = true
 text = "LOGS"
 
 [node name="TabRecords" type="Button" parent="MainContainer/VBoxContainer/TabBar"]
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 12
@@ -93,7 +110,7 @@ toggle_mode = true
 text = "RECORDS"
 
 [node name="TabTimeline" type="Button" parent="MainContainer/VBoxContainer/TabBar"]
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 12
@@ -110,29 +127,27 @@ size_flags_vertical = 3
 [node name="EntriesList" type="VBoxContainer" parent="MainContainer/VBoxContainer/ContentScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 10
+theme_override_constants/separation = 12
 
 [node name="ReaderModal" type="PanelContainer" parent="."]
 visible = false
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -260.0
-offset_top = -280.0
-offset_right = 260.0
-offset_bottom = 280.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 28.0
+offset_right = -16.0
+offset_bottom = -24.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Margin" type="MarginContainer" parent="ReaderModal"]
 layout_mode = 2
-theme_override_constants/margin_left = 22
-theme_override_constants/margin_top = 22
-theme_override_constants/margin_right = 22
-theme_override_constants/margin_bottom = 22
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
 
 [node name="VBoxContainer" type="VBoxContainer" parent="ReaderModal/Margin"]
 layout_mode = 2
@@ -151,7 +166,7 @@ text = "MERIDIAN RESEARCH LOG // RECOVERED"
 [node name="TitleLabel" type="Label" parent="ReaderModal/Margin/VBoxContainer/HeaderBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 20
 text = "LOG TITLE"
 autowrap_mode = 2
 
@@ -160,6 +175,12 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.796078, 0.835294, 0.882353, 1)
 theme_override_font_sizes/font_size = 12
 text = "Author: Unknown | Date: 2084.11.04"
+
+[node name="IntegrityLabel" type="Label" parent="ReaderModal/Margin/VBoxContainer/HeaderBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.204, 0.827, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "✦ PARITY INTEGRITY: 99.4% // SECURE RESTORATION"
 
 [node name="HSeparator" type="HSeparator" parent="ReaderModal/Margin/VBoxContainer"]
 layout_mode = 2
@@ -171,25 +192,158 @@ size_flags_vertical = 3
 [node name="ContentLabel" type="Label" parent="ReaderModal/Margin/VBoxContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.886275, 0.913725, 0.941176, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.92, 0.94, 0.97, 1)
+theme_override_constants/line_spacing = 6
+theme_override_font_sizes/font_size = 16
 text = "Log content text goes here..."
 autowrap_mode = 2
 
 [node name="ButtonsRow" type="HBoxContainer" parent="ReaderModal/Margin/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 12
 
 [node name="BtnReplay" type="Button" parent="ReaderModal/Margin/VBoxContainer/ButtonsRow"]
 visible = false
-custom_minimum_size = Vector2(140, 46)
+custom_minimum_size = Vector2(160, 48)
 layout_mode = 2
 text = "REPLAY AUDIO"
 
 [node name="BtnCloseReader" type="Button" parent="ReaderModal/Margin/VBoxContainer/ButtonsRow"]
-custom_minimum_size = Vector2(0, 46)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
 text = "CLOSE RECORD"
 
+[node name="TransmissionModal" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 28.0
+offset_right = -16.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="TransmissionModal"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 18
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TransmissionModal/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="FacilityHeader" type="HBoxContainer" parent="TransmissionModal/Margin/VBoxContainer"]
+layout_mode = 2
+
+[node name="FacilityTitle" type="Label" parent="TransmissionModal/Margin/VBoxContainer/FacilityHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.58, 0.64, 0.72, 1)
+theme_override_font_sizes/font_size = 11
+text = "MERIDIAN TEMPORAL RESEARCH COMPLEX // PROTOCOL 07"
+
+[node name="StatusBadge" type="Label" parent="TransmissionModal/Margin/VBoxContainer/FacilityHeader"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.83, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "[REPLAY MODE // VERIFIED]"
+
+[node name="HeaderBox" type="VBoxContainer" parent="TransmissionModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="SenderLabel" type="Label" parent="TransmissionModal/Margin/VBoxContainer/HeaderBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 20
+text = "MORROW // FACILITY AI"
+
+[node name="ChannelLabel" type="Label" parent="TransmissionModal/Margin/VBoxContainer/HeaderBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.580392, 0.639216, 0.721569, 1)
+theme_override_font_sizes/font_size = 13
+text = "EMERGENCY CONTAINMENT LINK"
+
+[node name="MetaLabel" type="Label" parent="TransmissionModal/Margin/VBoxContainer/HeaderBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.52, 0.62, 1)
+theme_override_font_sizes/font_size = 11
+text = "CH-01 // FIRST CONTACT • TR-01-INTRO"
+
+[node name="VisualizerContainer" type="VBoxContainer" parent="TransmissionModal/Margin/VBoxContainer"]
+custom_minimum_size = Vector2(0, 134)
+layout_mode = 2
+alignment = 1
+
+[node name="MorrowCore" type="Control" parent="TransmissionModal/Margin/VBoxContainer/VisualizerContainer"]
+custom_minimum_size = Vector2(180, 110)
+layout_mode = 2
+size_flags_horizontal = 4
+script = ExtResource("3_morrow")
+
+[node name="SignalStatusLabel" type="Label" parent="TransmissionModal/Margin/VBoxContainer/VisualizerContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 0.85)
+theme_override_font_sizes/font_size = 11
+text = "● CARRIER LOCK // RESONANCE STABLE"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="TransmissionModal/Margin/VBoxContainer"]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="TransmissionModal/Margin/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TransmissionContent" type="Label" parent="TransmissionModal/Margin/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.94, 0.96, 0.98, 1)
+theme_override_constants/line_spacing = 6
+theme_override_font_sizes/font_size = 17
+text = "Incoming transmission content..."
+autowrap_mode = 2
+
+[node name="ProgressRow" type="HBoxContainer" parent="TransmissionModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LineProgressLabel" type="Label" parent="TransmissionModal/Margin/VBoxContainer/ProgressRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.58, 0.64, 0.72, 1)
+theme_override_font_sizes/font_size = 12
+text = "LINE 01 / 06"
+
+[node name="Spacer" type="Control" parent="TransmissionModal/Margin/VBoxContainer/ProgressRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TapHintLabel" type="Label" parent="TransmissionModal/Margin/VBoxContainer/ProgressRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.48, 0.58, 1)
+theme_override_font_sizes/font_size = 11
+text = "TAP TO EXPAND"
+
+[node name="ButtonsRow" type="HBoxContainer" parent="TransmissionModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnSkipTransmission" type="Button" parent="TransmissionModal/Margin/VBoxContainer/ButtonsRow"]
+custom_minimum_size = Vector2(100, 48)
+layout_mode = 2
+text = "SKIP"
+
+[node name="BtnProceedTransmission" type="Button" parent="TransmissionModal/Margin/VBoxContainer/ButtonsRow"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 16
+text = "PROCEED ▶"

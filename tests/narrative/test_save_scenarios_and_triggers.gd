@@ -195,3 +195,4 @@ func run_all_scenario_tests() -> void:
 		DirAccess.remove_absolute(sandbox_fresh_path)
 		return true
 	)
+

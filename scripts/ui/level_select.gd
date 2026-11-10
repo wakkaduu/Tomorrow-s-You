@@ -4,6 +4,8 @@ extends Control
 ## Displays campaign levels filtered by selected difficulty tier,
 ## showing earned stars (1–3), move budgets, and minimum Echo requirements.
 
+const UIDesignSystemClass = preload("res://scripts/ui/components/ui_design_system.gd")
+
 @onready var levels_grid: GridContainer = $ScrollContainer/VBoxContainer/LevelsGrid
 @onready var back_button: Button = $Header/BackButton
 @onready var title_label: Label = $Header/Title
@@ -14,11 +16,13 @@ const TIER_NAMES: Dictionary = {
 	2: "NORMAL — SYNCHRONIZATION",
 	3: "HARD — CONVERGENCE",
 	4: "EXPERT — PARADOX",
-	5: "NIGHTMARE"
+	5: "NIGHTMARE — THE LAST TOMORROW"
 }
 
 func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
+	UIDesignSystemClass.apply_button_skin(back_button, UIDesignSystemClass.COLOR_CYAN_PRIMARY, false)
+
 	var tier: int = SaveManager.selected_difficulty_tier if SaveManager else 1
 	title_label.text = TIER_NAMES.get(tier, "SELECT LEVEL")
 	if background and background.has_method("set_difficulty_tier"):
@@ -68,13 +72,13 @@ func _build_level_cards() -> void:
 		var stars: int = SaveManager.get_level_stars(lvl.level_id) if SaveManager else 0
 
 		var btn: Button = Button.new()
-		btn.custom_minimum_size = Vector2(300, 76)
+		btn.custom_minimum_size = Vector2(300, 80)
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 		if not is_unlocked:
-			btn.text = "🔒  %d. %s [LOCKED]\n     Requires previous level completion" % [i + 1, lvl.level_name]
+			btn.text = "🔒  %d. %s [LOCKED]\nRequires previous level completion" % [i + 1, lvl.level_name]
 			btn.disabled = true
-			btn.modulate = Color(0.45, 0.45, 0.55, 0.6)
+			UIDesignSystemClass.apply_button_skin(btn, UIDesignSystemClass.COLOR_TEXT_DIM, false)
 		elif is_completed:
 			var star_str: String = ""
 			for s in range(3):
@@ -84,12 +88,13 @@ func _build_level_cards() -> void:
 			btn.text = "%s  %d. %s\nBest: %d turns (%d echoes) | 3★ Target: ≤%d" % [
 				star_str, i + 1, lvl.level_name, best_turns, best_ech, lvl.target_3_stars
 			]
-			btn.modulate = Color("#54E6EA")
+			UIDesignSystemClass.apply_button_skin(btn, UIDesignSystemClass.COLOR_CYAN_PRIMARY, false)
+			btn.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_CYAN_PRIMARY)
 		else:
 			btn.text = "▶  %d. %s [NEW]\nMin Echoes: %d | 3★ Target: ≤%d" % [
 				i + 1, lvl.level_name, lvl.min_echoes_required, lvl.target_3_stars
 			]
-			btn.modulate = Color("#FFFFFF")
+			UIDesignSystemClass.apply_button_skin(btn, UIDesignSystemClass.COLOR_CYAN_PRIMARY, true)
 
 		var level_idx: int = i
 		btn.pressed.connect(func():

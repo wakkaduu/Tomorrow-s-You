@@ -4,3 +4,4 @@
 
 [node name="TestOpeningFlow" type="Node"]
 script = ExtResource("1_test")
+

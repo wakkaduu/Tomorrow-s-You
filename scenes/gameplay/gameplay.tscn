@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://gameplay0001"]
+[gd_scene load_steps=5 format=3 uid="uid://gameplay0001"]
 
 [ext_resource type="Script" path="res://scripts/gameplay/gameplay_controller.gd" id="1_ctrl"]
 [ext_resource type="Script" path="res://scripts/gameplay/board_renderer.gd" id="2_rndr"]
 [ext_resource type="PackedScene" path="res://scenes/background/temporal_background.tscn" id="3_bg"]
+[ext_resource type="Script" path="res://scripts/ui/components/morrow_visualizer.gd" id="4_morrow"]
 
 [node name="Gameplay" type="Control"]
 layout_mode = 3
@@ -272,36 +273,52 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -210.0
-offset_top = -200.0
-offset_right = 210.0
-offset_bottom = 200.0
+offset_left = -230.0
+offset_top = -250.0
+offset_right = 230.0
+offset_bottom = 250.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Margin" type="MarginContainer" parent="Modals/PauseModal"]
 layout_mode = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 22
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Modals/PauseModal/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
 alignment = 1
 
-[node name="Title" type="Label" parent="Modals/PauseModal/Margin/VBoxContainer"]
+[node name="HeaderBox" type="VBoxContainer" parent="Modals/PauseModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Title" type="Label" parent="Modals/PauseModal/Margin/VBoxContainer/HeaderBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
-theme_override_font_sizes/font_size = 28
-text = "PAUSED"
+theme_override_font_sizes/font_size = 24
+text = "SYSTEM PAUSED"
 horizontal_alignment = 1
 
-[node name="ResumeButton" type="Button" parent="Modals/PauseModal/Margin/VBoxContainer"]
-custom_minimum_size = Vector2(0, 52)
+[node name="Subtitle" type="Label" parent="Modals/PauseModal/Margin/VBoxContainer/HeaderBox"]
 layout_mode = 2
-text = "RESUME"
+theme_override_colors/font_color = Color(0.58, 0.64, 0.72, 1)
+theme_override_font_sizes/font_size = 12
+text = "MERIDIAN FACILITY CONTROL // PROTOCOL 07"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="Modals/PauseModal/Margin/VBoxContainer"]
+layout_mode = 2
+
+[node name="ResumeButton" type="Button" parent="Modals/PauseModal/Margin/VBoxContainer"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 18
+text = "RESUME MISSION ▶"
 
 [node name="RestartButton" type="Button" parent="Modals/PauseModal/Margin/VBoxContainer"]
 custom_minimum_size = Vector2(0, 48)
@@ -311,7 +328,12 @@ text = "RESTART ATTEMPT"
 [node name="TransmissionButton" type="Button" parent="Modals/PauseModal/Margin/VBoxContainer"]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
-text = "COMM LOG / TRANSMISSION"
+text = "COMMUNICATION LOG"
+
+[node name="ArchiveButton" type="Button" parent="Modals/PauseModal/Margin/VBoxContainer"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "INCIDENT ARCHIVE"
 
 [node name="LevelsButton" type="Button" parent="Modals/PauseModal/Margin/VBoxContainer"]
 custom_minimum_size = Vector2(0, 48)
@@ -322,6 +344,127 @@ text = "LEVEL SELECT"
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "SETTINGS"
+
+[node name="RestartConfirmModal" type="PanelContainer" parent="Modals"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -120.0
+offset_right = 220.0
+offset_bottom = 120.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="Modals/RestartConfirmModal"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Modals/RestartConfirmModal/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="Title" type="Label" parent="Modals/RestartConfirmModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.984314, 0.74902, 0.141176, 1)
+theme_override_font_sizes/font_size = 20
+text = "RESTART ATTEMPT?"
+horizontal_alignment = 1
+
+[node name="Message" type="Label" parent="Modals/RestartConfirmModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
+theme_override_font_sizes/font_size = 14
+text = "Active moves and timeline recording will be reset."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="ButtonsRow" type="HBoxContainer" parent="Modals/RestartConfirmModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnConfirmRestart" type="Button" parent="Modals/RestartConfirmModal/Margin/VBoxContainer/ButtonsRow"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.957, 0.247, 0.369, 1)
+text = "RESTART"
+
+[node name="BtnCancelRestart" type="Button" parent="Modals/RestartConfirmModal/Margin/VBoxContainer/ButtonsRow"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "CANCEL"
+
+[node name="CommunicationLogModal" type="PanelContainer" parent="Modals"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 28.0
+offset_right = -16.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="Modals/CommunicationLogModal"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Modals/CommunicationLogModal/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HeaderBox" type="HBoxContainer" parent="Modals/CommunicationLogModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnCloseCommLog" type="Button" parent="Modals/CommunicationLogModal/Margin/VBoxContainer/HeaderBox"]
+custom_minimum_size = Vector2(80, 44)
+layout_mode = 2
+text = "< BACK"
+
+[node name="TitleBox" type="VBoxContainer" parent="Modals/CommunicationLogModal/Margin/VBoxContainer/HeaderBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="Title" type="Label" parent="Modals/CommunicationLogModal/Margin/VBoxContainer/HeaderBox/TitleBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 20
+text = "COMMUNICATION LOG"
+
+[node name="Subtitle" type="Label" parent="Modals/CommunicationLogModal/Margin/VBoxContainer/HeaderBox/TitleBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.58, 0.64, 0.72, 1)
+theme_override_font_sizes/font_size = 11
+text = "MERIDIAN FACILITY TRANSMISSION LOGS"
+
+[node name="HSeparator" type="HSeparator" parent="Modals/CommunicationLogModal/Margin/VBoxContainer"]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Modals/CommunicationLogModal/Margin/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TransmissionsList" type="VBoxContainer" parent="Modals/CommunicationLogModal/Margin/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
 
 [node name="CompleteModal" type="PanelContainer" parent="Modals"]
 visible = false
@@ -531,44 +674,82 @@ text = "CANCEL"
 [node name="TransmissionModal" type="PanelContainer" parent="Modals"]
 visible = false
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -260.0
-offset_top = -240.0
-offset_right = 260.0
-offset_bottom = 240.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 28.0
+offset_right = -16.0
+offset_bottom = -24.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Margin" type="MarginContainer" parent="Modals/TransmissionModal"]
 layout_mode = 2
-theme_override_constants/margin_left = 22
-theme_override_constants/margin_top = 22
-theme_override_constants/margin_right = 22
-theme_override_constants/margin_bottom = 22
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 18
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Modals/TransmissionModal/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 10
+
+[node name="FacilityHeader" type="HBoxContainer" parent="Modals/TransmissionModal/Margin/VBoxContainer"]
+layout_mode = 2
+
+[node name="FacilityTitle" type="Label" parent="Modals/TransmissionModal/Margin/VBoxContainer/FacilityHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.58, 0.64, 0.72, 1)
+theme_override_font_sizes/font_size = 11
+text = "MERIDIAN TEMPORAL RESEARCH COMPLEX // PROTOCOL 07"
+
+[node name="StatusBadge" type="Label" parent="Modals/TransmissionModal/Margin/VBoxContainer/FacilityHeader"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.83, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "[LINK SECURE // 0.04ms]"
 
 [node name="HeaderBox" type="VBoxContainer" parent="Modals/TransmissionModal/Margin/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 2
 
 [node name="SenderLabel" type="Label" parent="Modals/TransmissionModal/Margin/VBoxContainer/HeaderBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 20
 text = "MORROW // FACILITY AI"
 
 [node name="ChannelLabel" type="Label" parent="Modals/TransmissionModal/Margin/VBoxContainer/HeaderBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.580392, 0.639216, 0.721569, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 13
 text = "EMERGENCY CONTAINMENT LINK"
+
+[node name="MetaLabel" type="Label" parent="Modals/TransmissionModal/Margin/VBoxContainer/HeaderBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.52, 0.62, 1)
+theme_override_font_sizes/font_size = 11
+text = "CH-01 // FIRST CONTACT • TR-01-INTRO"
+
+[node name="VisualizerContainer" type="VBoxContainer" parent="Modals/TransmissionModal/Margin/VBoxContainer"]
+custom_minimum_size = Vector2(0, 134)
+layout_mode = 2
+alignment = 1
+
+[node name="MorrowCore" type="Control" parent="Modals/TransmissionModal/Margin/VBoxContainer/VisualizerContainer"]
+custom_minimum_size = Vector2(180, 110)
+layout_mode = 2
+size_flags_horizontal = 4
+script = ExtResource("4_morrow")
+
+[node name="SignalStatusLabel" type="Label" parent="Modals/TransmissionModal/Margin/VBoxContainer/VisualizerContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 0.85)
+theme_override_font_sizes/font_size = 11
+text = "● CARRIER LOCK // RESONANCE STABLE"
+horizontal_alignment = 1
 
 [node name="HSeparator" type="HSeparator" parent="Modals/TransmissionModal/Margin/VBoxContainer"]
 layout_mode = 2
@@ -580,10 +761,31 @@ size_flags_vertical = 3
 [node name="TransmissionContent" type="Label" parent="Modals/TransmissionModal/Margin/VBoxContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.886275, 0.913725, 0.941176, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.94, 0.96, 0.98, 1)
+theme_override_constants/line_spacing = 6
+theme_override_font_sizes/font_size = 17
 text = "Incoming transmission content..."
 autowrap_mode = 2
+
+[node name="ProgressRow" type="HBoxContainer" parent="Modals/TransmissionModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LineProgressLabel" type="Label" parent="Modals/TransmissionModal/Margin/VBoxContainer/ProgressRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.58, 0.64, 0.72, 1)
+theme_override_font_sizes/font_size = 12
+text = "LINE 01 / 06"
+
+[node name="Spacer" type="Control" parent="Modals/TransmissionModal/Margin/VBoxContainer/ProgressRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TapHintLabel" type="Label" parent="Modals/TransmissionModal/Margin/VBoxContainer/ProgressRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.48, 0.58, 1)
+theme_override_font_sizes/font_size = 11
+text = "TAP TO EXPAND"
 
 [node name="ButtonsRow" type="HBoxContainer" parent="Modals/TransmissionModal/Margin/VBoxContainer"]
 layout_mode = 2
@@ -595,7 +797,7 @@ layout_mode = 2
 text = "SKIP"
 
 [node name="BtnProceedTransmission" type="Button" parent="Modals/TransmissionModal/Margin/VBoxContainer/ButtonsRow"]
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)

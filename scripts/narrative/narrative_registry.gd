@@ -525,3 +525,15 @@ static func get_all_transmissions() -> Array[Dictionary]:
 	for k in TRANSMISSIONS.keys():
 		list.append(TRANSMISSIONS[k])
 	return list
+
+static func get_transmission_category(trans_id: String) -> String:
+	match trans_id:
+		"tr_lvl_01_intro", "tr_lvl_06_intro", "tr_lvl_07_intro":
+			return "EMERGENCY"
+		"tr_lvl_08_intro", "tr_lvl_09_intro":
+			return "CORRUPTED"
+		"tr_lvl_10_intro", "tr_lvl_10_outro":
+			return "FINAL"
+		_:
+			return "NORMAL"
+

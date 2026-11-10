@@ -4,9 +4,12 @@ extends Control
 ## UI Controller for the Incident Archive.
 ## Displays recovered Meridian Facility lore, MORROW transmissions, research logs,
 ## facility records, and the Project PALIMPSEST timeline.
+## Features a classified research terminal aesthetic and cinematic transmission replay.
 
 const NarrativeRegistryClass = preload("res://scripts/narrative/narrative_registry.gd")
 const ThemeManagerClass = preload("res://scripts/background/background_theme_manager.gd")
+const UIDesignSystemClass = preload("res://scripts/ui/components/ui_design_system.gd")
+const MorrowVisualizerClass = preload("res://scripts/ui/components/morrow_visualizer.gd")
 
 enum Tab {
 	TRANSMISSIONS,
@@ -20,6 +23,7 @@ var current_tab: Tab = Tab.TRANSMISSIONS
 @onready var background: Control = $TemporalBackground
 @onready var btn_back: Button = $MainContainer/VBoxContainer/Header/TopRow/BackButton
 @onready var status_label: Label = $MainContainer/VBoxContainer/Header/ProgressBarContainer/ArchiveStatusLabel
+@onready var restoration_bar: ProgressBar = $MainContainer/VBoxContainer/Header/ProgressBarContainer/RestorationBar
 @onready var tab_transmissions: Button = $MainContainer/VBoxContainer/TabBar/TabTransmissions
 @onready var tab_logs: Button = $MainContainer/VBoxContainer/TabBar/TabLogs
 @onready var tab_records: Button = $MainContainer/VBoxContainer/TabBar/TabRecords
@@ -31,14 +35,35 @@ var current_tab: Tab = Tab.TRANSMISSIONS
 @onready var reader_category_label: Label = $ReaderModal/Margin/VBoxContainer/HeaderBox/CategoryLabel
 @onready var reader_title_label: Label = $ReaderModal/Margin/VBoxContainer/HeaderBox/TitleLabel
 @onready var reader_meta_label: Label = $ReaderModal/Margin/VBoxContainer/HeaderBox/MetaLabel
+@onready var reader_integrity_label: Label = $ReaderModal/Margin/VBoxContainer/HeaderBox/IntegrityLabel
 @onready var reader_text_label: Label = $ReaderModal/Margin/VBoxContainer/ScrollContainer/ContentLabel
 @onready var btn_close_reader: Button = $ReaderModal/Margin/VBoxContainer/ButtonsRow/BtnCloseReader
 @onready var btn_replay_reader: Button = $ReaderModal/Margin/VBoxContainer/ButtonsRow/BtnReplay
 
+# Cinematic Transmission Modal (Inside Archive)
+@onready var transmission_modal: PanelContainer = $TransmissionModal
+@onready var transmission_sender: Label = $TransmissionModal/Margin/VBoxContainer/HeaderBox/SenderLabel
+@onready var transmission_channel: Label = $TransmissionModal/Margin/VBoxContainer/HeaderBox/ChannelLabel
+@onready var transmission_meta: Label = $TransmissionModal/Margin/VBoxContainer/HeaderBox/MetaLabel
+@onready var transmission_content: Label = $TransmissionModal/Margin/VBoxContainer/ScrollContainer/TransmissionContent
+@onready var morrow_core: Control = $TransmissionModal/Margin/VBoxContainer/VisualizerContainer/MorrowCore
+@onready var transmission_signal_status: Label = $TransmissionModal/Margin/VBoxContainer/VisualizerContainer/SignalStatusLabel
+@onready var transmission_line_progress: Label = $TransmissionModal/Margin/VBoxContainer/ProgressRow/LineProgressLabel
+@onready var btn_skip_transmission: Button = $TransmissionModal/Margin/VBoxContainer/ButtonsRow/BtnSkipTransmission
+@onready var btn_proceed_transmission: Button = $TransmissionModal/Margin/VBoxContainer/ButtonsRow/BtnProceedTransmission
+
 var _current_active_entry: Dictionary = {}
+var _active_transmission: Dictionary = {}
+var _current_transmission_line: int = 0
+var _typewriter_active: bool = false
+var _typewriter_chars_per_sec: float = 40.0
+var _typewriter_elapsed: float = 0.0
+var _typewriter_target_len: int = 0
 
 func _ready() -> void:
 	reader_modal.visible = false
+	if transmission_modal:
+		transmission_modal.visible = false
 
 	if background and background.has_method("set_screen_mode"):
 		background.set_screen_mode(ThemeManagerClass.ScreenMode.SETTINGS)
@@ -52,6 +77,20 @@ func _ready() -> void:
 
 	_update_tab_buttons()
 	_render_current_tab()
+
+func _process(delta: float) -> void:
+	if _typewriter_active and transmission_modal and transmission_modal.visible:
+		if SaveManager and SaveManager.reduced_animations:
+			transmission_content.visible_characters = -1
+			_typewriter_active = false
+		else:
+			_typewriter_elapsed += delta
+			var chars: int = int(_typewriter_elapsed * _typewriter_chars_per_sec)
+			if chars >= _typewriter_target_len:
+				transmission_content.visible_characters = -1
+				_typewriter_active = false
+			else:
+				transmission_content.visible_characters = chars
 
 func _apply_safe_area() -> void:
 	if not AndroidSystemManager:
@@ -84,6 +123,21 @@ func _bind_signals() -> void:
 	btn_close_reader.pressed.connect(_close_reader)
 	btn_replay_reader.pressed.connect(_on_replay_transmission)
 
+	if btn_skip_transmission:
+		btn_skip_transmission.pressed.connect(_close_transmission)
+	if btn_proceed_transmission:
+		btn_proceed_transmission.pressed.connect(_advance_transmission)
+
+	if transmission_content:
+		transmission_content.mouse_filter = Control.MOUSE_FILTER_STOP
+		transmission_content.gui_input.connect(func(event: InputEvent):
+			if (event is InputEventMouseButton and event.pressed) or (event is InputEventScreenTouch and event.pressed):
+				if _typewriter_active:
+					transmission_content.visible_characters = -1
+					_typewriter_active = false
+					if AudioManager: AudioManager.play_sfx("ui_click")
+		)
+
 func _select_tab(tab: Tab) -> void:
 	if AudioManager: AudioManager.play_sfx("ui_click")
 	if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
@@ -97,8 +151,13 @@ func _update_tab_buttons() -> void:
 	tab_records.button_pressed = (current_tab == Tab.RECORDS)
 	tab_timeline.button_pressed = (current_tab == Tab.TIMELINE)
 
-	var active_color = Color("#54E6EA")
-	var dim_color = Color("#94A3B8")
+	tab_transmissions.add_theme_stylebox_override("normal", UIDesignSystemClass.create_tab_style(current_tab == Tab.TRANSMISSIONS))
+	tab_logs.add_theme_stylebox_override("normal", UIDesignSystemClass.create_tab_style(current_tab == Tab.LOGS))
+	tab_records.add_theme_stylebox_override("normal", UIDesignSystemClass.create_tab_style(current_tab == Tab.RECORDS))
+	tab_timeline.add_theme_stylebox_override("normal", UIDesignSystemClass.create_tab_style(current_tab == Tab.TIMELINE))
+
+	var active_color = UIDesignSystemClass.COLOR_CYAN_PRIMARY
+	var dim_color = UIDesignSystemClass.COLOR_TEXT_MUTED
 
 	tab_transmissions.add_theme_color_override("font_color", active_color if current_tab == Tab.TRANSMISSIONS else dim_color)
 	tab_logs.add_theme_color_override("font_color", active_color if current_tab == Tab.LOGS else dim_color)
@@ -128,7 +187,9 @@ func _update_header_status() -> void:
 	var pct: float = prog.get("percentage", 0.0)
 	var unl: int = prog.get("unlocked", 0)
 	var tot: int = prog.get("total", 0)
-	status_label.text = "ARCHIVE STATUS: %d%% RESTORED (%d / %d RECORDS)" % [int(round(pct)), unl, tot]
+	status_label.text = "ARCHIVE RESTORATION: %d%% (%d / %d RECORDS RECOVERED)" % [int(round(pct)), unl, tot]
+	if restoration_bar:
+		restoration_bar.value = pct
 
 # ==============================================================================
 # TAB RENDERERS
@@ -136,6 +197,7 @@ func _update_header_status() -> void:
 
 func _render_transmissions() -> void:
 	var transmissions = NarrativeRegistryClass.get_all_transmissions()
+	var idx: int = 1
 	for trans in transmissions:
 		var tid: String = trans.get("id", "")
 		var is_unlocked: bool = SaveManager and SaveManager.is_transmission_unlocked(tid)
@@ -144,46 +206,82 @@ func _render_transmissions() -> void:
 		var ch_name = "%s: %s" % [ch_info.get("code", "CH"), ch_info.get("title", "")]
 		var type_str = trans.get("type", "OPENING")
 
-		var card = _create_card_container(is_unlocked)
+		var card = _create_card_container(is_unlocked, UIDesignSystemClass.COLOR_CYAN_PRIMARY)
 		var vbox = VBoxContainer.new()
-		vbox.add_theme_constant_override("separation", 4)
+		vbox.add_theme_constant_override("separation", 6)
 		card.add_child(vbox)
 
 		if is_unlocked:
+			var top_row = HBoxContainer.new()
+			var num_badge = Label.new()
+			num_badge.text = "COMM #%02d" % idx
+			num_badge.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_MUTED)
+			num_badge.add_theme_font_size_override("font_size", 11)
+			top_row.add_child(num_badge)
+
+			var spacer = Control.new()
+			spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			top_row.add_child(spacer)
+
+			var status_pill = Label.new()
+			status_pill.text = "✦ RESTORED"
+			status_pill.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
+			status_pill.add_theme_font_size_override("font_size", 11)
+			top_row.add_child(status_pill)
+			vbox.add_child(top_row)
+
 			var title_lbl = Label.new()
-			title_lbl.text = "✦ %s // %s TRANSMISSION" % [ch_name, type_str]
-			title_lbl.add_theme_color_override("font_color", Color("#54E6EA"))
-			title_lbl.add_theme_font_size_override("font_size", 14)
+			title_lbl.text = "✦ %s // %s" % [ch_name, type_str]
+			title_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_CYAN_PRIMARY)
+			title_lbl.add_theme_font_size_override("font_size", 15)
 			vbox.add_child(title_lbl)
 
 			var sub_lbl = Label.new()
 			sub_lbl.text = "%s  |  %s" % [trans.get("sender", "MORROW"), trans.get("channel", "LINK")]
-			sub_lbl.add_theme_color_override("font_color", Color("#94A3B8"))
+			sub_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_MUTED)
 			sub_lbl.add_theme_font_size_override("font_size", 12)
 			vbox.add_child(sub_lbl)
 
-			var btn = Button.new()
-			btn.text = "VIEW TRANSMISSION ▶"
-			btn.custom_minimum_size = Vector2(0, 40)
-			btn.pressed.connect(func():
+			var btn_row = HBoxContainer.new()
+			btn_row.add_theme_constant_override("separation", 8)
+
+			var btn_view = Button.new()
+			btn_view.text = "INSPECT LOG"
+			btn_view.custom_minimum_size = Vector2(0, 44)
+			btn_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			UIDesignSystemClass.apply_button_skin(btn_view, UIDesignSystemClass.COLOR_CYAN_PRIMARY, false)
+			var captured_trans = trans
+			btn_view.pressed.connect(func():
 				_open_reader(
 					"%s // %s" % [ch_name, type_str],
-					"%s\n%s" % [trans.get("sender", ""), trans.get("channel", "")],
-					"\n\n".join(trans.get("lines", [])),
+					"Speaker: %s\nChannel: %s" % [captured_trans.get("sender", ""), captured_trans.get("channel", "")],
+					"\n\n".join(captured_trans.get("lines", [])),
 					"MORROW COMMUNICATION DISPATCH",
 					true,
-					trans
+					captured_trans
 				)
 			)
-			vbox.add_child(btn)
+			btn_row.add_child(btn_view)
+
+			var btn_play = Button.new()
+			btn_play.text = "REPLAY ▶"
+			btn_play.custom_minimum_size = Vector2(110, 44)
+			UIDesignSystemClass.apply_button_skin(btn_play, UIDesignSystemClass.COLOR_CYAN_PRIMARY, true)
+			btn_play.pressed.connect(func():
+				_show_cinematic_transmission(captured_trans)
+			)
+			btn_row.add_child(btn_play)
+
+			vbox.add_child(btn_row)
 		else:
 			var locked_lbl = Label.new()
-			locked_lbl.text = "🔒 [CORRUPTED // COMPLETE %s TO DECRYPT]" % ch_name
-			locked_lbl.add_theme_color_override("font_color", Color("#64748B"))
+			locked_lbl.text = "🔒 [RESTRICTED // COMPLETE %s TO DECRYPT]" % ch_name
+			locked_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_DIM)
 			locked_lbl.add_theme_font_size_override("font_size", 13)
 			vbox.add_child(locked_lbl)
 
 		entries_list.add_child(card)
+		idx += 1
 
 func _render_logs() -> void:
 	var logs = NarrativeRegistryClass.get_all_logs()
@@ -192,56 +290,74 @@ func _render_logs() -> void:
 		var is_unlocked: bool = SaveManager and SaveManager.is_log_unlocked(lid)
 		var is_read: bool = SaveManager and SaveManager.is_log_read(lid)
 
-		var card = _create_card_container(is_unlocked)
+		var card = _create_card_container(is_unlocked, UIDesignSystemClass.COLOR_CYAN_PRIMARY)
 		var vbox = VBoxContainer.new()
-		vbox.add_theme_constant_override("separation", 4)
+		vbox.add_theme_constant_override("separation", 6)
 		card.add_child(vbox)
 
 		if is_unlocked:
-			var hbox = HBoxContainer.new()
-			var title_lbl = Label.new()
-			title_lbl.text = "✦ %s: %s" % [lid.to_upper(), log_entry.get("title", "")]
-			title_lbl.add_theme_color_override("font_color", Color("#38BDF8"))
-			title_lbl.add_theme_font_size_override("font_size", 14)
-			title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			hbox.add_child(title_lbl)
+			var top_row = HBoxContainer.new()
+			var num_lbl = Label.new()
+			num_lbl.text = "RECORD #%s" % log_entry.get("number", "000")
+			num_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_MUTED)
+			num_lbl.add_theme_font_size_override("font_size", 11)
+			top_row.add_child(num_lbl)
+
+			var spacer = Control.new()
+			spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			top_row.add_child(spacer)
 
 			if not is_read:
 				var new_badge = Label.new()
-				new_badge.text = "[NEW]"
-				new_badge.add_theme_color_override("font_color", Color("#FBBF24"))
-				new_badge.add_theme_font_size_override("font_size", 12)
-				hbox.add_child(new_badge)
+				new_badge.text = "✦ NEW"
+				new_badge.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_AMBER_WARN)
+				new_badge.add_theme_font_size_override("font_size", 11)
+				top_row.add_child(new_badge)
+			else:
+				var read_badge = Label.new()
+				read_badge.text = "VERIFIED"
+				read_badge.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
+				read_badge.add_theme_font_size_override("font_size", 11)
+				top_row.add_child(read_badge)
 
-			vbox.add_child(hbox)
+			vbox.add_child(top_row)
+
+			var title_lbl = Label.new()
+			title_lbl.text = "✦ %s" % log_entry.get("title", "")
+			title_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_CYAN_PRIMARY)
+			title_lbl.add_theme_font_size_override("font_size", 15)
+			vbox.add_child(title_lbl)
 
 			var meta_lbl = Label.new()
 			meta_lbl.text = "Author: %s  |  Date: %s" % [log_entry.get("author", "Unknown"), log_entry.get("date", "Unknown")]
-			meta_lbl.add_theme_color_override("font_color", Color("#94A3B8"))
+			meta_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_MUTED)
 			meta_lbl.add_theme_font_size_override("font_size", 12)
 			vbox.add_child(meta_lbl)
 
 			var btn = Button.new()
 			btn.text = "READ RESEARCH LOG ▶"
-			btn.custom_minimum_size = Vector2(0, 40)
+			btn.custom_minimum_size = Vector2(0, 44)
+			UIDesignSystemClass.apply_button_skin(btn, UIDesignSystemClass.COLOR_CYAN_PRIMARY, not is_read)
+			var captured_log = log_entry
+			var captured_lid = lid
 			btn.pressed.connect(func():
 				if SaveManager:
-					SaveManager.mark_log_read(lid)
+					SaveManager.mark_log_read(captured_lid)
 				_open_reader(
-					"%s: %s" % [lid.to_upper(), log_entry.get("title", "")],
-					"Author: %s\nDate: %s\nClassification: %s" % [log_entry.get("author", ""), log_entry.get("date", ""), log_entry.get("classification", "")],
-					log_entry.get("content", ""),
+					"%s: %s" % [captured_lid.to_upper(), captured_log.get("title", "")],
+					"Author: %s\nDate: %s\nClassification: %s" % [captured_log.get("author", ""), captured_log.get("date", ""), captured_log.get("classification", "")],
+					captured_log.get("content", ""),
 					"MERIDIAN RESEARCH LOG // RECOVERED",
 					false,
-					log_entry
+					captured_log
 				)
 			)
 			vbox.add_child(btn)
 		else:
 			var locked_lbl = Label.new()
 			var unlock_lvl = log_entry.get("unlock_level", 1)
-			locked_lbl.text = "🔒 [CLASSIFIED LOG // RESTORE IN LEVEL %02d]" % unlock_lvl
-			locked_lbl.add_theme_color_override("font_color", Color("#64748B"))
+			locked_lbl.text = "🔒 [CLASSIFIED LOG // RESTORE IN SECTOR %02d]" % unlock_lvl
+			locked_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_DIM)
 			locked_lbl.add_theme_font_size_override("font_size", 13)
 			vbox.add_child(locked_lbl)
 
@@ -249,38 +365,59 @@ func _render_logs() -> void:
 
 func _render_records() -> void:
 	var records = NarrativeRegistryClass.get_all_facility_records()
+	var idx: int = 1
 	for rec in records:
 		var is_unlocked: bool = SaveManager and SaveManager.is_record_unlocked(rec)
 
-		var card = _create_card_container(is_unlocked)
+		var card = _create_card_container(is_unlocked, UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
 		var vbox = VBoxContainer.new()
-		vbox.add_theme_constant_override("separation", 4)
+		vbox.add_theme_constant_override("separation", 6)
 		card.add_child(vbox)
 
 		if is_unlocked:
+			var top_row = HBoxContainer.new()
+			var num_lbl = Label.new()
+			num_lbl.text = "FACILITY RECORD #%02d" % idx
+			num_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_MUTED)
+			num_lbl.add_theme_font_size_override("font_size", 11)
+			top_row.add_child(num_lbl)
+
+			var spacer = Control.new()
+			spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			top_row.add_child(spacer)
+
+			var class_lbl = Label.new()
+			class_lbl.text = rec.get("classification", "RESTRICTED")
+			class_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
+			class_lbl.add_theme_font_size_override("font_size", 11)
+			top_row.add_child(class_lbl)
+			vbox.add_child(top_row)
+
 			var title_lbl = Label.new()
 			title_lbl.text = "✦ %s" % rec.get("title", "")
-			title_lbl.add_theme_color_override("font_color", Color("#34D399"))
-			title_lbl.add_theme_font_size_override("font_size", 14)
+			title_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
+			title_lbl.add_theme_font_size_override("font_size", 15)
 			vbox.add_child(title_lbl)
 
 			var cat_lbl = Label.new()
-			cat_lbl.text = "Category: %s  |  %s" % [rec.get("category", ""), rec.get("classification", "")]
-			cat_lbl.add_theme_color_override("font_color", Color("#94A3B8"))
+			cat_lbl.text = "Category: %s" % rec.get("category", "")
+			cat_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_MUTED)
 			cat_lbl.add_theme_font_size_override("font_size", 12)
 			vbox.add_child(cat_lbl)
 
 			var btn = Button.new()
-			btn.text = "INSPECT FACILITY RECORD ▶"
-			btn.custom_minimum_size = Vector2(0, 40)
+			btn.text = "INSPECT FACILITY DIRECTIVE ▶"
+			btn.custom_minimum_size = Vector2(0, 44)
+			UIDesignSystemClass.apply_button_skin(btn, UIDesignSystemClass.COLOR_EMERALD_SUCCESS, false)
+			var captured_rec = rec
 			btn.pressed.connect(func():
 				_open_reader(
-					rec.get("title", ""),
-					"Category: %s\nClassification: %s" % [rec.get("category", ""), rec.get("classification", "")],
-					rec.get("content", ""),
+					captured_rec.get("title", ""),
+					"Category: %s\nClassification: %s" % [captured_rec.get("category", ""), captured_rec.get("classification", "")],
+					captured_rec.get("content", ""),
 					"FACILITY DIRECTIVE & SCHEMATIC",
 					false,
-					rec
+					captured_rec
 				)
 			)
 			vbox.add_child(btn)
@@ -288,57 +425,69 @@ func _render_records() -> void:
 			var locked_lbl = Label.new()
 			var req_lvl = rec.get("unlock_level", 1)
 			locked_lbl.text = "🔒 [RESTRICTED SCHEMATIC // REACH LEVEL %02d]" % req_lvl
-			locked_lbl.add_theme_color_override("font_color", Color("#64748B"))
+			locked_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_DIM)
 			locked_lbl.add_theme_font_size_override("font_size", 13)
 			vbox.add_child(locked_lbl)
 
 		entries_list.add_child(card)
+		idx += 1
 
 func _render_timeline() -> void:
 	var timeline = NarrativeRegistryClass.get_all_timeline_entries()
 	for entry in timeline:
 		var is_unlocked: bool = SaveManager and SaveManager.is_timeline_unlocked(entry)
 
-		var card = _create_card_container(is_unlocked)
+		var card = _create_card_container(is_unlocked, UIDesignSystemClass.COLOR_AMBER_WARN)
 		var vbox = VBoxContainer.new()
-		vbox.add_theme_constant_override("separation", 4)
+		vbox.add_theme_constant_override("separation", 6)
 		card.add_child(vbox)
 
 		if is_unlocked:
+			var top_row = HBoxContainer.new()
 			var time_lbl = Label.new()
-			time_lbl.text = "⏱ %s // %s" % [entry.get("timestamp", ""), entry.get("title", "")]
-			time_lbl.add_theme_color_override("font_color", Color("#FBBF24"))
-			time_lbl.add_theme_font_size_override("font_size", 14)
-			vbox.add_child(time_lbl)
+			time_lbl.text = "⏱ %s" % entry.get("timestamp", "")
+			time_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_AMBER_WARN)
+			time_lbl.add_theme_font_size_override("font_size", 12)
+			top_row.add_child(time_lbl)
+
+			var spacer = Control.new()
+			spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			top_row.add_child(spacer)
+
+			var auth_lbl = Label.new()
+			auth_lbl.text = "PARITY SECURE"
+			auth_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
+			auth_lbl.add_theme_font_size_override("font_size", 11)
+			top_row.add_child(auth_lbl)
+			vbox.add_child(top_row)
+
+			var title_lbl = Label.new()
+			title_lbl.text = "✦ %s" % entry.get("title", "")
+			title_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_PRIMARY)
+			title_lbl.add_theme_font_size_override("font_size", 15)
+			vbox.add_child(title_lbl)
 
 			var summary_lbl = Label.new()
 			summary_lbl.text = entry.get("summary", "")
-			summary_lbl.add_theme_color_override("font_color", Color("#E2E8F0"))
+			summary_lbl.add_theme_color_override("font_color", Color("#CBD5E1"))
 			summary_lbl.add_theme_font_size_override("font_size", 13)
+			summary_lbl.theme_override_constants_set("line_spacing", 4)
 			summary_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			vbox.add_child(summary_lbl)
 		else:
 			var locked_lbl = Label.new()
 			var req_lvl = entry.get("unlock_level", 1)
 			locked_lbl.text = "🔒 [TEMPORAL RECORD ENCRYPTED // REACH LEVEL %02d]" % req_lvl
-			locked_lbl.add_theme_color_override("font_color", Color("#64748B"))
+			locked_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_DIM)
 			locked_lbl.add_theme_font_size_override("font_size", 13)
 			vbox.add_child(locked_lbl)
 
 		entries_list.add_child(card)
 
-func _create_card_container(unlocked: bool) -> PanelContainer:
+func _create_card_container(unlocked: bool, accent_color: Color = UIDesignSystemClass.COLOR_CYAN_PRIMARY) -> PanelContainer:
 	var panel = PanelContainer.new()
-	var sb = StyleBoxFlat.new()
-	sb.bg_color = Color(0.06, 0.09, 0.16, 0.92) if unlocked else Color(0.04, 0.05, 0.09, 0.75)
-	sb.border_color = Color(0.33, 0.90, 0.92, 0.5) if unlocked else Color(0.2, 0.25, 0.35, 0.4)
-	sb.set_border_width_all(1)
-	sb.set_corner_radius_all(8)
-	sb.content_margin_left = 14
-	sb.content_margin_right = 14
-	sb.content_margin_top = 10
-	sb.content_margin_bottom = 10
-	panel.add_theme_stylebox_override("panel", sb)
+	panel.add_theme_stylebox_override("panel", UIDesignSystemClass.create_card_style(accent_color, unlocked, false))
+	panel.custom_minimum_size = Vector2(0, 72)
 	return panel
 
 # ==============================================================================
@@ -354,6 +503,7 @@ func _open_reader(title: String, meta: String, content: String, category: String
 	reader_meta_label.text = meta
 	reader_text_label.text = content
 	btn_replay_reader.visible = is_trans
+	btn_replay_reader.text = "REPLAY AUDIO ▶"
 	reader_modal.visible = true
 
 func _close_reader() -> void:
@@ -363,13 +513,104 @@ func _close_reader() -> void:
 	_render_current_tab()
 
 func _on_replay_transmission() -> void:
-	# If transmission, replay lines
-	if _current_active_entry.has("lines"):
-		reader_text_label.text = "\n\n".join(_current_active_entry.get("lines", []))
+	if _current_active_entry.is_empty():
+		return
+	_close_reader()
+	_show_cinematic_transmission(_current_active_entry)
+
+# ==============================================================================
+# CINEMATIC TRANSMISSION OVERLAY (ARCHIVE REPLAY)
+# ==============================================================================
+
+func _show_cinematic_transmission(trans: Dictionary) -> void:
+	if trans.is_empty() or not transmission_modal:
+		return
+
+	_active_transmission = trans
+	var lines: Array = trans.get("lines", [])
+	_current_transmission_line = 0
+
+	var tid = trans.get("id", "unknown")
+	var cat_name: String = NarrativeRegistryClass.get_transmission_category(tid)
+	var cat_enum = MorrowVisualizerClass.Category.NORMAL
+	var border_color = UIDesignSystemClass.COLOR_CYAN_PRIMARY
+	var status_text = "● CARRIER LOCK // RESONANCE STABLE"
+
+	match cat_name:
+		"EMERGENCY":
+			cat_enum = MorrowVisualizerClass.Category.EMERGENCY
+			border_color = UIDesignSystemClass.COLOR_AMBER_WARN
+			status_text = "● WARNING // FREQUENCY JITTER DETECTED"
+		"CORRUPTED":
+			cat_enum = MorrowVisualizerClass.Category.CORRUPTED
+			border_color = UIDesignSystemClass.COLOR_VIOLET_ECHO
+			status_text = "● DATA CORRUPTION // MEMORY PACKET LOSS"
+		"FINAL":
+			cat_enum = MorrowVisualizerClass.Category.FINAL
+			border_color = Color(1.0, 0.84, 0.36)
+			status_text = "● FINAL HARMONICS // TEMPORAL STABILIZATION"
+
+	if morrow_core and morrow_core.has_method("set_category"):
+		morrow_core.set_category(cat_enum)
+
+	if transmission_signal_status:
+		transmission_signal_status.text = status_text
+		transmission_signal_status.add_theme_color_override("font_color", border_color)
+
+	var panel_sb = UIDesignSystemClass.create_panel_style(border_color, Color(0.02, 0.035, 0.07, 0.98), 2, 14, 20)
+	transmission_modal.add_theme_stylebox_override("panel", panel_sb)
+
+	transmission_sender.text = trans.get("sender", "MORROW // FACILITY AI")
+	transmission_channel.text = trans.get("channel", "EMERGENCY CONTAINMENT LINK")
+
+	var lvl_id: String = trans.get("level_id", "")
+	var ch_info = NarrativeRegistryClass.get_chapter_info(lvl_id)
+	if transmission_meta:
+		var ch_str = "%s // %s" % [ch_info.get("code", "CH-01"), ch_info.get("title", "SECTOR")]
+		transmission_meta.text = "%s  •  %s" % [ch_str, tid.to_upper()]
+
+	_display_transmission_line(0)
+	transmission_modal.visible = true
+
+	if AudioManager: AudioManager.play_sfx("ui_click")
+	if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+
+func _display_transmission_line(idx: int) -> void:
+	var lines: Array = _active_transmission.get("lines", [])
+	_current_transmission_line = idx
+	var text: String = lines[idx] if idx < lines.size() else ""
+	transmission_content.text = text
+	_typewriter_target_len = text.length()
+	_typewriter_elapsed = 0.0
+	_typewriter_active = true
+	transmission_content.visible_characters = 0
+
+	if transmission_line_progress:
+		transmission_line_progress.text = "LINE %02d / %02d" % [idx + 1, lines.size()]
+
+	btn_proceed_transmission.text = "NEXT ▶" if (idx < lines.size() - 1) else "PROCEED ▶"
+
+func _advance_transmission() -> void:
+	var lines: Array = _active_transmission.get("lines", [])
+	_current_transmission_line += 1
+	if _current_transmission_line < lines.size():
+		_display_transmission_line(_current_transmission_line)
+		if AudioManager: AudioManager.play_sfx("ui_click")
+		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+	else:
+		_close_transmission()
+
+func _close_transmission() -> void:
+	transmission_modal.visible = false
+	_typewriter_active = false
+	_active_transmission = {}
 	if AudioManager: AudioManager.play_sfx("ui_click")
 	if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
 
 func handle_back_button() -> bool:
+	if transmission_modal and transmission_modal.visible:
+		_close_transmission()
+		return true
 	if reader_modal and reader_modal.visible:
 		_close_reader()
 		return true
@@ -377,14 +618,27 @@ func handle_back_button() -> bool:
 	return true
 
 func _style_components() -> void:
-	var sb = StyleBoxFlat.new()
-	sb.bg_color = Color(0.04, 0.07, 0.13, 0.98)
-	sb.border_color = Color(0.329, 0.902, 0.918, 0.9)
-	sb.set_border_width_all(2)
-	sb.set_corner_radius_all(12)
-	sb.shadow_color = Color(0.329, 0.902, 0.918, 0.2)
-	sb.shadow_size = 14
-	sb.shadow_offset = Vector2(0, 4)
 	if reader_modal:
-		reader_modal.add_theme_stylebox_override("panel", sb)
+		reader_modal.add_theme_stylebox_override("panel", UIDesignSystemClass.create_panel_style(UIDesignSystemClass.COLOR_CYAN_PRIMARY, Color(0.04, 0.065, 0.12, 0.98), 2, 14, 18))
+	if btn_close_reader:
+		UIDesignSystemClass.apply_button_skin(btn_close_reader, UIDesignSystemClass.COLOR_CYAN_PRIMARY, true)
+	if btn_replay_reader:
+		UIDesignSystemClass.apply_button_skin(btn_replay_reader, UIDesignSystemClass.COLOR_CYAN_PRIMARY, false)
+	if btn_back:
+		UIDesignSystemClass.apply_button_skin(btn_back, UIDesignSystemClass.COLOR_CYAN_PRIMARY, false)
 
+	# Progress bar style
+	if restoration_bar:
+		var bg_sb = StyleBoxFlat.new()
+		bg_sb.bg_color = Color(0.05, 0.08, 0.14, 0.9)
+		bg_sb.border_color = UIDesignSystemClass.COLOR_BORDER_SUBTLE
+		bg_sb.set_border_width_all(1)
+		bg_sb.set_corner_radius_all(5)
+		restoration_bar.add_theme_stylebox_override("background", bg_sb)
+
+		var fill_sb = StyleBoxFlat.new()
+		fill_sb.bg_color = UIDesignSystemClass.COLOR_CYAN_PRIMARY
+		fill_sb.set_corner_radius_all(5)
+		fill_sb.shadow_color = UIDesignSystemClass.COLOR_CYAN_GLOW
+		fill_sb.shadow_size = 6
+		restoration_bar.add_theme_stylebox_override("fill", fill_sb)

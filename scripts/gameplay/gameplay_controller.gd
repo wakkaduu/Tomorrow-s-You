@@ -6,6 +6,8 @@ extends Control
 
 const HintRegistryClass = preload("res://scripts/hints/hint_registry.gd")
 const NarrativeRegistryClass = preload("res://scripts/narrative/narrative_registry.gd")
+const UIDesignSystemClass = preload("res://scripts/ui/components/ui_design_system.gd")
+const MorrowVisualizerClass = preload("res://scripts/ui/components/morrow_visualizer.gd")
 
 @onready var board_renderer: BoardRenderer = $BoardRenderer
 @onready var level_title_label: Label = $TopHUD/MarginContainer/VBoxContainer/HeaderRow/LevelInfo/LevelTitle
@@ -32,6 +34,16 @@ const NarrativeRegistryClass = preload("res://scripts/narrative/narrative_regist
 @onready var complete_modal: PanelContainer = $Modals/CompleteModal
 @onready var log_reward_label: Label = $Modals/CompleteModal/Margin/VBoxContainer/LogRewardLabel
 
+# Restart Confirmation Modal
+@onready var restart_confirm_modal: PanelContainer = $Modals/RestartConfirmModal
+@onready var btn_confirm_restart: Button = $Modals/RestartConfirmModal/Margin/VBoxContainer/ButtonsRow/BtnConfirmRestart
+@onready var btn_cancel_restart: Button = $Modals/RestartConfirmModal/Margin/VBoxContainer/ButtonsRow/BtnCancelRestart
+
+# Communication Log Modal
+@onready var comm_log_modal: PanelContainer = $Modals/CommunicationLogModal
+@onready var btn_close_comm_log: Button = $Modals/CommunicationLogModal/Margin/VBoxContainer/HeaderBox/BtnCloseCommLog
+@onready var comm_log_list: VBoxContainer = $Modals/CommunicationLogModal/Margin/VBoxContainer/ScrollContainer/TransmissionsList
+
 # Hint Modals
 @onready var hint_modal: PanelContainer = $Modals/HintModal
 @onready var hint_level_name: Label = $Modals/HintModal/Margin/VBoxContainer/HeaderBox/LevelNameLabel
@@ -51,6 +63,10 @@ const NarrativeRegistryClass = preload("res://scripts/narrative/narrative_regist
 @onready var transmission_content: Label = $Modals/TransmissionModal/Margin/VBoxContainer/ScrollContainer/TransmissionContent
 @onready var btn_skip_transmission: Button = $Modals/TransmissionModal/Margin/VBoxContainer/ButtonsRow/BtnSkipTransmission
 @onready var btn_proceed_transmission: Button = $Modals/TransmissionModal/Margin/VBoxContainer/ButtonsRow/BtnProceedTransmission
+@onready var morrow_core: Control = $Modals/TransmissionModal/Margin/VBoxContainer/VisualizerContainer/MorrowCore
+@onready var transmission_signal_status: Label = $Modals/TransmissionModal/Margin/VBoxContainer/VisualizerContainer/SignalStatusLabel
+@onready var transmission_meta: Label = $Modals/TransmissionModal/Margin/VBoxContainer/HeaderBox/MetaLabel
+@onready var transmission_line_progress: Label = $Modals/TransmissionModal/Margin/VBoxContainer/ProgressRow/LineProgressLabel
 
 # Ending Modal
 @onready var ending_modal: PanelContainer = $Modals/EndingModal
@@ -63,6 +79,7 @@ const NarrativeRegistryClass = preload("res://scripts/narrative/narrative_regist
 @onready var btn_resume: Button = $Modals/PauseModal/Margin/VBoxContainer/ResumeButton
 @onready var btn_modal_restart: Button = $Modals/PauseModal/Margin/VBoxContainer/RestartButton
 @onready var btn_modal_transmission: Button = $Modals/PauseModal/Margin/VBoxContainer/TransmissionButton
+@onready var btn_modal_archive: Button = $Modals/PauseModal/Margin/VBoxContainer/ArchiveButton
 @onready var btn_modal_levels: Button = $Modals/PauseModal/Margin/VBoxContainer/LevelsButton
 @onready var btn_modal_settings: Button = $Modals/PauseModal/Margin/VBoxContainer/SettingsButton
 
@@ -85,6 +102,12 @@ var _active_transmission: Dictionary = {}
 var _current_transmission_line: int = 0
 var _transmission_callback: Callable = Callable()
 
+# Typewriter text animation state
+var _typewriter_active: bool = false
+var _typewriter_chars_per_sec: float = 40.0
+var _typewriter_elapsed: float = 0.0
+var _typewriter_target_len: int = 0
+
 # Swipe gesture tracking
 var _touch_start_pos: Vector2 = Vector2.ZERO
 var _is_swiping: bool = false
@@ -95,10 +118,24 @@ func _ready() -> void:
 	complete_modal.visible = false
 	hint_modal.visible = false
 	hint_confirm_modal.visible = false
+	if restart_confirm_modal:
+		restart_confirm_modal.visible = false
+	if comm_log_modal:
+		comm_log_modal.visible = false
 	if transmission_modal:
 		transmission_modal.visible = false
 	if ending_modal:
 		ending_modal.visible = false
+
+	if transmission_content:
+		transmission_content.mouse_filter = Control.MOUSE_FILTER_STOP
+		transmission_content.gui_input.connect(func(event: InputEvent):
+			if (event is InputEventMouseButton and event.pressed) or (event is InputEventScreenTouch and event.pressed):
+				if _typewriter_active:
+					transmission_content.visible_characters = -1
+					_typewriter_active = false
+					if AudioManager: AudioManager.play_sfx("ui_click")
+		)
 
 	if GameManager:
 		simulation = GameManager.current_simulation
@@ -145,6 +182,20 @@ func _ready() -> void:
 			print("[NARRATIVE] No opening transmission registered for level: %s" % lid)
 
 	get_viewport().size_changed.connect(_on_viewport_resized)
+
+func _process(delta: float) -> void:
+	if _typewriter_active and transmission_modal and transmission_modal.visible:
+		if SaveManager and SaveManager.reduced_animations:
+			transmission_content.visible_characters = -1
+			_typewriter_active = false
+		else:
+			_typewriter_elapsed += delta
+			var chars: int = int(_typewriter_elapsed * _typewriter_chars_per_sec)
+			if chars >= _typewriter_target_len:
+				transmission_content.visible_characters = -1
+				_typewriter_active = false
+			else:
+				transmission_content.visible_characters = chars
 
 func _apply_safe_area() -> void:
 	if not AndroidSystemManager:
@@ -222,7 +273,15 @@ func _bind_simulation_signals() -> void:
 	simulation.level_completed.connect(_on_level_completed)
 
 func _is_modal_active() -> bool:
-	return _level_completed_handled or pause_modal.visible or complete_modal.visible or hint_modal.visible or hint_confirm_modal.visible or (transmission_modal != null and transmission_modal.visible) or (ending_modal != null and ending_modal.visible)
+	return _level_completed_handled \
+		or (pause_modal != null and pause_modal.visible) \
+		or (complete_modal != null and complete_modal.visible) \
+		or (hint_modal != null and hint_modal.visible) \
+		or (hint_confirm_modal != null and hint_confirm_modal.visible) \
+		or (transmission_modal != null and transmission_modal.visible) \
+		or (ending_modal != null and ending_modal.visible) \
+		or (restart_confirm_modal != null and restart_confirm_modal.visible) \
+		or (comm_log_modal != null and comm_log_modal.visible)
 
 func _bind_ui_buttons() -> void:
 	# D-Pad
@@ -280,17 +339,42 @@ func _bind_ui_buttons() -> void:
 	)
 	btn_modal_restart.pressed.connect(func():
 		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
-		_toggle_pause()
-		simulation.restart_attempt()
+		if simulation and (simulation.current_turn > 0 or simulation.echo_history.size() > 0):
+			restart_confirm_modal.visible = true
+		else:
+			_toggle_pause()
+			simulation.restart_attempt()
 	)
+	if btn_confirm_restart:
+		btn_confirm_restart.pressed.connect(func():
+			if AndroidSystemManager: AndroidSystemManager.trigger_haptic("reset")
+			restart_confirm_modal.visible = false
+			pause_modal.visible = false
+			if background and background.has_method("set_paused"):
+				background.set_paused(false)
+			simulation.restart_attempt()
+		)
+	if btn_cancel_restart:
+		btn_cancel_restart.pressed.connect(func():
+			if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+			restart_confirm_modal.visible = false
+		)
 	if btn_modal_transmission:
 		btn_modal_transmission.pressed.connect(func():
 			if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
-			_toggle_pause()
-			var intro_tr = NarrativeRegistryClass.get_opening_transmission(current_level_def.level_id)
-			if not intro_tr.is_empty():
-				print("[NARRATIVE] Manually replaying transmission from Pause menu for %s" % current_level_def.level_id)
-				show_transmission(intro_tr)
+			pause_modal.visible = false
+			_open_comm_log_modal()
+		)
+	if btn_close_comm_log:
+		btn_close_comm_log.pressed.connect(func():
+			if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+			comm_log_modal.visible = false
+			pause_modal.visible = true
+		)
+	if btn_modal_archive:
+		btn_modal_archive.pressed.connect(func():
+			if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+			SceneRouter.go_to_archive()
 		)
 	btn_modal_levels.pressed.connect(func():
 		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
@@ -594,28 +678,80 @@ func show_transmission(trans: Dictionary, on_completed: Callable = Callable()) -
 	var tid = trans.get("id", "unknown")
 	print("[NARRATIVE] Displaying transmission modal '%s' (Lines: %d)" % [tid, lines.size()])
 
+	var cat_name: String = NarrativeRegistryClass.get_transmission_category(tid)
+	var cat_enum = MorrowVisualizerClass.Category.NORMAL
+	var border_color: Color = UIDesignSystemClass.COLOR_CYAN_PRIMARY
+	var status_text: String = "● CARRIER LOCK // RESONANCE STABLE"
+
+	match cat_name:
+		"EMERGENCY":
+			cat_enum = MorrowVisualizerClass.Category.EMERGENCY
+			border_color = UIDesignSystemClass.COLOR_AMBER_WARN
+			status_text = "● WARNING // FREQUENCY JITTER DETECTED"
+		"CORRUPTED":
+			cat_enum = MorrowVisualizerClass.Category.CORRUPTED
+			border_color = UIDesignSystemClass.COLOR_VIOLET_ECHO
+			status_text = "● DATA CORRUPTION // MEMORY PACKET LOSS"
+		"FINAL":
+			cat_enum = MorrowVisualizerClass.Category.FINAL
+			border_color = Color(1.0, 0.84, 0.36)
+			status_text = "● FINAL HARMONICS // TEMPORAL STABILIZATION"
+		_:
+			cat_enum = MorrowVisualizerClass.Category.NORMAL
+			border_color = UIDesignSystemClass.COLOR_CYAN_PRIMARY
+			status_text = "● CARRIER LOCK // RESONANCE STABLE"
+
+	if morrow_core:
+		morrow_core.set_category(cat_enum)
+
+	if transmission_signal_status:
+		transmission_signal_status.text = status_text
+		transmission_signal_status.add_theme_color_override("font_color", border_color)
+
+	if transmission_modal:
+		var panel_sb = UIDesignSystemClass.create_panel_style(border_color, Color(0.02, 0.035, 0.07, 0.98), 2, 14, 20)
+		transmission_modal.add_theme_stylebox_override("panel", panel_sb)
+
 	transmission_sender.text = trans.get("sender", "MORROW // FACILITY AI")
 	transmission_channel.text = trans.get("channel", "EMERGENCY CONTAINMENT LINK")
 
-	if lines.size() > 0:
-		transmission_content.text = lines[0]
-	else:
-		transmission_content.text = ""
+	var lvl_id: String = trans.get("level_id", "")
+	var ch_info = NarrativeRegistryClass.get_chapter_info(lvl_id)
+	if transmission_meta:
+		var ch_str = "%s // %s" % [ch_info.get("code", "CH-01"), ch_info.get("title", "SECTOR")]
+		transmission_meta.text = "%s  •  %s" % [ch_str, tid.to_upper()]
 
-	btn_proceed_transmission.text = "NEXT ▶" if lines.size() > 1 else "PROCEED ▶"
+	_display_transmission_line(0)
+
 	transmission_modal.visible = true
+	if background and background.has_method("set_paused"):
+		background.set_paused(true)
 
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
 	if AndroidSystemManager:
 		AndroidSystemManager.trigger_haptic("button")
 
+func _display_transmission_line(line_idx: int) -> void:
+	var lines: Array = _active_transmission.get("lines", [])
+	_current_transmission_line = line_idx
+	var text: String = lines[line_idx] if line_idx < lines.size() else ""
+	transmission_content.text = text
+	_typewriter_target_len = text.length()
+	_typewriter_elapsed = 0.0
+	_typewriter_active = true
+	transmission_content.visible_characters = 0
+
+	if transmission_line_progress:
+		transmission_line_progress.text = "LINE %02d / %02d" % [line_idx + 1, lines.size()]
+
+	btn_proceed_transmission.text = "NEXT ▶" if (line_idx < lines.size() - 1) else "PROCEED ▶"
+
 func _advance_transmission() -> void:
 	var lines: Array = _active_transmission.get("lines", [])
 	_current_transmission_line += 1
 	if _current_transmission_line < lines.size():
-		transmission_content.text = lines[_current_transmission_line]
-		btn_proceed_transmission.text = "NEXT ▶" if (_current_transmission_line < lines.size() - 1) else "PROCEED ▶"
+		_display_transmission_line(_current_transmission_line)
 		if AudioManager:
 			AudioManager.play_sfx("ui_click")
 		if AndroidSystemManager:
@@ -629,11 +765,90 @@ func _close_transmission() -> void:
 		print("[NARRATIVE] Closing transmission '%s' and marking as viewed in SaveManager." % tid)
 		SaveManager.mark_transmission_viewed(tid)
 	transmission_modal.visible = false
+	_typewriter_active = false
+	if background and background.has_method("set_paused"):
+		background.set_paused(pause_modal.visible or (comm_log_modal and comm_log_modal.visible))
 	var cb = _transmission_callback
 	_active_transmission = {}
 	_transmission_callback = Callable()
 	if cb.is_valid():
 		cb.call()
+
+func _open_comm_log_modal() -> void:
+	for child in comm_log_list.get_children():
+		child.queue_free()
+
+	var all_transmissions = NarrativeRegistryClass.get_all_transmissions()
+	for trans in all_transmissions:
+		var tid: String = trans.get("id", "")
+		var is_unlocked: bool = SaveManager and SaveManager.is_transmission_unlocked(tid)
+		var is_viewed: bool = SaveManager and SaveManager.is_transmission_viewed(tid)
+		var lvl_id: String = trans.get("level_id", "")
+		var ch = NarrativeRegistryClass.get_chapter_info(lvl_id)
+		var ch_str = "%s: %s" % [ch.get("code", "CH"), ch.get("title", "")]
+		var type_str = trans.get("type", "OPENING")
+
+		var card = PanelContainer.new()
+		card.custom_minimum_size = Vector2(0, 72)
+		card.add_theme_stylebox_override("panel", UIDesignSystemClass.create_card_style(
+			UIDesignSystemClass.COLOR_CYAN_PRIMARY if is_unlocked else UIDesignSystemClass.COLOR_TEXT_DIM,
+			is_unlocked,
+			false
+		))
+
+		var margin = MarginContainer.new()
+		margin.add_theme_constant_override("margin_left", 12)
+		margin.add_theme_constant_override("margin_right", 12)
+		margin.add_theme_constant_override("margin_top", 10)
+		margin.add_theme_constant_override("margin_bottom", 10)
+		card.add_child(margin)
+
+		var row = HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		margin.add_child(row)
+
+		var info_box = VBoxContainer.new()
+		info_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		info_box.add_theme_constant_override("separation", 3)
+		row.add_child(info_box)
+
+		if is_unlocked:
+			var title_lbl = Label.new()
+			title_lbl.text = "✦ %s // %s" % [ch_str, type_str]
+			title_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_CYAN_PRIMARY)
+			title_lbl.add_theme_font_size_override("font_size", 14)
+			info_box.add_child(title_lbl)
+
+			var sub_lbl = Label.new()
+			sub_lbl.text = "%s • %s" % [trans.get("sender", "MORROW"), trans.get("channel", "LINK")]
+			sub_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_MUTED)
+			sub_lbl.add_theme_font_size_override("font_size", 11)
+			info_box.add_child(sub_lbl)
+
+			var replay_btn = Button.new()
+			replay_btn.custom_minimum_size = Vector2(100, 42)
+			replay_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			replay_btn.text = "REPLAY ▶"
+			UIDesignSystemClass.apply_button_skin(replay_btn, UIDesignSystemClass.COLOR_CYAN_PRIMARY, true)
+			var captured_trans = trans
+			replay_btn.pressed.connect(func():
+				comm_log_modal.visible = false
+				show_transmission(captured_trans, func():
+					comm_log_modal.visible = true
+				)
+			)
+			row.add_child(replay_btn)
+		else:
+			var locked_lbl = Label.new()
+			var req_ch = ch.get("code", "CH")
+			locked_lbl.text = "🔒 RESTRICTED // COMPLETE %s TO RECOVER" % req_ch
+			locked_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_DIM)
+			locked_lbl.add_theme_font_size_override("font_size", 13)
+			info_box.add_child(locked_lbl)
+
+		comm_log_list.add_child(card)
+
+	comm_log_modal.visible = true
 
 func handle_back_button() -> bool:
 	if transmission_modal and transmission_modal.visible:
@@ -642,6 +857,13 @@ func handle_back_button() -> bool:
 	if ending_modal and ending_modal.visible:
 		ending_modal.visible = false
 		SceneRouter.go_to_main_menu()
+		return true
+	if restart_confirm_modal and restart_confirm_modal.visible:
+		restart_confirm_modal.visible = false
+		return true
+	if comm_log_modal and comm_log_modal.visible:
+		comm_log_modal.visible = false
+		pause_modal.visible = true
 		return true
 	if hint_confirm_modal and hint_confirm_modal.visible:
 		_on_cancel_reveal()
@@ -660,29 +882,34 @@ func handle_back_button() -> bool:
 	return true
 
 func _style_holographic_modals() -> void:
-	var make_panel_style = func(border_col: Color, fill_col: Color = Color(0.05, 0.075, 0.14, 0.96), border_w: int = 2) -> StyleBoxFlat:
-		var sb: StyleBoxFlat = StyleBoxFlat.new()
-		sb.bg_color = fill_col
-		sb.border_color = border_col
-		sb.set_border_width_all(border_w)
-		sb.set_corner_radius_all(12)
-		sb.shadow_color = Color(border_col.r, border_col.g, border_col.b, 0.22)
-		sb.shadow_size = 14
-		sb.shadow_offset = Vector2(0, 4)
-		return sb
-
 	if pause_modal:
-		pause_modal.add_theme_stylebox_override("panel", make_panel_style.call(Color(0.329, 0.902, 0.918, 0.8)))
+		pause_modal.add_theme_stylebox_override("panel", UIDesignSystemClass.create_panel_style(UIDesignSystemClass.COLOR_CYAN_PRIMARY, Color(0.04, 0.065, 0.12, 0.98), 2, 14, 18))
+	if restart_confirm_modal:
+		restart_confirm_modal.add_theme_stylebox_override("panel", UIDesignSystemClass.create_panel_style(UIDesignSystemClass.COLOR_AMBER_WARN, Color(0.05, 0.05, 0.09, 0.98), 2, 12, 16))
+	if comm_log_modal:
+		comm_log_modal.add_theme_stylebox_override("panel", UIDesignSystemClass.create_panel_style(UIDesignSystemClass.COLOR_CYAN_PRIMARY, Color(0.03, 0.05, 0.10, 0.98), 2, 14, 18))
 	if complete_modal:
-		complete_modal.add_theme_stylebox_override("panel", make_panel_style.call(Color(0.329, 0.902, 0.918, 1.0), Color(0.06, 0.10, 0.18, 0.97), 2))
+		complete_modal.add_theme_stylebox_override("panel", UIDesignSystemClass.create_panel_style(UIDesignSystemClass.COLOR_CYAN_PRIMARY, Color(0.04, 0.07, 0.14, 0.98), 2, 14, 18))
 	if hint_modal:
-		hint_modal.add_theme_stylebox_override("panel", make_panel_style.call(Color(1.0, 0.745, 0.333, 0.8)))
+		hint_modal.add_theme_stylebox_override("panel", UIDesignSystemClass.create_panel_style(UIDesignSystemClass.COLOR_AMBER_WARN, Color(0.05, 0.06, 0.10, 0.98), 2, 14, 16))
 	if hint_confirm_modal:
-		hint_confirm_modal.add_theme_stylebox_override("panel", make_panel_style.call(Color(1.0, 0.745, 0.333, 0.9)))
+		hint_confirm_modal.add_theme_stylebox_override("panel", UIDesignSystemClass.create_panel_style(UIDesignSystemClass.COLOR_AMBER_WARN, Color(0.05, 0.06, 0.10, 0.98), 2, 12, 16))
 	if transmission_modal:
-		transmission_modal.add_theme_stylebox_override("panel", make_panel_style.call(Color(0.329, 0.902, 0.918, 0.95), Color(0.04, 0.07, 0.14, 0.97), 2))
+		transmission_modal.add_theme_stylebox_override("panel", UIDesignSystemClass.create_panel_style(UIDesignSystemClass.COLOR_CYAN_PRIMARY, Color(0.02, 0.035, 0.07, 0.98), 2, 14, 20))
 	if ending_modal:
-		ending_modal.add_theme_stylebox_override("panel", make_panel_style.call(Color(0.204, 0.827, 0.6, 0.95), Color(0.03, 0.06, 0.12, 0.98), 2))
+		ending_modal.add_theme_stylebox_override("panel", UIDesignSystemClass.create_panel_style(UIDesignSystemClass.COLOR_EMERALD_SUCCESS, Color(0.03, 0.06, 0.12, 0.98), 2, 14, 20))
+
+	# Apply button skins
+	if btn_resume:
+		UIDesignSystemClass.apply_button_skin(btn_resume, UIDesignSystemClass.COLOR_CYAN_PRIMARY, true)
+	if btn_create_echo:
+		UIDesignSystemClass.apply_button_skin(btn_create_echo, UIDesignSystemClass.COLOR_CYAN_PRIMARY, true)
+	if btn_next_level:
+		UIDesignSystemClass.apply_button_skin(btn_next_level, UIDesignSystemClass.COLOR_CYAN_PRIMARY, true)
+	if btn_confirm_restart:
+		UIDesignSystemClass.apply_button_skin(btn_confirm_restart, UIDesignSystemClass.COLOR_ROSE_ALERT, true)
+	if btn_confirm_reveal:
+		UIDesignSystemClass.apply_button_skin(btn_confirm_reveal, UIDesignSystemClass.COLOR_AMBER_WARN, true)
 
 # ==============================================================================
 # Desktop & Touch Input Handling
