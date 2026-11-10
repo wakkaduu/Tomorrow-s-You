@@ -21,3 +21,15 @@
 .DS_Store
 Thumbs.db
 
+
+# Private signing material and nested public-release build artifacts
+*.keystore
+*.jks
+*.p12
+*.pfx
+export_credentials.cfg
+/build/android/releases/
+
+# Python tooling caches
+__pycache__/
+*.pyc
