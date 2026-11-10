@@ -83,6 +83,11 @@ action_pause={
 ]
 }
 
+[gui]
+
+theme/custom="res://assets/themes/default_theme.tres"
+theme/custom_font="res://assets/fonts/Inter/Inter-Regular.ttf"
+
 [rendering]
 
 renderer/rendering_method="mobile"

@@ -186,3 +186,4 @@ func _draw_waveform(base_pos: Vector2, total_width: float, col: Color) -> void:
 		for i in range(points.size() - 1):
 			var alpha: float = 0.2 + (1.0 - absf(float(i - points.size() / 2) / float(points.size() / 2))) * 0.6
 			draw_line(points[i], points[i + 1], col * Color(1, 1, 1, alpha), 1.5, true)
+

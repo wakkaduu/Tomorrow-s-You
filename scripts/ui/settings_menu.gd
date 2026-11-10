@@ -15,8 +15,28 @@ const UIDesignSystemClass = preload("res://scripts/ui/components/ui_design_syste
 
 func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
-	UIDesignSystemClass.apply_button_skin(back_button, UIDesignSystemClass.COLOR_CYAN_PRIMARY, false)
-	UIDesignSystemClass.apply_button_skin(reset_button, UIDesignSystemClass.COLOR_ROSE_ALERT, false)
+	UIDesignSystemClass.apply_button_style(back_button, UIDesignSystemClass.ButtonType.SECONDARY)
+	back_button.icon = preload("res://assets/icons/ui/icon_back.svg")
+
+	var header_title = $Header/Title
+	if header_title:
+		UIDesignSystemClass.apply_display_heading(header_title, UIDesignSystemClass.FONT_SIZE_SCREEN_HEADING, UIDesignSystemClass.COLOR_CYAN_PRIMARY, "Bold")
+
+	UIDesignSystemClass.apply_button_style(reset_button, UIDesignSystemClass.ButtonType.DESTRUCTIVE)
+
+	# Apply typography to row labels
+	var music_lbl = $Content/VBoxContainer/MusicRow/Label
+	if music_lbl:
+		UIDesignSystemClass.apply_display_heading(music_lbl, 18, UIDesignSystemClass.COLOR_TEXT_PRIMARY, "SemiBold")
+	var sfx_lbl = $Content/VBoxContainer/SFXRow/Label
+	if sfx_lbl:
+		UIDesignSystemClass.apply_display_heading(sfx_lbl, 18, UIDesignSystemClass.COLOR_TEXT_PRIMARY, "SemiBold")
+	var haptics_lbl = $Content/VBoxContainer/HapticsRow/Label
+	if haptics_lbl:
+		UIDesignSystemClass.apply_display_heading(haptics_lbl, 18, UIDesignSystemClass.COLOR_TEXT_PRIMARY, "SemiBold")
+	var anims_lbl = $Content/VBoxContainer/AnimsRow/Label
+	if anims_lbl:
+		UIDesignSystemClass.apply_display_heading(anims_lbl, 18, UIDesignSystemClass.COLOR_TEXT_PRIMARY, "SemiBold")
 
 	reset_button.pressed.connect(func(): reset_confirm_dialog.popup_centered())
 	reset_confirm_dialog.confirmed.connect(_on_reset_confirmed)

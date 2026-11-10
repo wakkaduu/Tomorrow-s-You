@@ -29,15 +29,39 @@ func _ready() -> void:
 		20
 	))
 
-	# Apply button styling
-	UIDesignSystemClass.apply_button_skin(play_button, UIDesignSystemClass.COLOR_CYAN_PRIMARY, true)
-	UIDesignSystemClass.apply_button_skin(levels_button, UIDesignSystemClass.COLOR_CYAN_PRIMARY, false)
-	UIDesignSystemClass.apply_button_skin(archive_button, UIDesignSystemClass.COLOR_CYAN_PRIMARY, false)
-	UIDesignSystemClass.apply_button_skin(settings_button, UIDesignSystemClass.COLOR_CYAN_PRIMARY, false)
-	UIDesignSystemClass.apply_button_skin(credits_button, UIDesignSystemClass.COLOR_CYAN_PRIMARY, false)
+	# Apply typography to title and tagline
+	UIDesignSystemClass.apply_display_heading(title_label, UIDesignSystemClass.FONT_SIZE_MAIN_TITLE, UIDesignSystemClass.COLOR_CYAN_PRIMARY, "Bold")
+	var tagline_lbl = $VBoxContainer/Header/Tagline
+	if tagline_lbl:
+		UIDesignSystemClass.apply_body_text(tagline_lbl, UIDesignSystemClass.FONT_SIZE_BODY, UIDesignSystemClass.COLOR_TEXT_SECONDARY, "Medium")
+
+	# Apply button styling with clear hierarchy
+	UIDesignSystemClass.apply_button_style(play_button, UIDesignSystemClass.ButtonType.PRIMARY)
+	play_button.custom_minimum_size = Vector2(0, 60)
+
+	UIDesignSystemClass.apply_button_style(levels_button, UIDesignSystemClass.ButtonType.SECONDARY)
+	levels_button.custom_minimum_size = Vector2(0, 52)
+
+	UIDesignSystemClass.apply_button_style(archive_button, UIDesignSystemClass.ButtonType.SECONDARY)
+	archive_button.custom_minimum_size = Vector2(0, 52)
+
+	UIDesignSystemClass.apply_button_style(settings_button, UIDesignSystemClass.ButtonType.SECONDARY)
+	settings_button.custom_minimum_size = Vector2(0, 52)
+
+	# Credits has less visual weight (Tertiary)
+	UIDesignSystemClass.apply_button_style(credits_button, UIDesignSystemClass.ButtonType.TERTIARY)
+	credits_button.custom_minimum_size = Vector2(0, 44)
+
 	var close_cred_btn = $CreditsPopup/VBoxContainer/CloseCreditsButton
 	if close_cred_btn:
-		UIDesignSystemClass.apply_button_skin(close_cred_btn, UIDesignSystemClass.COLOR_CYAN_PRIMARY, true)
+		UIDesignSystemClass.apply_button_style(close_cred_btn, UIDesignSystemClass.ButtonType.PRIMARY)
+
+	var cred_title = $CreditsPopup/VBoxContainer/CreditsTitle
+	if cred_title:
+		UIDesignSystemClass.apply_display_heading(cred_title, 22, UIDesignSystemClass.COLOR_CYAN_PRIMARY, "Bold")
+	var cred_body = $CreditsPopup/VBoxContainer/CreditsBody
+	if cred_body:
+		UIDesignSystemClass.apply_body_text(cred_body, 14, UIDesignSystemClass.COLOR_TEXT_SECONDARY)
 
 	play_button.pressed.connect(_on_play_pressed)
 	levels_button.pressed.connect(_on_levels_pressed)

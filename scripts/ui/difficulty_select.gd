@@ -61,7 +61,14 @@ const TIER_DATA: Array[Dictionary] = [
 
 func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
-	UIDesignSystemClass.apply_button_skin(back_button, UIDesignSystemClass.COLOR_CYAN_PRIMARY, false)
+	UIDesignSystemClass.apply_button_style(back_button, UIDesignSystemClass.ButtonType.SECONDARY)
+	back_button.icon = preload("res://assets/icons/ui/icon_back.svg")
+
+	var header_title = $Header/Title
+	if header_title:
+		UIDesignSystemClass.apply_display_heading(header_title, UIDesignSystemClass.FONT_SIZE_SCREEN_HEADING, UIDesignSystemClass.COLOR_CYAN_PRIMARY, "Bold")
+	if stars_label:
+		UIDesignSystemClass.apply_technical_text(stars_label, 16, UIDesignSystemClass.COLOR_AMBER_WARN, "SemiBold")
 
 	_update_header_stars()
 	_build_tier_cards()
@@ -137,31 +144,25 @@ func _build_tier_cards() -> void:
 
 		var tier_pill: Label = Label.new()
 		tier_pill.text = " %s " % info.get("code", "TIER")
-		tier_pill.add_theme_font_size_override("font_size", 11)
-		if is_unlocked:
-			tier_pill.add_theme_color_override("font_color", card_color)
-		else:
-			tier_pill.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_DIM)
+		UIDesignSystemClass.apply_technical_text(tier_pill, 11, card_color if is_unlocked else UIDesignSystemClass.COLOR_TEXT_DIM, "Bold")
 		top_row.add_child(tier_pill)
 
 		var title_lbl: Label = Label.new()
 		title_lbl.text = info["title"]
 		title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		title_lbl.add_theme_font_size_override("font_size", 17)
-		title_lbl.add_theme_color_override("font_color", card_color if is_unlocked else Color(0.5, 0.55, 0.62))
+		UIDesignSystemClass.apply_display_heading(title_lbl, 18, card_color if is_unlocked else Color(0.5, 0.55, 0.62), "SemiBold")
 		top_row.add_child(title_lbl)
 
 		var status_lbl: Label = Label.new()
 		if not is_unlocked:
 			status_lbl.text = "🔒 LOCKED"
-			status_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_ROSE_ALERT)
+			UIDesignSystemClass.apply_technical_text(status_lbl, 12, UIDesignSystemClass.COLOR_ROSE_ALERT, "SemiBold")
 		elif pct >= 100.0:
 			status_lbl.text = "★ COMPLETED"
-			status_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
+			UIDesignSystemClass.apply_technical_text(status_lbl, 12, UIDesignSystemClass.COLOR_EMERALD_SUCCESS, "SemiBold")
 		else:
 			status_lbl.text = "%.0f%% DONE" % pct
-			status_lbl.add_theme_color_override("font_color", card_color)
-		status_lbl.add_theme_font_size_override("font_size", 13)
+			UIDesignSystemClass.apply_technical_text(status_lbl, 12, card_color, "SemiBold")
 		top_row.add_child(status_lbl)
 		vbox.add_child(top_row)
 
@@ -169,27 +170,24 @@ func _build_tier_cards() -> void:
 		var desc_lbl: Label = Label.new()
 		desc_lbl.text = info["description"]
 		desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		desc_lbl.add_theme_font_size_override("font_size", 13)
-		desc_lbl.add_theme_color_override("font_color", Color("#CBD5E1") if is_unlocked else Color(0.42, 0.48, 0.55))
+		UIDesignSystemClass.apply_body_text(desc_lbl, 14, Color("#CBD5E1") if is_unlocked else Color(0.42, 0.48, 0.55))
 		vbox.add_child(desc_lbl)
 
 		# Row 3: Meta info (Level count, Echo requirement, Stars)
 		var meta_row: HBoxContainer = HBoxContainer.new()
 		var count_lbl: Label = Label.new()
 		count_lbl.text = "%d %s" % [count, "Level" if count == 1 else "Levels"]
-		count_lbl.add_theme_font_size_override("font_size", 12)
-		count_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_MUTED)
+		UIDesignSystemClass.apply_technical_text(count_lbl, 12, UIDesignSystemClass.COLOR_TEXT_MUTED)
 		meta_row.add_child(count_lbl)
 
 		var dot1: Label = Label.new()
 		dot1.text = " • "
-		dot1.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_DIM)
+		UIDesignSystemClass.apply_technical_text(dot1, 12, UIDesignSystemClass.COLOR_TEXT_DIM)
 		meta_row.add_child(dot1)
 
 		var echo_lbl: Label = Label.new()
 		echo_lbl.text = info["echoes"]
-		echo_lbl.add_theme_font_size_override("font_size", 12)
-		echo_lbl.add_theme_color_override("font_color", card_color if is_unlocked else UIDesignSystemClass.COLOR_TEXT_DIM)
+		UIDesignSystemClass.apply_technical_text(echo_lbl, 12, card_color if is_unlocked else UIDesignSystemClass.COLOR_TEXT_DIM)
 		meta_row.add_child(echo_lbl)
 
 		var spacer: Control = Control.new()
@@ -198,8 +196,7 @@ func _build_tier_cards() -> void:
 
 		var star_lbl: Label = Label.new()
 		star_lbl.text = "★ %d/%d" % [stars_dict.get("earned", 0), stars_dict.get("total", 0)]
-		star_lbl.add_theme_font_size_override("font_size", 13)
-		star_lbl.add_theme_color_override("font_color", Color("#FBBF24") if is_unlocked else UIDesignSystemClass.COLOR_TEXT_DIM)
+		UIDesignSystemClass.apply_technical_text(star_lbl, 13, Color("#FBBF24") if is_unlocked else UIDesignSystemClass.COLOR_TEXT_DIM, "SemiBold")
 		meta_row.add_child(star_lbl)
 		vbox.add_child(meta_row)
 
@@ -232,10 +229,10 @@ func _build_tier_cards() -> void:
 			var prev_name: String = TIER_DATA[tier_num - 2]["title"].split(" — ")[0]
 			select_btn.text = "🔒 Complete %s to unlock" % prev_name
 			select_btn.disabled = true
-			UIDesignSystemClass.apply_button_skin(select_btn, card_color, false)
+			UIDesignSystemClass.apply_button_style(select_btn, UIDesignSystemClass.ButtonType.SECONDARY, UIDesignSystemClass.COLOR_TEXT_DIM)
 		else:
 			select_btn.text = "SELECT %s ▶" % info["title"].split(" — ")[0]
-			UIDesignSystemClass.apply_button_skin(select_btn, card_color, true)
+			UIDesignSystemClass.apply_button_style(select_btn, UIDesignSystemClass.ButtonType.PRIMARY, card_color)
 
 		var captured_tier: int = tier_num
 		var captured_card: PanelContainer = card

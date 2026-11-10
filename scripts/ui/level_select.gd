@@ -21,10 +21,13 @@ const TIER_NAMES: Dictionary = {
 
 func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
-	UIDesignSystemClass.apply_button_skin(back_button, UIDesignSystemClass.COLOR_CYAN_PRIMARY, false)
+	UIDesignSystemClass.apply_button_style(back_button, UIDesignSystemClass.ButtonType.SECONDARY)
+	back_button.icon = preload("res://assets/icons/ui/icon_back.svg")
 
 	var tier: int = SaveManager.selected_difficulty_tier if SaveManager else 1
 	title_label.text = TIER_NAMES.get(tier, "SELECT LEVEL")
+	UIDesignSystemClass.apply_display_heading(title_label, UIDesignSystemClass.FONT_SIZE_SCREEN_HEADING, UIDesignSystemClass.COLOR_CYAN_PRIMARY, "Bold")
+
 	if background and background.has_method("set_difficulty_tier"):
 		background.set_difficulty_tier(tier)
 	_build_level_cards()
@@ -72,29 +75,28 @@ func _build_level_cards() -> void:
 		var stars: int = SaveManager.get_level_stars(lvl.level_id) if SaveManager else 0
 
 		var btn: Button = Button.new()
-		btn.custom_minimum_size = Vector2(300, 80)
+		btn.custom_minimum_size = Vector2(300, 84)
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 		if not is_unlocked:
-			btn.text = "🔒  %d. %s [LOCKED]\nRequires previous level completion" % [i + 1, lvl.level_name]
+			btn.text = "🔒  LVL %02d: %s\nRESTRICTED // COMPLETE PREVIOUS LEVEL" % [i + 1, lvl.level_name]
 			btn.disabled = true
-			UIDesignSystemClass.apply_button_skin(btn, UIDesignSystemClass.COLOR_TEXT_DIM, false)
+			UIDesignSystemClass.apply_button_style(btn, UIDesignSystemClass.ButtonType.SECONDARY, UIDesignSystemClass.COLOR_TEXT_DIM)
 		elif is_completed:
 			var star_str: String = ""
 			for s in range(3):
 				star_str += "★" if s < stars else "☆"
 			var best_turns: int = SaveManager.best_actions.get(lvl.level_id, 0) if SaveManager else 0
 			var best_ech: int = SaveManager.best_echoes.get(lvl.level_id, 0) if SaveManager else 0
-			btn.text = "%s  %d. %s\nBest: %d turns (%d echoes) | 3★ Target: ≤%d" % [
+			btn.text = "%s  LVL %02d: %s\nRECORD: %d TURNS (%d ECHOES)  •  3★ TARGET: ≤%d" % [
 				star_str, i + 1, lvl.level_name, best_turns, best_ech, lvl.target_3_stars
 			]
-			UIDesignSystemClass.apply_button_skin(btn, UIDesignSystemClass.COLOR_CYAN_PRIMARY, false)
-			btn.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_CYAN_PRIMARY)
+			UIDesignSystemClass.apply_button_style(btn, UIDesignSystemClass.ButtonType.SECONDARY, UIDesignSystemClass.COLOR_CYAN_PRIMARY)
 		else:
-			btn.text = "▶  %d. %s [NEW]\nMin Echoes: %d | 3★ Target: ≤%d" % [
+			btn.text = "▶  LVL %02d: %s [DEPLOY NOW]\nMIN ECHOES: %d  •  3★ TARGET: ≤%d" % [
 				i + 1, lvl.level_name, lvl.min_echoes_required, lvl.target_3_stars
 			]
-			UIDesignSystemClass.apply_button_skin(btn, UIDesignSystemClass.COLOR_CYAN_PRIMARY, true)
+			UIDesignSystemClass.apply_button_style(btn, UIDesignSystemClass.ButtonType.PRIMARY)
 
 		var level_idx: int = i
 		btn.pressed.connect(func():

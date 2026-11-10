@@ -249,7 +249,7 @@ func _render_transmissions() -> void:
 			btn_view.text = "INSPECT LOG"
 			btn_view.custom_minimum_size = Vector2(0, 44)
 			btn_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			UIDesignSystemClass.apply_button_skin(btn_view, UIDesignSystemClass.COLOR_CYAN_PRIMARY, false)
+			UIDesignSystemClass.apply_button_style(btn_view, UIDesignSystemClass.ButtonType.SECONDARY)
 			var captured_trans = trans
 			btn_view.pressed.connect(func():
 				_open_reader(
@@ -266,7 +266,7 @@ func _render_transmissions() -> void:
 			var btn_play = Button.new()
 			btn_play.text = "REPLAY ▶"
 			btn_play.custom_minimum_size = Vector2(110, 44)
-			UIDesignSystemClass.apply_button_skin(btn_play, UIDesignSystemClass.COLOR_CYAN_PRIMARY, true)
+			UIDesignSystemClass.apply_button_style(btn_play, UIDesignSystemClass.ButtonType.PRIMARY)
 			btn_play.pressed.connect(func():
 				_show_cinematic_transmission(captured_trans)
 			)
@@ -337,7 +337,7 @@ func _render_logs() -> void:
 			var btn = Button.new()
 			btn.text = "READ RESEARCH LOG ▶"
 			btn.custom_minimum_size = Vector2(0, 44)
-			UIDesignSystemClass.apply_button_skin(btn, UIDesignSystemClass.COLOR_CYAN_PRIMARY, not is_read)
+			UIDesignSystemClass.apply_button_style(btn, UIDesignSystemClass.ButtonType.PRIMARY if not is_read else UIDesignSystemClass.ButtonType.SECONDARY)
 			var captured_log = log_entry
 			var captured_lid = lid
 			btn.pressed.connect(func():
@@ -408,7 +408,7 @@ func _render_records() -> void:
 			var btn = Button.new()
 			btn.text = "INSPECT FACILITY DIRECTIVE ▶"
 			btn.custom_minimum_size = Vector2(0, 44)
-			UIDesignSystemClass.apply_button_skin(btn, UIDesignSystemClass.COLOR_EMERALD_SUCCESS, false)
+			UIDesignSystemClass.apply_button_style(btn, UIDesignSystemClass.ButtonType.SECONDARY, UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
 			var captured_rec = rec
 			btn.pressed.connect(func():
 				_open_reader(
@@ -621,11 +621,39 @@ func _style_components() -> void:
 	if reader_modal:
 		reader_modal.add_theme_stylebox_override("panel", UIDesignSystemClass.create_panel_style(UIDesignSystemClass.COLOR_CYAN_PRIMARY, Color(0.04, 0.065, 0.12, 0.98), 2, 14, 18))
 	if btn_close_reader:
-		UIDesignSystemClass.apply_button_skin(btn_close_reader, UIDesignSystemClass.COLOR_CYAN_PRIMARY, true)
+		UIDesignSystemClass.apply_button_style(btn_close_reader, UIDesignSystemClass.ButtonType.PRIMARY)
 	if btn_replay_reader:
-		UIDesignSystemClass.apply_button_skin(btn_replay_reader, UIDesignSystemClass.COLOR_CYAN_PRIMARY, false)
+		UIDesignSystemClass.apply_button_style(btn_replay_reader, UIDesignSystemClass.ButtonType.SECONDARY)
 	if btn_back:
-		UIDesignSystemClass.apply_button_skin(btn_back, UIDesignSystemClass.COLOR_CYAN_PRIMARY, false)
+		UIDesignSystemClass.apply_button_style(btn_back, UIDesignSystemClass.ButtonType.SECONDARY)
+		btn_back.icon = preload("res://assets/icons/ui/icon_back.svg")
+
+	var header_title = $MainContainer/VBoxContainer/Header/TopRow/TitleBox/Title
+	if header_title:
+		UIDesignSystemClass.apply_display_heading(header_title, UIDesignSystemClass.FONT_SIZE_SCREEN_HEADING, UIDesignSystemClass.COLOR_CYAN_PRIMARY, "Bold")
+	var sub = $MainContainer/VBoxContainer/Header/TopRow/TitleBox/FacilitySubtitle
+	if sub:
+		UIDesignSystemClass.apply_technical_text(sub, 11, UIDesignSystemClass.COLOR_TEXT_MUTED, "SemiBold")
+	if status_label:
+		UIDesignSystemClass.apply_technical_text(status_label, 12, UIDesignSystemClass.COLOR_TEXT_MUTED, "SemiBold")
+
+	# Document reader typography
+	if reader_category_label:
+		UIDesignSystemClass.apply_technical_text(reader_category_label, 12, UIDesignSystemClass.COLOR_CYAN_PRIMARY, "Bold")
+	if reader_title_label:
+		UIDesignSystemClass.apply_display_heading(reader_title_label, 20, UIDesignSystemClass.COLOR_TEXT_PRIMARY, "Bold")
+	if reader_meta_label:
+		UIDesignSystemClass.apply_technical_text(reader_meta_label, 12, UIDesignSystemClass.COLOR_TEXT_MUTED)
+	if reader_integrity_label:
+		UIDesignSystemClass.apply_technical_text(reader_integrity_label, 11, UIDesignSystemClass.COLOR_EMERALD_SUCCESS, "Bold")
+	if reader_text_label:
+		UIDesignSystemClass.apply_body_text(reader_text_label, 15, Color("#E2E8F0"))
+
+	# Embedded transmission modal buttons
+	if btn_proceed_transmission:
+		UIDesignSystemClass.apply_button_style(btn_proceed_transmission, UIDesignSystemClass.ButtonType.PRIMARY)
+	if btn_skip_transmission:
+		UIDesignSystemClass.apply_button_style(btn_skip_transmission, UIDesignSystemClass.ButtonType.TERTIARY)
 
 	# Progress bar style
 	if restoration_bar:

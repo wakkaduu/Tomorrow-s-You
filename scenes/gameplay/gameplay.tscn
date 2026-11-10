@@ -149,7 +149,7 @@ custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.745098, 0.333333, 1)
 theme_override_font_sizes/font_size = 14
-text = "💡 HINT · 3 LEFT"
+text = "HINT · 3 LEFT"
 
 [node name="PrimaryActionContainer" type="MarginContainer" parent="BottomHUD"]
 layout_mode = 2
@@ -161,7 +161,7 @@ custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.960784, 0.968627, 1, 1)
 theme_override_font_sizes/font_size = 17
-text = "✦ CREATE ECHO (+1 TEAMMATE)"
+text = "CREATE ECHO (+1 TEAMMATE)"
 
 [node name="ControlsRow" type="HBoxContainer" parent="BottomHUD"]
 layout_mode = 2
@@ -236,21 +236,21 @@ custom_minimum_size = Vector2(160, 52)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
 theme_override_font_sizes/font_size = 16
-text = "⏳ WAIT TURN"
+text = "WAIT TURN"
 
 [node name="BtnRestart" type="Button" parent="BottomHUD/ControlsRow/ActionButtons"]
 custom_minimum_size = Vector2(160, 48)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.654902, 0.709804, 0.8, 1)
 theme_override_font_sizes/font_size = 14
-text = "↺ RESTART"
+text = "RESTART ATTEMPT"
 
 [node name="BtnClearEchoes" type="Button" parent="BottomHUD/ControlsRow/ActionButtons"]
 custom_minimum_size = Vector2(160, 48)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.392157, 0.486275, 1)
 theme_override_font_sizes/font_size = 14
-text = "✕ CLEAR ALL"
+text = "CLEAR ALL"
 
 [node name="BottomSafeMargin" type="Control" parent="BottomHUD"]
 custom_minimum_size = Vector2(0, 16)

@@ -505,11 +505,18 @@ func _update_hud() -> void:
 	btn_create_echo.disabled = at_echo_limit or not has_steps
 	btn_clear_echoes.disabled = simulation.echoes.is_empty()
 
+	if at_echo_limit:
+		btn_create_echo.text = "MAX ECHOES ACTIVE (%d/%d)" % [simulation.echoes.size(), current_level_def.echo_limit]
+	elif not has_steps:
+		btn_create_echo.text = "CREATE ECHO (MOVE FIRST TO RECORD)"
+	else:
+		btn_create_echo.text = "CREATE ECHO (%d/%d READY)" % [simulation.echoes.size(), current_level_def.echo_limit]
+
 	# Visual prominence feedback for CREATE ECHO button
 	if not btn_create_echo.disabled:
-		btn_create_echo.modulate = Color(1.1, 1.1, 1.15)
+		btn_create_echo.modulate = Color(1.0, 1.0, 1.0)
 	else:
-		btn_create_echo.modulate = Color(0.65, 0.65, 0.7, 0.6)
+		btn_create_echo.modulate = Color(0.7, 0.7, 0.75, 0.65)
 
 func _update_echo_timeline() -> void:
 	if not echo_timeline_row:
@@ -715,11 +722,28 @@ func show_transmission(trans: Dictionary, on_completed: Callable = Callable()) -
 	transmission_sender.text = trans.get("sender", "MORROW // FACILITY AI")
 	transmission_channel.text = trans.get("channel", "EMERGENCY CONTAINMENT LINK")
 
+	UIDesignSystemClass.apply_display_heading(transmission_sender, 18, border_color, "Bold")
+	UIDesignSystemClass.apply_technical_text(transmission_channel, 12, border_color, "SemiBold")
+	if transmission_signal_status:
+		UIDesignSystemClass.apply_technical_text(transmission_signal_status, 11, border_color)
+	if transmission_line_progress:
+		UIDesignSystemClass.apply_technical_text(transmission_line_progress, 12, UIDesignSystemClass.COLOR_TEXT_MUTED, "SemiBold")
+	if transmission_content:
+		transmission_content.add_theme_font_override("font", UIDesignSystemClass.get_interface_font("Medium"))
+		transmission_content.add_theme_font_size_override("font_size", 16)
+		transmission_content.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_PRIMARY)
+
+	if btn_proceed_transmission:
+		UIDesignSystemClass.apply_button_style(btn_proceed_transmission, UIDesignSystemClass.ButtonType.PRIMARY, border_color)
+	if btn_skip_transmission:
+		UIDesignSystemClass.apply_button_style(btn_skip_transmission, UIDesignSystemClass.ButtonType.TERTIARY)
+
 	var lvl_id: String = trans.get("level_id", "")
 	var ch_info = NarrativeRegistryClass.get_chapter_info(lvl_id)
 	if transmission_meta:
 		var ch_str = "%s // %s" % [ch_info.get("code", "CH-01"), ch_info.get("title", "SECTOR")]
 		transmission_meta.text = "%s  •  %s" % [ch_str, tid.to_upper()]
+		UIDesignSystemClass.apply_technical_text(transmission_meta, 12, UIDesignSystemClass.COLOR_TEXT_MUTED)
 
 	_display_transmission_line(0)
 
@@ -815,21 +839,19 @@ func _open_comm_log_modal() -> void:
 		if is_unlocked:
 			var title_lbl = Label.new()
 			title_lbl.text = "✦ %s // %s" % [ch_str, type_str]
-			title_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_CYAN_PRIMARY)
-			title_lbl.add_theme_font_size_override("font_size", 14)
+			UIDesignSystemClass.apply_display_heading(title_lbl, 14, UIDesignSystemClass.COLOR_CYAN_PRIMARY, "SemiBold")
 			info_box.add_child(title_lbl)
 
 			var sub_lbl = Label.new()
 			sub_lbl.text = "%s • %s" % [trans.get("sender", "MORROW"), trans.get("channel", "LINK")]
-			sub_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_MUTED)
-			sub_lbl.add_theme_font_size_override("font_size", 11)
+			UIDesignSystemClass.apply_technical_text(sub_lbl, 11, UIDesignSystemClass.COLOR_TEXT_MUTED)
 			info_box.add_child(sub_lbl)
 
 			var replay_btn = Button.new()
 			replay_btn.custom_minimum_size = Vector2(100, 42)
 			replay_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			replay_btn.text = "REPLAY ▶"
-			UIDesignSystemClass.apply_button_skin(replay_btn, UIDesignSystemClass.COLOR_CYAN_PRIMARY, true)
+			UIDesignSystemClass.apply_button_style(replay_btn, UIDesignSystemClass.ButtonType.PRIMARY)
 			var captured_trans = trans
 			replay_btn.pressed.connect(func():
 				comm_log_modal.visible = false
@@ -842,8 +864,7 @@ func _open_comm_log_modal() -> void:
 			var locked_lbl = Label.new()
 			var req_ch = ch.get("code", "CH")
 			locked_lbl.text = "🔒 RESTRICTED // COMPLETE %s TO RECOVER" % req_ch
-			locked_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_DIM)
-			locked_lbl.add_theme_font_size_override("font_size", 13)
+			UIDesignSystemClass.apply_technical_text(locked_lbl, 12, UIDesignSystemClass.COLOR_TEXT_DIM)
 			info_box.add_child(locked_lbl)
 
 		comm_log_list.add_child(card)
@@ -882,10 +903,99 @@ func handle_back_button() -> bool:
 	return true
 
 func _style_holographic_modals() -> void:
+	# Top HUD Typography
+	if level_title_label:
+		UIDesignSystemClass.apply_display_heading(level_title_label, UIDesignSystemClass.FONT_SIZE_LEVEL_TITLE, UIDesignSystemClass.COLOR_CYAN_PRIMARY, "Bold")
+	if sector_label:
+		UIDesignSystemClass.apply_technical_text(sector_label, UIDesignSystemClass.FONT_SIZE_METADATA, UIDesignSystemClass.COLOR_TEXT_MUTED, "SemiBold")
+	if turn_count_label:
+		UIDesignSystemClass.apply_technical_text(turn_count_label, 14, UIDesignSystemClass.COLOR_CYAN_PRIMARY, "SemiBold")
+	if echo_count_label:
+		UIDesignSystemClass.apply_technical_text(echo_count_label, 14, UIDesignSystemClass.COLOR_VIOLET_ECHO, "SemiBold")
+	if budget_label:
+		UIDesignSystemClass.apply_technical_text(budget_label, 13, UIDesignSystemClass.COLOR_AMBER_WARN, "SemiBold")
+
+	# Top HUD Pills styling
+	var turn_pill = $TopHUD/MarginContainer/VBoxContainer/StatsPillsRow/TurnPill
+	if turn_pill:
+		turn_pill.add_theme_stylebox_override("panel", UIDesignSystemClass.create_badge_style(UIDesignSystemClass.COLOR_CYAN_PRIMARY))
+	var echo_pill = $TopHUD/MarginContainer/VBoxContainer/StatsPillsRow/EchoPill
+	if echo_pill:
+		echo_pill.add_theme_stylebox_override("panel", UIDesignSystemClass.create_badge_style(UIDesignSystemClass.COLOR_VIOLET_ECHO))
+	var budget_pill = $TopHUD/MarginContainer/VBoxContainer/StatsPillsRow/BudgetPill
+	if budget_pill:
+		budget_pill.add_theme_stylebox_override("panel", UIDesignSystemClass.create_badge_style(UIDesignSystemClass.COLOR_AMBER_WARN))
+
+	# Pause Button (Top HUD right)
+	if pause_button:
+		UIDesignSystemClass.apply_button_style(pause_button, UIDesignSystemClass.ButtonType.ICON, UIDesignSystemClass.COLOR_CYAN_PRIMARY)
+		pause_button.icon = preload("res://assets/icons/ui/icon_pause.svg")
+		pause_button.text = ""
+		pause_button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		pause_button.expand_icon = true
+
+	# Directional Pad buttons
+	const ICON_UP = preload("res://assets/icons/ui/icon_arrow_up.svg")
+	const ICON_DOWN = preload("res://assets/icons/ui/icon_arrow_down.svg")
+	const ICON_LEFT = preload("res://assets/icons/ui/icon_arrow_left.svg")
+	const ICON_RIGHT = preload("res://assets/icons/ui/icon_arrow_right.svg")
+
+	var dpad_pairs = [
+		[btn_up, ICON_UP],
+		[btn_down, ICON_DOWN],
+		[btn_left, ICON_LEFT],
+		[btn_right, ICON_RIGHT]
+	]
+	for pair in dpad_pairs:
+		var b: Button = pair[0]
+		var icon_res: Texture2D = pair[1]
+		if b:
+			UIDesignSystemClass.apply_button_style(b, UIDesignSystemClass.ButtonType.SECONDARY, UIDesignSystemClass.COLOR_CYAN_PRIMARY)
+			b.icon = icon_res
+			b.text = ""
+			b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			b.expand_icon = true
+			b.custom_minimum_size = Vector2(76, 76)
+
+	# Primary Gameplay Action (Create Echo)
+	if btn_create_echo:
+		UIDesignSystemClass.apply_button_style(btn_create_echo, UIDesignSystemClass.ButtonType.PRIMARY, UIDesignSystemClass.COLOR_CYAN_PRIMARY)
+		btn_create_echo.icon = preload("res://assets/icons/ui/icon_echo.svg")
+		btn_create_echo.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		btn_create_echo.expand_icon = true
+		btn_create_echo.custom_minimum_size = Vector2(0, UIDesignSystemClass.PRIMARY_ACTION_HEIGHT)
+
+	# Utility Actions
+	if btn_wait:
+		UIDesignSystemClass.apply_button_style(btn_wait, UIDesignSystemClass.ButtonType.UTILITY, UIDesignSystemClass.COLOR_CYAN_PRIMARY)
+		btn_wait.icon = preload("res://assets/icons/ui/icon_wait.svg")
+		btn_wait.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		btn_wait.expand_icon = true
+
+	if btn_hint:
+		UIDesignSystemClass.apply_button_style(btn_hint, UIDesignSystemClass.ButtonType.UTILITY, UIDesignSystemClass.COLOR_AMBER_WARN)
+		btn_hint.icon = preload("res://assets/icons/ui/icon_hint.svg")
+		btn_hint.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		btn_hint.expand_icon = true
+
+	# Destructive Actions
+	if btn_restart:
+		UIDesignSystemClass.apply_button_style(btn_restart, UIDesignSystemClass.ButtonType.DESTRUCTIVE)
+		btn_restart.icon = preload("res://assets/icons/ui/icon_restart.svg")
+		btn_restart.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		btn_restart.expand_icon = true
+
+	if btn_clear_echoes:
+		UIDesignSystemClass.apply_button_style(btn_clear_echoes, UIDesignSystemClass.ButtonType.DESTRUCTIVE)
+		btn_clear_echoes.icon = preload("res://assets/icons/ui/icon_close.svg")
+		btn_clear_echoes.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		btn_clear_echoes.expand_icon = true
+
+	# Modal Panels
 	if pause_modal:
 		pause_modal.add_theme_stylebox_override("panel", UIDesignSystemClass.create_panel_style(UIDesignSystemClass.COLOR_CYAN_PRIMARY, Color(0.04, 0.065, 0.12, 0.98), 2, 14, 18))
 	if restart_confirm_modal:
-		restart_confirm_modal.add_theme_stylebox_override("panel", UIDesignSystemClass.create_panel_style(UIDesignSystemClass.COLOR_AMBER_WARN, Color(0.05, 0.05, 0.09, 0.98), 2, 12, 16))
+		restart_confirm_modal.add_theme_stylebox_override("panel", UIDesignSystemClass.create_panel_style(UIDesignSystemClass.COLOR_ROSE_ALERT, Color(0.06, 0.04, 0.08, 0.98), 2, 12, 16))
 	if comm_log_modal:
 		comm_log_modal.add_theme_stylebox_override("panel", UIDesignSystemClass.create_panel_style(UIDesignSystemClass.COLOR_CYAN_PRIMARY, Color(0.03, 0.05, 0.10, 0.98), 2, 14, 18))
 	if complete_modal:
@@ -899,17 +1009,56 @@ func _style_holographic_modals() -> void:
 	if ending_modal:
 		ending_modal.add_theme_stylebox_override("panel", UIDesignSystemClass.create_panel_style(UIDesignSystemClass.COLOR_EMERALD_SUCCESS, Color(0.03, 0.06, 0.12, 0.98), 2, 14, 20))
 
-	# Apply button skins
+	# Modal Buttons
 	if btn_resume:
-		UIDesignSystemClass.apply_button_skin(btn_resume, UIDesignSystemClass.COLOR_CYAN_PRIMARY, true)
-	if btn_create_echo:
-		UIDesignSystemClass.apply_button_skin(btn_create_echo, UIDesignSystemClass.COLOR_CYAN_PRIMARY, true)
-	if btn_next_level:
-		UIDesignSystemClass.apply_button_skin(btn_next_level, UIDesignSystemClass.COLOR_CYAN_PRIMARY, true)
+		UIDesignSystemClass.apply_button_style(btn_resume, UIDesignSystemClass.ButtonType.PRIMARY, UIDesignSystemClass.COLOR_CYAN_PRIMARY)
+	if btn_modal_restart:
+		UIDesignSystemClass.apply_button_style(btn_modal_restart, UIDesignSystemClass.ButtonType.DESTRUCTIVE)
+	if btn_modal_transmission:
+		UIDesignSystemClass.apply_button_style(btn_modal_transmission, UIDesignSystemClass.ButtonType.SECONDARY)
+	if btn_modal_archive:
+		UIDesignSystemClass.apply_button_style(btn_modal_archive, UIDesignSystemClass.ButtonType.SECONDARY)
+	if btn_modal_levels:
+		UIDesignSystemClass.apply_button_style(btn_modal_levels, UIDesignSystemClass.ButtonType.SECONDARY)
+	if btn_modal_settings:
+		UIDesignSystemClass.apply_button_style(btn_modal_settings, UIDesignSystemClass.ButtonType.SECONDARY)
+
+	if btn_close_comm_log:
+		UIDesignSystemClass.apply_button_style(btn_close_comm_log, UIDesignSystemClass.ButtonType.SECONDARY)
+		btn_close_comm_log.icon = preload("res://assets/icons/ui/icon_back.svg")
+
 	if btn_confirm_restart:
-		UIDesignSystemClass.apply_button_skin(btn_confirm_restart, UIDesignSystemClass.COLOR_ROSE_ALERT, true)
+		UIDesignSystemClass.apply_button_style(btn_confirm_restart, UIDesignSystemClass.ButtonType.DESTRUCTIVE)
+	if btn_cancel_restart:
+		UIDesignSystemClass.apply_button_style(btn_cancel_restart, UIDesignSystemClass.ButtonType.TERTIARY)
+
+	if btn_reveal_next:
+		UIDesignSystemClass.apply_button_style(btn_reveal_next, UIDesignSystemClass.ButtonType.PRIMARY, UIDesignSystemClass.COLOR_AMBER_WARN)
+	if btn_close_hint:
+		UIDesignSystemClass.apply_button_style(btn_close_hint, UIDesignSystemClass.ButtonType.TERTIARY)
 	if btn_confirm_reveal:
-		UIDesignSystemClass.apply_button_skin(btn_confirm_reveal, UIDesignSystemClass.COLOR_AMBER_WARN, true)
+		UIDesignSystemClass.apply_button_style(btn_confirm_reveal, UIDesignSystemClass.ButtonType.PRIMARY, UIDesignSystemClass.COLOR_AMBER_WARN)
+	if btn_cancel_reveal:
+		UIDesignSystemClass.apply_button_style(btn_cancel_reveal, UIDesignSystemClass.ButtonType.TERTIARY)
+
+	if btn_proceed_transmission:
+		UIDesignSystemClass.apply_button_style(btn_proceed_transmission, UIDesignSystemClass.ButtonType.PRIMARY)
+	if btn_skip_transmission:
+		UIDesignSystemClass.apply_button_style(btn_skip_transmission, UIDesignSystemClass.ButtonType.TERTIARY)
+
+	if btn_next_level:
+		UIDesignSystemClass.apply_button_style(btn_next_level, UIDesignSystemClass.ButtonType.PRIMARY)
+	if btn_replay:
+		UIDesignSystemClass.apply_button_style(btn_replay, UIDesignSystemClass.ButtonType.SECONDARY)
+	if btn_complete_levels:
+		UIDesignSystemClass.apply_button_style(btn_complete_levels, UIDesignSystemClass.ButtonType.SECONDARY)
+
+	if btn_ending_archive:
+		UIDesignSystemClass.apply_button_style(btn_ending_archive, UIDesignSystemClass.ButtonType.PRIMARY, UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
+	if btn_ending_main_menu:
+		UIDesignSystemClass.apply_button_style(btn_ending_main_menu, UIDesignSystemClass.ButtonType.SECONDARY)
+	if btn_ending_replay:
+		UIDesignSystemClass.apply_button_style(btn_ending_replay, UIDesignSystemClass.ButtonType.SECONDARY)
 
 # ==============================================================================
 # Desktop & Touch Input Handling
@@ -1087,7 +1236,7 @@ func _update_hint_button() -> void:
 	if not btn_hint:
 		return
 	var rem: int = SaveManager.get_remaining_daily_hints() if SaveManager else 3
-	btn_hint.text = "💡 HINT · %d LEFT" % rem
+	btn_hint.text = "HINT · %d LEFT" % rem
 	if rem > 0:
 		btn_hint.modulate = Color(1.0, 1.0, 1.0)
 	else:
