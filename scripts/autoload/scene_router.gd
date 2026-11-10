@@ -40,3 +40,6 @@ func go_to_gameplay(level_index: int = 0) -> void:
 func go_to_settings() -> void:
 	change_scene("res://scenes/menus/settings.tscn")
 
+func go_to_archive() -> void:
+	change_scene("res://scenes/menus/incident_archive.tscn")
+

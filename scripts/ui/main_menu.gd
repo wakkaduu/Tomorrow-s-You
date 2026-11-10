@@ -5,6 +5,7 @@ extends Control
 
 @onready var play_button: Button = $VBoxContainer/Buttons/PlayButton
 @onready var levels_button: Button = $VBoxContainer/Buttons/LevelsButton
+@onready var archive_button: Button = $VBoxContainer/Buttons/ArchiveButton
 @onready var settings_button: Button = $VBoxContainer/Buttons/SettingsButton
 @onready var credits_button: Button = $VBoxContainer/Buttons/CreditsButton
 @onready var credits_popup: PanelContainer = $CreditsPopup
@@ -30,6 +31,7 @@ func _ready() -> void:
 
 	play_button.pressed.connect(_on_play_pressed)
 	levels_button.pressed.connect(_on_levels_pressed)
+	archive_button.pressed.connect(_on_archive_pressed)
 	settings_button.pressed.connect(_on_settings_pressed)
 	credits_button.pressed.connect(_on_credits_pressed)
 	$CreditsPopup/VBoxContainer/CloseCreditsButton.pressed.connect(func():
@@ -90,6 +92,13 @@ func _on_levels_pressed() -> void:
 	if AudioManager:
 		AudioManager.play_sfx("ui_click")
 	SceneRouter.go_to_difficulty_select()
+
+func _on_archive_pressed() -> void:
+	if AudioManager:
+		AudioManager.play_sfx("ui_click")
+	if AndroidSystemManager:
+		AndroidSystemManager.trigger_haptic("button")
+	SceneRouter.go_to_archive()
 
 func _on_settings_pressed() -> void:
 	if AudioManager:

@@ -4,17 +4,19 @@ extends Node
 ## Saves to user://save.cfg with safe defaults, migration logic, and corruption resilience.
 
 const LevelRegistryClass = preload("res://scripts/level/level_registry.gd")
+const NarrativeRegistryClass = preload("res://scripts/narrative/narrative_registry.gd")
 
 signal save_loaded()
 signal save_written()
 signal daily_hints_reset()
 signal hint_revealed(level_id: String, stage_index: int, remaining_credits: int)
+signal narrative_log_unlocked(log_id: String)
 
 const SAVE_PATH: String = "user://save.cfg"
-const CURRENT_VERSION: int = 2
+const CURRENT_VERSION: int = 3
 const DAILY_HINT_LIMIT: int = 3
 
-var save_version: int = 2
+var save_version: int = 3
 var unlocked_levels: Array[String] = ["lvl_01"]
 var completed_levels: Array[String] = [] # Only stores valid/verified completions under current rules
 var level_records: Dictionary = {} # level_id -> { "actions": int, "echoes": int, "stars": int, "time_sec": float, "rules_version": int, "status": "VERIFIED"|"LEGACY" }
@@ -29,6 +31,13 @@ var last_reset_date: String = ""
 var hints_used_today: int = 0
 var last_observed_timestamp: int = 0
 var level_hint_progress: Dictionary = {} # level_id -> int (-1: none, 0: obs, 1: strat, 2: sol)
+
+# Narrative & Lore System Tracking
+var unlocked_transmissions: Array[String] = ["tr_lvl_01_intro"]
+var viewed_transmissions: Array[String] = []
+var unlocked_logs: Array[String] = []
+var read_logs: Array[String] = []
+var story_ending_unlocked: bool = false
 
 # Injectable test clock / date provider
 var _date_override: String = ""
@@ -94,6 +103,31 @@ func load_save() -> void:
 	last_observed_timestamp = int(config.get_value("hint_daily", "last_observed_timestamp", 0))
 	level_hint_progress = config.get_value("hint_progress", "revealed", {})
 
+	# Load narrative tracking data
+	var raw_unlocked_tr = config.get_value("narrative", "unlocked_transmissions", ["tr_lvl_01_intro"])
+	unlocked_transmissions.clear()
+	for t in raw_unlocked_tr:
+		unlocked_transmissions.append(str(t))
+	if not unlocked_transmissions.has("tr_lvl_01_intro"):
+		unlocked_transmissions.append("tr_lvl_01_intro")
+
+	var raw_viewed_tr = config.get_value("narrative", "viewed_transmissions", [])
+	viewed_transmissions.clear()
+	for t in raw_viewed_tr:
+		viewed_transmissions.append(str(t))
+
+	var raw_unlocked_logs = config.get_value("narrative", "unlocked_logs", [])
+	unlocked_logs.clear()
+	for l in raw_unlocked_logs:
+		unlocked_logs.append(str(l))
+
+	var raw_read_logs = config.get_value("narrative", "read_logs", [])
+	read_logs.clear()
+	for l in raw_read_logs:
+		read_logs.append(str(l))
+
+	story_ending_unlocked = bool(config.get_value("narrative", "ending_unlocked", false))
+
 	check_and_apply_daily_reset()
 
 	# Schema migration
@@ -109,39 +143,60 @@ func _notification(what: int) -> void:
 func _migrate_save(old_version: int) -> void:
 	print("[SaveManager] Migrating save from version %d to %d..." % [old_version, CURRENT_VERSION])
 	
-	# In version 2, zero-Echo and sub-minimum completions are invalid.
-	# Any historical record with echoes < min_echoes_required is marked as LEGACY/UNVERIFIED
-	# and removed from active completed_levels so it cannot unlock higher difficulties.
-	var valid_completed: Array[String] = []
-	
-	for lid in completed_levels:
-		var lvl: LevelDefinition = LevelRegistryClass.get_level_by_id(lid)
-		var recorded_echoes: int = best_echoes.get(lid, 0)
-		var min_req: int = lvl.min_echoes_required if lvl else 1
+	if old_version < 2:
+		# In version 2, zero-Echo and sub-minimum completions are invalid.
+		var valid_completed: Array[String] = []
 		
-		if recorded_echoes < min_req:
-			print("[SaveManager] Invalidating legacy record for %s (recorded echoes: %d, min required: %d)" % [lid, recorded_echoes, min_req])
-			legacy_records[lid] = {
-				"actions": best_actions.get(lid, 0),
-				"echoes": recorded_echoes,
-				"rules_version": 1,
-				"status": "LEGACY_INVALID"
-			}
-			level_records.erase(lid)
-			best_stars.erase(lid)
-		else:
-			valid_completed.append(lid)
-			var stars = calculate_stars(lid, best_actions.get(lid, 999))
-			best_stars[lid] = stars
-			level_records[lid] = {
-				"actions": best_actions.get(lid, 0),
-				"echoes": recorded_echoes,
-				"stars": stars,
-				"rules_version": 2,
-				"status": "VERIFIED"
-			}
+		for lid in completed_levels:
+			var lvl: LevelDefinition = LevelRegistryClass.get_level_by_id(lid)
+			var recorded_echoes: int = best_echoes.get(lid, 0)
+			var min_req: int = lvl.min_echoes_required if lvl else 1
 			
-	completed_levels = valid_completed
+			if recorded_echoes < min_req:
+				print("[SaveManager] Invalidating legacy record for %s (recorded echoes: %d, min required: %d)" % [lid, recorded_echoes, min_req])
+				legacy_records[lid] = {
+					"actions": best_actions.get(lid, 0),
+					"echoes": recorded_echoes,
+					"rules_version": 1,
+					"status": "LEGACY_INVALID"
+				}
+				level_records.erase(lid)
+				best_stars.erase(lid)
+			else:
+				valid_completed.append(lid)
+				var stars = calculate_stars(lid, best_actions.get(lid, 999))
+				best_stars[lid] = stars
+				level_records[lid] = {
+					"actions": best_actions.get(lid, 0),
+					"echoes": recorded_echoes,
+					"stars": stars,
+					"rules_version": 2,
+					"status": "VERIFIED"
+				}
+				
+		completed_levels = valid_completed
+
+	if old_version < 3:
+		# In version 3, narrative logs and transmissions are unlocked based on existing completion progress
+		if not unlocked_transmissions.has("tr_lvl_01_intro"):
+			unlocked_transmissions.append("tr_lvl_01_intro")
+		for lid in completed_levels:
+			var chapter = NarrativeRegistryClass.get_chapter_info(lid)
+			var log_id: String = chapter.get("log_id", "")
+			if not log_id.is_empty() and not unlocked_logs.has(log_id):
+				unlocked_logs.append(log_id)
+			var outro_id: String = "tr_%s_outro" % lid
+			if NarrativeRegistryClass.TRANSMISSIONS.has(outro_id) and not unlocked_transmissions.has(outro_id):
+				unlocked_transmissions.append(outro_id)
+			# Unlock next level's intro
+			var idx: int = int(lid.replace("lvl_", ""))
+			if idx < 10:
+				var next_intro: String = "tr_lvl_%02d_intro" % (idx + 1)
+				if NarrativeRegistryClass.TRANSMISSIONS.has(next_intro) and not unlocked_transmissions.has(next_intro):
+					unlocked_transmissions.append(next_intro)
+		if completed_levels.has("lvl_10"):
+			story_ending_unlocked = true
+
 	save_version = CURRENT_VERSION
 	write_save()
 
@@ -161,6 +216,13 @@ func write_save() -> void:
 	config.set_value("hint_daily", "hints_used_today", hints_used_today)
 	config.set_value("hint_daily", "last_observed_timestamp", last_observed_timestamp)
 	config.set_value("hint_progress", "revealed", level_hint_progress)
+
+	# Narrative system persistence
+	config.set_value("narrative", "unlocked_transmissions", unlocked_transmissions)
+	config.set_value("narrative", "viewed_transmissions", viewed_transmissions)
+	config.set_value("narrative", "unlocked_logs", unlocked_logs)
+	config.set_value("narrative", "read_logs", read_logs)
+	config.set_value("narrative", "ending_unlocked", story_ending_unlocked)
 
 	config.set_value("settings", "music_volume", music_volume)
 	config.set_value("settings", "sfx_volume", sfx_volume)
@@ -238,6 +300,9 @@ func record_level_completion(level_id: String, actions: int, echoes: int, next_l
 	if not next_level_id.is_empty() and not unlocked_levels.has(next_level_id):
 		unlocked_levels.append(next_level_id)
 
+	# Unlock narrative logs and transmissions
+	unlock_narrative_on_level_completed(level_id)
+
 	write_save()
 
 # ==============================================================================
@@ -311,6 +376,11 @@ func _set_default_save() -> void:
 	hints_used_today = 0
 	last_observed_timestamp = get_current_timestamp()
 	level_hint_progress = {}
+	unlocked_transmissions = ["tr_lvl_01_intro"]
+	viewed_transmissions = []
+	unlocked_logs = []
+	read_logs = []
+	story_ending_unlocked = false
 
 # ==============================================================================
 # DAILY HINT SYSTEM & CLOCK MANAGEMENT
@@ -394,6 +464,126 @@ func reveal_next_hint(level_id: String) -> bool:
 	write_save()
 	hint_revealed.emit(level_id, next_idx, get_remaining_daily_hints())
 	return true
+
+# ==============================================================================
+# NARRATIVE & LORE ARCHIVE HELPERS
+# ==============================================================================
+
+func is_transmission_unlocked(tr_id: String) -> bool:
+	return unlocked_transmissions.has(tr_id)
+
+func is_transmission_viewed(tr_id: String) -> bool:
+	return viewed_transmissions.has(tr_id)
+
+func mark_transmission_viewed(tr_id: String) -> void:
+	if not viewed_transmissions.has(tr_id):
+		viewed_transmissions.append(tr_id)
+		write_save()
+
+func is_log_unlocked(log_id: String) -> bool:
+	return unlocked_logs.has(log_id)
+
+func is_log_read(log_id: String) -> bool:
+	return read_logs.has(log_id)
+
+func mark_log_read(log_id: String) -> void:
+	if not read_logs.has(log_id):
+		read_logs.append(log_id)
+		write_save()
+
+func is_record_unlocked(rec: Dictionary) -> bool:
+	var req_lvl: int = rec.get("unlock_level", 1)
+	if req_lvl <= 1:
+		return true
+	var req_id: String = "lvl_%02d" % req_lvl
+	return completed_levels.has(req_id) or unlocked_levels.has(req_id)
+
+func is_timeline_unlocked(entry: Dictionary) -> bool:
+	var req_lvl: int = entry.get("unlock_level", 1)
+	if req_lvl <= 1:
+		return true
+	var req_id: String = "lvl_%02d" % req_lvl
+	return completed_levels.has(req_id) or unlocked_levels.has(req_id)
+
+func unlock_narrative_on_level_started(level_id: String) -> void:
+	var intro_id: String = "tr_%s_intro" % level_id
+	if NarrativeRegistryClass.TRANSMISSIONS.has(intro_id) and not unlocked_transmissions.has(intro_id):
+		unlocked_transmissions.append(intro_id)
+		write_save()
+
+func unlock_narrative_on_level_completed(level_id: String) -> void:
+	var modified: bool = false
+
+	# Unlock outro transmission if exists
+	var outro_id: String = "tr_%s_outro" % level_id
+	if NarrativeRegistryClass.TRANSMISSIONS.has(outro_id) and not unlocked_transmissions.has(outro_id):
+		unlocked_transmissions.append(outro_id)
+		modified = true
+
+	# Unlock research log for this chapter
+	var chapter: Dictionary = NarrativeRegistryClass.get_chapter_info(level_id)
+	var log_id: String = chapter.get("log_id", "")
+	if not log_id.is_empty() and not unlocked_logs.has(log_id):
+		unlocked_logs.append(log_id)
+		narrative_log_unlocked.emit(log_id)
+		modified = true
+
+	# Unlock next level's intro transmission
+	var idx: int = int(level_id.replace("lvl_", ""))
+	if idx < 10:
+		var next_intro: String = "tr_lvl_%02d_intro" % (idx + 1)
+		if NarrativeRegistryClass.TRANSMISSIONS.has(next_intro) and not unlocked_transmissions.has(next_intro):
+			unlocked_transmissions.append(next_intro)
+			modified = true
+	elif level_id == "lvl_10":
+		story_ending_unlocked = true
+		modified = true
+
+	if modified:
+		write_save()
+
+func get_archive_progress() -> Dictionary:
+	var total_items: int = 0
+	var unlocked_items: int = 0
+
+	# Transmissions
+	var transmissions = NarrativeRegistryClass.get_all_transmissions()
+	total_items += transmissions.size()
+	for t in transmissions:
+		if unlocked_transmissions.has(t.get("id", "")):
+			unlocked_items += 1
+
+	# Logs
+	var logs = NarrativeRegistryClass.get_all_logs()
+	total_items += logs.size()
+	for l in logs:
+		if unlocked_logs.has(l.get("id", "")):
+			unlocked_items += 1
+
+	# Facility Records
+	var records = NarrativeRegistryClass.get_all_facility_records()
+	total_items += records.size()
+	for r in records:
+		if is_record_unlocked(r):
+			unlocked_items += 1
+
+	# Timeline Entries
+	var timeline = NarrativeRegistryClass.get_all_timeline_entries()
+	total_items += timeline.size()
+	for e in timeline:
+		if is_timeline_unlocked(e):
+			unlocked_items += 1
+
+	var pct: float = 0.0
+	if total_items > 0:
+		pct = (float(unlocked_items) / float(total_items)) * 100.0
+
+	return {
+		"total": total_items,
+		"unlocked": unlocked_items,
+		"percentage": pct
+	}
+
 
 
 

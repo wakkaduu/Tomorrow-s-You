@@ -87,6 +87,9 @@ func handle_back_request() -> void:
 	elif scene_file.ends_with("settings.tscn") or scene_name == "Settings":
 		trigger_haptic("button")
 		SceneRouter.go_to_main_menu()
+	elif scene_file.ends_with("incident_archive.tscn") or scene_name == "IncidentArchive":
+		trigger_haptic("button")
+		SceneRouter.go_to_main_menu()
 	elif scene_file.ends_with("main_menu.tscn") or scene_name == "MainMenu":
 		_handle_main_menu_back(current_scene)
 

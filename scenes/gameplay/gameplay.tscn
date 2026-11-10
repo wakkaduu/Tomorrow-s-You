@@ -373,6 +373,15 @@ text = "Winning Attempt: 0 turns
 Echoes Used: 0"
 horizontal_alignment = 1
 
+[node name="LogRewardLabel" type="Label" parent="Modals/CompleteModal/Margin/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 14
+text = "✦ RECOVERED LOG RESTORED TO ARCHIVE"
+horizontal_alignment = 1
+autowrap_mode = 2
+
 [node name="NextButton" type="Button" parent="Modals/CompleteModal/Margin/VBoxContainer"]
 custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
@@ -513,3 +522,166 @@ text = "REVEAL HINT"
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 text = "CANCEL"
+
+[node name="TransmissionModal" type="PanelContainer" parent="Modals"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -240.0
+offset_right = 260.0
+offset_bottom = 240.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="Modals/TransmissionModal"]
+layout_mode = 2
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 22
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Modals/TransmissionModal/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="HeaderBox" type="VBoxContainer" parent="Modals/TransmissionModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SenderLabel" type="Label" parent="Modals/TransmissionModal/Margin/VBoxContainer/HeaderBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 18
+text = "MORROW // FACILITY AI"
+
+[node name="ChannelLabel" type="Label" parent="Modals/TransmissionModal/Margin/VBoxContainer/HeaderBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.580392, 0.639216, 0.721569, 1)
+theme_override_font_sizes/font_size = 12
+text = "EMERGENCY CONTAINMENT LINK"
+
+[node name="HSeparator" type="HSeparator" parent="Modals/TransmissionModal/Margin/VBoxContainer"]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Modals/TransmissionModal/Margin/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TransmissionContent" type="Label" parent="Modals/TransmissionModal/Margin/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.886275, 0.913725, 0.941176, 1)
+theme_override_font_sizes/font_size = 15
+text = "Incoming transmission content..."
+autowrap_mode = 2
+
+[node name="ButtonsRow" type="HBoxContainer" parent="Modals/TransmissionModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnSkipTransmission" type="Button" parent="Modals/TransmissionModal/Margin/VBoxContainer/ButtonsRow"]
+custom_minimum_size = Vector2(100, 48)
+layout_mode = 2
+text = "SKIP"
+
+[node name="BtnProceedTransmission" type="Button" parent="Modals/TransmissionModal/Margin/VBoxContainer/ButtonsRow"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 16
+text = "PROCEED ▶"
+
+[node name="EndingModal" type="PanelContainer" parent="Modals"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -270.0
+offset_top = -300.0
+offset_right = 270.0
+offset_bottom = 300.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="Modals/EndingModal"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Modals/EndingModal/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Subtitle" type="Label" parent="Modals/EndingModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 13
+text = "PROJECT PALIMPSEST // FINAL REPORT"
+horizontal_alignment = 1
+
+[node name="Title" type="Label" parent="Modals/EndingModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.85, 1)
+theme_override_font_sizes/font_size = 19
+text = "THE FUTURE WAS NEVER BUILT BY ONE VERSION OF YOU."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="ProtocolLabel" type="Label" parent="Modals/EndingModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.203922, 0.827451, 0.6, 1)
+theme_override_font_sizes/font_size = 15
+text = "PROTOCOL COMPLETE."
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="Modals/EndingModal/Margin/VBoxContainer"]
+layout_mode = 2
+
+[node name="EndingMessage" type="Label" parent="Modals/EndingModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.796078, 0.835294, 0.882353, 1)
+theme_override_font_sizes/font_size = 14
+text = "Core resonance stabilized.
+Fracture contained.
+Analysis indicates 100% of recorded Echoes were necessary.
+None were wasted.
+
+Operator 07, your shift is complete.
+Tomorrow begins now."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="EndingStatsLabel" type="Label" parent="Modals/EndingModal/Margin/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.580392, 0.639216, 0.721569, 1)
+theme_override_font_sizes/font_size = 13
+text = "Total Actions: 0 | Echoes Deployed: 0 | Stars: 30 / 30"
+horizontal_alignment = 1
+
+[node name="BtnEndingArchive" type="Button" parent="Modals/EndingModal/Margin/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
+theme_override_font_sizes/font_size = 16
+text = "INCIDENT ARCHIVE ▶"
+
+[node name="BtnEndingMainMenu" type="Button" parent="Modals/EndingModal/Margin/VBoxContainer"]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+text = "MAIN MENU"
+
+[node name="BtnEndingReplay" type="Button" parent="Modals/EndingModal/Margin/VBoxContainer"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "REPLAY SEQUENCE"

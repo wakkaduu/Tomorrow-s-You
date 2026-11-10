@@ -126,6 +126,22 @@ func set_level_complete(complete_state: bool) -> void:
 		if _overlay_rect:
 			_overlay_rect.color = Color(0, 0, 0, 0)
 
+func set_ending_stabilized() -> void:
+	is_complete_mode = true
+	var theme = {
+		"bg_dark": Color(0.02, 0.04, 0.08),
+		"bg_mid": Color(0.04, 0.08, 0.14),
+		"primary_glow": Color(0.33, 0.90, 0.92),
+		"secondary_glow": Color(0.2, 0.7, 0.8),
+		"beam_opacity": 0.08,
+		"vignette_strength": 0.4,
+		"fog_density": 0.05,
+		"pulse_speed": 0.3
+	}
+	_apply_theme(theme)
+	if _overlay_rect:
+		_overlay_rect.color = Color(0.33, 0.90, 0.92, 0.12)
+
 func _apply_theme(theme: Dictionary) -> void:
 	_current_theme = theme
 	_pulse_speed = theme.get("pulse_speed", 0.8)

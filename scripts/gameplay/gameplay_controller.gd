@@ -5,6 +5,7 @@ extends Control
 ## Coordinates puzzle simulation, board rendering, mobile touch controls, desktop input, HUD, and dialogs.
 
 const HintRegistryClass = preload("res://scripts/hints/hint_registry.gd")
+const NarrativeRegistryClass = preload("res://scripts/narrative/narrative_registry.gd")
 
 @onready var board_renderer: BoardRenderer = $BoardRenderer
 @onready var level_title_label: Label = $TopHUD/MarginContainer/VBoxContainer/HeaderRow/LevelInfo/LevelTitle
@@ -29,6 +30,7 @@ const HintRegistryClass = preload("res://scripts/hints/hint_registry.gd")
 # Dialogs & Modals
 @onready var pause_modal: PanelContainer = $Modals/PauseModal
 @onready var complete_modal: PanelContainer = $Modals/CompleteModal
+@onready var log_reward_label: Label = $Modals/CompleteModal/Margin/VBoxContainer/LogRewardLabel
 
 # Hint Modals
 @onready var hint_modal: PanelContainer = $Modals/HintModal
@@ -41,6 +43,21 @@ const HintRegistryClass = preload("res://scripts/hints/hint_registry.gd")
 @onready var hint_confirm_modal: PanelContainer = $Modals/HintConfirmModal
 @onready var btn_confirm_reveal: Button = $Modals/HintConfirmModal/Margin/VBoxContainer/BtnConfirmReveal
 @onready var btn_cancel_reveal: Button = $Modals/HintConfirmModal/Margin/VBoxContainer/BtnCancelReveal
+
+# Transmission Modal
+@onready var transmission_modal: PanelContainer = $Modals/TransmissionModal
+@onready var transmission_sender: Label = $Modals/TransmissionModal/Margin/VBoxContainer/HeaderBox/SenderLabel
+@onready var transmission_channel: Label = $Modals/TransmissionModal/Margin/VBoxContainer/HeaderBox/ChannelLabel
+@onready var transmission_content: Label = $Modals/TransmissionModal/Margin/VBoxContainer/ScrollContainer/TransmissionContent
+@onready var btn_skip_transmission: Button = $Modals/TransmissionModal/Margin/VBoxContainer/ButtonsRow/BtnSkipTransmission
+@onready var btn_proceed_transmission: Button = $Modals/TransmissionModal/Margin/VBoxContainer/ButtonsRow/BtnProceedTransmission
+
+# Ending Modal
+@onready var ending_modal: PanelContainer = $Modals/EndingModal
+@onready var ending_stats_label: Label = $Modals/EndingModal/Margin/VBoxContainer/EndingStatsLabel
+@onready var btn_ending_archive: Button = $Modals/EndingModal/Margin/VBoxContainer/BtnEndingArchive
+@onready var btn_ending_main_menu: Button = $Modals/EndingModal/Margin/VBoxContainer/BtnEndingMainMenu
+@onready var btn_ending_replay: Button = $Modals/EndingModal/Margin/VBoxContainer/BtnEndingReplay
 
 # Modal buttons
 @onready var btn_resume: Button = $Modals/PauseModal/Margin/VBoxContainer/ResumeButton
@@ -63,6 +80,9 @@ var current_level_def: LevelDefinition = null
 var _dev_panel: PanelContainer = null
 var _dev_info_label: Label = null
 var _level_completed_handled: bool = false
+var _active_transmission: Dictionary = {}
+var _current_transmission_line: int = 0
+var _transmission_callback: Callable = Callable()
 
 # Swipe gesture tracking
 var _touch_start_pos: Vector2 = Vector2.ZERO
@@ -74,6 +94,10 @@ func _ready() -> void:
 	complete_modal.visible = false
 	hint_modal.visible = false
 	hint_confirm_modal.visible = false
+	if transmission_modal:
+		transmission_modal.visible = false
+	if ending_modal:
+		ending_modal.visible = false
 
 	if GameManager:
 		simulation = GameManager.current_simulation
@@ -97,6 +121,17 @@ func _ready() -> void:
 
 	board_renderer.setup(simulation, get_viewport_rect().size)
 	_update_hud()
+
+	# Check and unlock opening transmission
+	if current_level_def:
+		var lid: String = current_level_def.level_id
+		if SaveManager:
+			SaveManager.unlock_narrative_on_level_started(lid)
+		var intro_tr: Dictionary = NarrativeRegistryClass.get_opening_transmission(lid)
+		if not intro_tr.is_empty():
+			var tid: String = intro_tr.get("id", "")
+			if SaveManager and not SaveManager.is_transmission_viewed(tid):
+				show_transmission(intro_tr)
 
 	get_viewport().size_changed.connect(_on_viewport_resized)
 
@@ -176,7 +211,7 @@ func _bind_simulation_signals() -> void:
 	simulation.level_completed.connect(_on_level_completed)
 
 func _is_modal_active() -> bool:
-	return _level_completed_handled or pause_modal.visible or complete_modal.visible or hint_modal.visible or hint_confirm_modal.visible
+	return _level_completed_handled or pause_modal.visible or complete_modal.visible or hint_modal.visible or hint_confirm_modal.visible or (transmission_modal != null and transmission_modal.visible) or (ending_modal != null and ending_modal.visible)
 
 func _bind_ui_buttons() -> void:
 	# D-Pad
@@ -289,6 +324,41 @@ func _bind_ui_buttons() -> void:
 		_on_cancel_reveal()
 	)
 
+	# Narrative transmission buttons
+	if btn_skip_transmission:
+		btn_skip_transmission.pressed.connect(func():
+			if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+			_close_transmission()
+		)
+	if btn_proceed_transmission:
+		btn_proceed_transmission.pressed.connect(func():
+			if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+			_advance_transmission()
+		)
+
+	# Ending modal buttons
+	if btn_ending_archive:
+		btn_ending_archive.pressed.connect(func():
+			if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+			ending_modal.visible = false
+			SceneRouter.go_to_archive()
+		)
+	if btn_ending_main_menu:
+		btn_ending_main_menu.pressed.connect(func():
+			if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+			ending_modal.visible = false
+			SceneRouter.go_to_main_menu()
+		)
+	if btn_ending_replay:
+		btn_ending_replay.pressed.connect(func():
+			if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
+			ending_modal.visible = false
+			_level_completed_handled = false
+			if background and background.has_method("set_level_complete"):
+				background.set_level_complete(false)
+			simulation.clear_echoes()
+		)
+
 	if SaveManager:
 		SaveManager.daily_hints_reset.connect(_update_hint_button)
 		SaveManager.hint_revealed.connect(func(_lid, _idx, _rem): _update_hint_button())
@@ -303,9 +373,8 @@ func _update_hud() -> void:
 		return
 
 	level_title_label.text = current_level_def.level_name
-	var sector_names: Array[String] = ["AWAKENING", "SYNCHRONIZATION", "PARADOX"]
-	var s_idx: int = clampi(current_level_def.sector - 1, 0, 2)
-	sector_label.text = "SECTOR 0%d — %s" % [current_level_def.sector, sector_names[s_idx]]
+	var chapter: Dictionary = NarrativeRegistryClass.get_chapter_info(current_level_def.level_id)
+	sector_label.text = "%s // %s" % [chapter.get("code", "CH-01"), chapter.get("title", "THE AWAKENING")]
 
 	turn_count_label.text = "⏱ TURN: %02d" % simulation.current_turn
 	echo_count_label.text = "✦ ECHOES: %d / %d" % [simulation.echoes.size(), current_level_def.echo_limit]
@@ -429,20 +498,121 @@ func _on_level_completed(turns: int, echoes: int, total_actions: int) -> void:
 	complete_stats_label.text = "Winning Attempt: %d turns\nEchoes Used: %d / %d\nTotal Actions Taken: %d (3★ Target: ≤%d)" % [
 		turns, echoes, current_level_def.echo_limit, total_actions, current_level_def.target_3_stars
 	]
+
+	# Update log reward badge if a log exists for this level
+	var chapter: Dictionary = NarrativeRegistryClass.get_chapter_info(current_level_def.level_id)
+	var log_id: String = chapter.get("log_id", "")
+	if not log_id.is_empty():
+		var log_data: Dictionary = NarrativeRegistryClass.get_log(log_id)
+		log_reward_label.text = "✦ ARCHIVE RECORD RESTORED: [%s %s]" % [log_id.to_upper(), log_data.get("title", "")]
+		log_reward_label.visible = true
+	else:
+		log_reward_label.visible = false
+
 	if GameManager and not GameManager.next_level_exists():
 		btn_next_level.text = "CAMPAIGN COMPLETE!"
 		btn_next_level.disabled = true
 	else:
 		btn_next_level.text = "NEXT LEVEL >"
 		btn_next_level.disabled = false
-	complete_modal.visible = true
-	print("[SCENE] Level Complete screen displayed")
+
 	if AndroidSystemManager:
 		AndroidSystemManager.trigger_haptic("complete")
-	if background and background.has_method("set_level_complete"):
-		background.set_level_complete(true)
+
+	var outro_tr: Dictionary = NarrativeRegistryClass.get_completion_transmission(current_level_def.level_id)
+
+	if current_level_def.level_id == "lvl_10":
+		# Level 10 ending sequence
+		var on_outro_finished = func():
+			if background and background.has_method("set_ending_stabilized"):
+				background.set_ending_stabilized()
+			var tot_actions: int = 0
+			var tot_echoes: int = 0
+			if SaveManager:
+				for lid in SaveManager.completed_levels:
+					tot_actions += SaveManager.best_actions.get(lid, 0)
+					tot_echoes += SaveManager.best_echoes.get(lid, 0)
+				var stars_info = SaveManager.get_total_stars()
+				ending_stats_label.text = "Total Actions: %d | Echoes Deployed: %d | Stars: %d / %d" % [
+					tot_actions, tot_echoes, stars_info.get("earned", 0), stars_info.get("total", 30)
+				]
+			ending_modal.visible = true
+
+		if not outro_tr.is_empty():
+			show_transmission(outro_tr, on_outro_finished)
+		else:
+			on_outro_finished.call()
+	else:
+		if background and background.has_method("set_level_complete"):
+			background.set_level_complete(true)
+		if not outro_tr.is_empty() and SaveManager and not SaveManager.is_transmission_viewed(outro_tr.get("id", "")):
+			show_transmission(outro_tr, func():
+				complete_modal.visible = true
+			)
+		else:
+			complete_modal.visible = true
+
+	print("[SCENE] Level Complete sequence executed")
+
+func show_transmission(trans: Dictionary, on_completed: Callable = Callable()) -> void:
+	if trans.is_empty():
+		if on_completed.is_valid():
+			on_completed.call()
+		return
+
+	_active_transmission = trans
+	_transmission_callback = on_completed
+	var lines: Array = trans.get("lines", [])
+	_current_transmission_line = 0
+
+	transmission_sender.text = trans.get("sender", "MORROW // FACILITY AI")
+	transmission_channel.text = trans.get("channel", "EMERGENCY CONTAINMENT LINK")
+
+	if lines.size() > 0:
+		transmission_content.text = lines[0]
+	else:
+		transmission_content.text = ""
+
+	btn_proceed_transmission.text = "NEXT ▶" if lines.size() > 1 else "PROCEED ▶"
+	transmission_modal.visible = true
+
+	if SaveManager:
+		SaveManager.mark_transmission_viewed(trans.get("id", ""))
+
+	if AudioManager:
+		AudioManager.play_sfx("ui_click")
+	if AndroidSystemManager:
+		AndroidSystemManager.trigger_haptic("button")
+
+func _advance_transmission() -> void:
+	var lines: Array = _active_transmission.get("lines", [])
+	_current_transmission_line += 1
+	if _current_transmission_line < lines.size():
+		transmission_content.text = lines[_current_transmission_line]
+		btn_proceed_transmission.text = "NEXT ▶" if (_current_transmission_line < lines.size() - 1) else "PROCEED ▶"
+		if AudioManager:
+			AudioManager.play_sfx("ui_click")
+		if AndroidSystemManager:
+			AndroidSystemManager.trigger_haptic("button")
+	else:
+		_close_transmission()
+
+func _close_transmission() -> void:
+	transmission_modal.visible = false
+	var cb = _transmission_callback
+	_active_transmission = {}
+	_transmission_callback = Callable()
+	if cb.is_valid():
+		cb.call()
 
 func handle_back_button() -> bool:
+	if transmission_modal and transmission_modal.visible:
+		_close_transmission()
+		return true
+	if ending_modal and ending_modal.visible:
+		ending_modal.visible = false
+		SceneRouter.go_to_main_menu()
+		return true
 	if hint_confirm_modal and hint_confirm_modal.visible:
 		_on_cancel_reveal()
 		return true
@@ -479,6 +649,10 @@ func _style_holographic_modals() -> void:
 		hint_modal.add_theme_stylebox_override("panel", make_panel_style.call(Color(1.0, 0.745, 0.333, 0.8)))
 	if hint_confirm_modal:
 		hint_confirm_modal.add_theme_stylebox_override("panel", make_panel_style.call(Color(1.0, 0.745, 0.333, 0.9)))
+	if transmission_modal:
+		transmission_modal.add_theme_stylebox_override("panel", make_panel_style.call(Color(0.329, 0.902, 0.918, 0.95), Color(0.04, 0.07, 0.14, 0.97), 2))
+	if ending_modal:
+		ending_modal.add_theme_stylebox_override("panel", make_panel_style.call(Color(0.204, 0.827, 0.6, 0.95), Color(0.03, 0.06, 0.12, 0.98), 2))
 
 # ==============================================================================
 # Desktop & Touch Input Handling

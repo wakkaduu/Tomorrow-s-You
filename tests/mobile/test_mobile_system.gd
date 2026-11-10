@@ -126,6 +126,11 @@ func test_back_button_routing() -> void:
 
 	add_child(gameplay_scene)
 
+	# Dismiss any introductory story transmission if active on first launch
+	var trans_modal = gameplay_scene.get_node_or_null("Modals/TransmissionModal")
+	if trans_modal and trans_modal.visible:
+		gameplay_scene.handle_back_button()
+
 	# 1. Initially playing: back button should toggle pause
 	var pause_modal = gameplay_scene.get_node("Modals/PauseModal")
 	assert_true(not pause_modal.visible, "Pause modal initially closed")
