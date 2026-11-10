@@ -61,14 +61,13 @@ const TIER_DATA: Array[Dictionary] = [
 
 func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
-	UIDesignSystemClass.apply_button_style(back_button, UIDesignSystemClass.ButtonType.SECONDARY)
-	back_button.icon = preload("res://assets/icons/ui/icon_back.svg")
+	UIDesignSystemClass.apply_icon_button(back_button, "icon_back", Vector2(48, 48))
 
 	var header_title = $Header/Title
 	if header_title:
 		UIDesignSystemClass.apply_display_heading(header_title, UIDesignSystemClass.FONT_SIZE_SCREEN_HEADING, UIDesignSystemClass.COLOR_CYAN_PRIMARY, "Bold")
 	if stars_label:
-		UIDesignSystemClass.apply_technical_text(stars_label, 16, UIDesignSystemClass.COLOR_AMBER_WARN, "SemiBold")
+		UIDesignSystemClass.apply_technical_text(stars_label, 15, UIDesignSystemClass.COLOR_AMBER_WARN, "SemiBold")
 
 	_update_header_stars()
 	_build_tier_cards()
@@ -103,10 +102,10 @@ func _on_back_pressed() -> void:
 
 func _update_header_stars() -> void:
 	if not SaveManager:
-		stars_label.text = "★ 0/30"
+		stars_label.text = "0 / 30 Stars"
 		return
 	var totals: Dictionary = SaveManager.get_total_stars()
-	stars_label.text = "★ %d/%d" % [totals.get("earned", 0), totals.get("total", 30)]
+	stars_label.text = "%d / %d Stars" % [totals.get("earned", 0), totals.get("total", 30)]
 
 func _build_tier_cards() -> void:
 	for child in cards_container.get_children():
@@ -155,13 +154,13 @@ func _build_tier_cards() -> void:
 
 		var status_lbl: Label = Label.new()
 		if not is_unlocked:
-			status_lbl.text = "🔒 LOCKED"
+			status_lbl.text = "Locked"
 			UIDesignSystemClass.apply_technical_text(status_lbl, 12, UIDesignSystemClass.COLOR_ROSE_ALERT, "SemiBold")
 		elif pct >= 100.0:
-			status_lbl.text = "★ COMPLETED"
+			status_lbl.text = "Completed"
 			UIDesignSystemClass.apply_technical_text(status_lbl, 12, UIDesignSystemClass.COLOR_EMERALD_SUCCESS, "SemiBold")
 		else:
-			status_lbl.text = "%.0f%% DONE" % pct
+			status_lbl.text = "%.0f%% Complete" % pct
 			UIDesignSystemClass.apply_technical_text(status_lbl, 12, card_color, "SemiBold")
 		top_row.add_child(status_lbl)
 		vbox.add_child(top_row)
@@ -195,7 +194,7 @@ func _build_tier_cards() -> void:
 		meta_row.add_child(spacer)
 
 		var star_lbl: Label = Label.new()
-		star_lbl.text = "★ %d/%d" % [stars_dict.get("earned", 0), stars_dict.get("total", 0)]
+		star_lbl.text = "%d / %d Stars" % [stars_dict.get("earned", 0), stars_dict.get("total", 0)]
 		UIDesignSystemClass.apply_technical_text(star_lbl, 13, Color("#FBBF24") if is_unlocked else UIDesignSystemClass.COLOR_TEXT_DIM, "SemiBold")
 		meta_row.add_child(star_lbl)
 		vbox.add_child(meta_row)
@@ -227,12 +226,13 @@ func _build_tier_cards() -> void:
 
 		if not is_unlocked:
 			var prev_name: String = TIER_DATA[tier_num - 2]["title"].split(" — ")[0]
-			select_btn.text = "🔒 Complete %s to unlock" % prev_name
+			select_btn.text = "Complete %s to Unlock" % prev_name
 			select_btn.disabled = true
+			UIDesignSystemClass.apply_button_icon(select_btn, "icon_locked")
 			UIDesignSystemClass.apply_button_style(select_btn, UIDesignSystemClass.ButtonType.SECONDARY, UIDesignSystemClass.COLOR_TEXT_DIM)
 		else:
-			select_btn.text = "SELECT %s ▶" % info["title"].split(" — ")[0]
-			UIDesignSystemClass.apply_button_style(select_btn, UIDesignSystemClass.ButtonType.PRIMARY, card_color)
+			var tier_title: String = info["title"].split(" — ")[0].capitalize()
+			UIDesignSystemClass.apply_primary_button(select_btn, "Deploy to %s" % tier_title, "icon_play")
 
 		var captured_tier: int = tier_num
 		var captured_card: PanelContainer = card

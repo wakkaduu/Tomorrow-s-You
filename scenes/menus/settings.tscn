@@ -30,14 +30,14 @@ grow_horizontal = 2
 custom_minimum_size = Vector2(100, 48)
 layout_mode = 2
 size_flags_vertical = 4
-text = "< BACK"
+text = "Back"
 
 [node name="Title" type="Label" parent="Header"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.329412, 0.901961, 0.917647, 1)
 theme_override_font_sizes/font_size = 32
-text = "SETTINGS"
+text = "Settings"
 horizontal_alignment = 1
 
 [node name="Spacer" type="Control" parent="Header"]
@@ -125,12 +125,12 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.392157, 0.486275, 1)
-text = "RESET PROGRESS"
+text = "Reset Campaign Progress"
 
 [node name="ResetConfirmDialog" type="ConfirmationDialog" parent="."]
 title = "Reset Progress"
 initial_position = 2
 size = Vector2i(340, 140)
 dialog_text = "Are you sure you want to reset all unlocked levels and records? This cannot be undone."
-ok_button_text = "RESET"
+ok_button_text = "Reset Progress"
 

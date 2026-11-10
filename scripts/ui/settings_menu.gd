@@ -15,14 +15,15 @@ const UIDesignSystemClass = preload("res://scripts/ui/components/ui_design_syste
 
 func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
-	UIDesignSystemClass.apply_button_style(back_button, UIDesignSystemClass.ButtonType.SECONDARY)
-	back_button.icon = preload("res://assets/icons/ui/icon_back.svg")
+	UIDesignSystemClass.apply_secondary_button(back_button, "Back", "icon_back")
 
 	var header_title = $Header/Title
 	if header_title:
+		header_title.text = "Settings"
 		UIDesignSystemClass.apply_display_heading(header_title, UIDesignSystemClass.FONT_SIZE_SCREEN_HEADING, UIDesignSystemClass.COLOR_CYAN_PRIMARY, "Bold")
 
-	UIDesignSystemClass.apply_button_style(reset_button, UIDesignSystemClass.ButtonType.DESTRUCTIVE)
+	UIDesignSystemClass.apply_destructive_button(reset_button, "Reset Campaign Progress", "icon_warning")
+	reset_confirm_dialog.ok_button_text = "Reset Progress"
 
 	# Apply typography to row labels
 	var music_lbl = $Content/VBoxContainer/MusicRow/Label

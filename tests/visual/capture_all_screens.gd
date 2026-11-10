@@ -6,8 +6,14 @@ extends Node
 
 const NarrativeRegistryClass = preload("res://scripts/narrative/narrative_registry.gd")
 
+var target_viewport: SubViewport
+
 func _ready() -> void:
-	get_window().size = Vector2i(720, 1280)
+	target_viewport = SubViewport.new()
+	target_viewport.size = Vector2i(720, 1280)
+	target_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(target_viewport)
+
 	print("\n=======================================================")
 	print(" CAPTURING ALL CINEMATIC VISUAL SCREENSHOTS (720x1280)")
 	print("=======================================================")
@@ -18,7 +24,7 @@ func _capture_sequence() -> void:
 	# 1. Main Menu
 	print("\n[1/16] Capturing Main Menu...")
 	var main_menu = load("res://scenes/menus/main_menu.tscn").instantiate()
-	add_child(main_menu)
+	target_viewport.add_child(main_menu)
 	await _wait_frames(12)
 	_save_screen("01_main_menu.png")
 
@@ -34,7 +40,7 @@ func _capture_sequence() -> void:
 	print("\n[3/16] Capturing Difficulty Select (Easy)...")
 	SaveManager.selected_difficulty_tier = 1
 	var diff_select = load("res://scenes/menus/difficulty_select.tscn").instantiate()
-	add_child(diff_select)
+	target_viewport.add_child(diff_select)
 	await _wait_frames(12)
 	_save_screen("03_difficulty_select_easy.png")
 
@@ -51,7 +57,7 @@ func _capture_sequence() -> void:
 	print("\n[5/16] Capturing Level Select...")
 	SaveManager.selected_difficulty_tier = 1
 	var lvl_select = load("res://scenes/menus/level_select.tscn").instantiate()
-	add_child(lvl_select)
+	target_viewport.add_child(lvl_select)
 	await _wait_frames(12)
 	_save_screen("05_level_select.png")
 	lvl_select.queue_free()
@@ -60,7 +66,7 @@ func _capture_sequence() -> void:
 	# 6. Settings
 	print("\n[6/16] Capturing Settings...")
 	var settings = load("res://scenes/menus/settings.tscn").instantiate()
-	add_child(settings)
+	target_viewport.add_child(settings)
 	await _wait_frames(12)
 	_save_screen("06_settings.png")
 	settings.queue_free()
@@ -69,7 +75,7 @@ func _capture_sequence() -> void:
 	# 7. Incident Archive
 	print("\n[7/16] Capturing Incident Archive...")
 	var archive = load("res://scenes/menus/incident_archive.tscn").instantiate()
-	add_child(archive)
+	target_viewport.add_child(archive)
 	await _wait_frames(12)
 	_save_screen("15_incident_archive.png")
 
@@ -93,7 +99,7 @@ func _capture_sequence() -> void:
 	print("\n[9/16] Capturing Gameplay (Playing)...")
 	GameManager.select_level(0)
 	var gameplay = load("res://scenes/gameplay/gameplay.tscn").instantiate()
-	add_child(gameplay)
+	target_viewport.add_child(gameplay)
 	# Dismiss opening transmission if showing
 	if gameplay.transmission_modal and gameplay.transmission_modal.visible:
 		gameplay.transmission_modal.visible = false
@@ -174,7 +180,7 @@ func _wait_frames(count: int) -> void:
 		await get_tree().process_frame
 
 func _save_screen(filename: String) -> void:
-	var vp: Viewport = get_viewport()
+	var vp: Viewport = target_viewport if target_viewport else get_viewport()
 	var img: Image = vp.get_texture().get_image()
 	if img:
 		var path: String = "screenshots/" + filename

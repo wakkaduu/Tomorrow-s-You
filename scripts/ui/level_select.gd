@@ -21,11 +21,10 @@ const TIER_NAMES: Dictionary = {
 
 func _ready() -> void:
 	back_button.pressed.connect(_on_back_pressed)
-	UIDesignSystemClass.apply_button_style(back_button, UIDesignSystemClass.ButtonType.SECONDARY)
-	back_button.icon = preload("res://assets/icons/ui/icon_back.svg")
+	UIDesignSystemClass.apply_icon_button(back_button, "icon_back", Vector2(48, 48))
 
 	var tier: int = SaveManager.selected_difficulty_tier if SaveManager else 1
-	title_label.text = TIER_NAMES.get(tier, "SELECT LEVEL")
+	title_label.text = TIER_NAMES.get(tier, "Select Level")
 	UIDesignSystemClass.apply_display_heading(title_label, UIDesignSystemClass.FONT_SIZE_SCREEN_HEADING, UIDesignSystemClass.COLOR_CYAN_PRIMARY, "Bold")
 
 	if background and background.has_method("set_difficulty_tier"):
@@ -79,24 +78,23 @@ func _build_level_cards() -> void:
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 		if not is_unlocked:
-			btn.text = "🔒  LVL %02d: %s\nRESTRICTED // COMPLETE PREVIOUS LEVEL" % [i + 1, lvl.level_name]
+			btn.text = "Level %02d: %s\nRestricted // Complete Previous Level" % [i + 1, lvl.level_name]
 			btn.disabled = true
+			UIDesignSystemClass.apply_button_icon(btn, "icon_locked")
 			UIDesignSystemClass.apply_button_style(btn, UIDesignSystemClass.ButtonType.SECONDARY, UIDesignSystemClass.COLOR_TEXT_DIM)
 		elif is_completed:
-			var star_str: String = ""
-			for s in range(3):
-				star_str += "★" if s < stars else "☆"
+			var star_str: String = "%d/3 Stars" % stars
 			var best_turns: int = SaveManager.best_actions.get(lvl.level_id, 0) if SaveManager else 0
 			var best_ech: int = SaveManager.best_echoes.get(lvl.level_id, 0) if SaveManager else 0
-			btn.text = "%s  LVL %02d: %s\nRECORD: %d TURNS (%d ECHOES)  •  3★ TARGET: ≤%d" % [
-				star_str, i + 1, lvl.level_name, best_turns, best_ech, lvl.target_3_stars
+			var label_text: String = "Level %02d: %s [%s]\nRecord: %d Turns (%d Echoes) • 3★ Target: ≤%d" % [
+				i + 1, lvl.level_name, star_str, best_turns, best_ech, lvl.target_3_stars
 			]
-			UIDesignSystemClass.apply_button_style(btn, UIDesignSystemClass.ButtonType.SECONDARY, UIDesignSystemClass.COLOR_CYAN_PRIMARY)
+			UIDesignSystemClass.apply_secondary_button(btn, label_text, "icon_complete", UIDesignSystemClass.COLOR_CYAN_PRIMARY)
 		else:
-			btn.text = "▶  LVL %02d: %s [DEPLOY NOW]\nMIN ECHOES: %d  •  3★ TARGET: ≤%d" % [
+			var label_text: String = "Level %02d: %s [Ready to Deploy]\nMin Echoes: %d • 3★ Target: ≤%d" % [
 				i + 1, lvl.level_name, lvl.min_echoes_required, lvl.target_3_stars
 			]
-			UIDesignSystemClass.apply_button_style(btn, UIDesignSystemClass.ButtonType.PRIMARY)
+			UIDesignSystemClass.apply_primary_button(btn, label_text, "icon_play")
 
 		var level_idx: int = i
 		btn.pressed.connect(func():

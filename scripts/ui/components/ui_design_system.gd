@@ -43,6 +43,10 @@ const COLOR_BORDER_SUBTLE: Color = Color(0.250, 0.380, 0.520, 0.35) # Architectu
 # 2. TYPOGRAPHY ASSETS & HIERARCHY CONSTANTS
 # ==============================================================================
 
+# Custom Icon System Directory
+const ICON_DIR_CANONICAL: String = "res://assets/ui/icons/"
+const ICON_DIR_FALLBACK: String = "res://assets/icons/ui/"
+
 # Font Paths
 const FONT_PATH_OXANIUM_BOLD: String = "res://assets/fonts/Oxanium/Oxanium-Bold.ttf"
 const FONT_PATH_OXANIUM_SEMIBOLD: String = "res://assets/fonts/Oxanium/Oxanium-SemiBold.ttf"
@@ -65,8 +69,8 @@ const FONT_SIZE_SCREEN_HEADING: int = 28
 const FONT_SIZE_LEVEL_TITLE: int = 24
 const FONT_SIZE_DIFFICULTY_TITLE: int = 22
 const FONT_SIZE_SECTION_HEADING: int = 20
-const FONT_SIZE_BUTTON: int = 16
-const FONT_SIZE_BODY: int = 15
+const FONT_SIZE_BUTTON: int = 15
+const FONT_SIZE_BODY: int = 14
 const FONT_SIZE_SUPPORTING: int = 13
 const FONT_SIZE_METADATA: int = 12
 
@@ -78,8 +82,26 @@ const CORNER_RADIUS_BADGE: int = 4
 const MIN_TOUCH_SIZE: int = 48
 const PRIMARY_ACTION_HEIGHT: int = 54
 
-# Cached Font Instances
+# Cached Font & Icon Instances
 static var _fonts_cache: Dictionary = {}
+static var _icons_cache: Dictionary = {}
+
+static func get_icon(icon_name: String) -> Texture2D:
+	if _icons_cache.has(icon_name):
+		return _icons_cache[icon_name]
+	var path_canon = ICON_DIR_CANONICAL + icon_name + ".svg"
+	if ResourceLoader.exists(path_canon):
+		var tex = load(path_canon)
+		if tex is Texture2D:
+			_icons_cache[icon_name] = tex
+			return tex
+	var path_fb = ICON_DIR_FALLBACK + icon_name + ".svg"
+	if ResourceLoader.exists(path_fb):
+		var tex_fb = load(path_fb)
+		if tex_fb is Texture2D:
+			_icons_cache[icon_name] = tex_fb
+			return tex_fb
+	return null
 
 static func get_font(path: String) -> Font:
 	if _fonts_cache.has(path):
@@ -133,19 +155,19 @@ enum ButtonType {
 static func create_panel_style(
 	border_color: Color = COLOR_CYAN_PRIMARY,
 	bg_color: Color = COLOR_BG_SURFACE,
-	border_width: int = 2,
+	border_width: int = 1,
 	corner_radius: int = CORNER_RADIUS_PANEL,
-	shadow_size: int = 16
+	shadow_size: int = 12
 ) -> StyleBoxFlat:
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
 	sb.bg_color = bg_color
-	sb.border_color = border_color
+	sb.border_color = Color(border_color.r, border_color.g, border_color.b, 0.50)
 	sb.set_border_width_all(border_width)
 	sb.set_corner_radius_all(corner_radius)
 	if shadow_size > 0:
-		sb.shadow_color = Color(border_color.r, border_color.g, border_color.b, 0.25)
+		sb.shadow_color = Color(border_color.r, border_color.g, border_color.b, 0.18)
 		sb.shadow_size = shadow_size
-		sb.shadow_offset = Vector2(0, 4)
+		sb.shadow_offset = Vector2(0, 3)
 	return sb
 
 ## Reusable Card Style (Archive, Difficulty, Levels)
@@ -156,23 +178,27 @@ static func create_card_style(
 ) -> StyleBoxFlat:
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
 	sb.set_corner_radius_all(CORNER_RADIUS_CARD)
+	sb.content_margin_left = 14
+	sb.content_margin_right = 14
+	sb.content_margin_top = 10
+	sb.content_margin_bottom = 10
 
 	if not is_unlocked:
-		sb.bg_color = Color(0.045, 0.065, 0.105, 0.70)
-		sb.border_color = Color(0.20, 0.26, 0.35, 0.30)
+		sb.bg_color = Color(0.040, 0.055, 0.090, 0.75)
+		sb.border_color = Color(0.18, 0.24, 0.32, 0.25)
 		sb.set_border_width_all(1)
 		return sb
 
 	if is_highlighted:
-		sb.bg_color = Color(accent_color.r * 0.14, accent_color.g * 0.14, accent_color.b * 0.14, 0.96)
+		sb.bg_color = Color(0.09, 0.13, 0.22, 0.96)
 		sb.border_color = accent_color
-		sb.set_border_width_all(2)
-		sb.shadow_color = Color(accent_color.r, accent_color.g, accent_color.b, 0.30)
-		sb.shadow_size = 12
-		sb.shadow_offset = Vector2(0, 3)
+		sb.set_border_width_all(1)
+		sb.shadow_color = Color(accent_color.r, accent_color.g, accent_color.b, 0.20)
+		sb.shadow_size = 8
+		sb.shadow_offset = Vector2(0, 2)
 	else:
-		sb.bg_color = COLOR_BG_ELEVATED
-		sb.border_color = Color(accent_color.r, accent_color.g, accent_color.b, 0.40)
+		sb.bg_color = Color(0.070, 0.098, 0.165, 0.94)
+		sb.border_color = Color(accent_color.r, accent_color.g, accent_color.b, 0.30)
 		sb.set_border_width_all(1)
 
 	return sb
@@ -180,8 +206,8 @@ static func create_card_style(
 ## Classification / Status Badge Style
 static func create_badge_style(accent_color: Color = COLOR_CYAN_PRIMARY) -> StyleBoxFlat:
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
-	sb.bg_color = Color(accent_color.r * 0.15, accent_color.g * 0.15, accent_color.b * 0.15, 0.85)
-	sb.border_color = accent_color
+	sb.bg_color = Color(accent_color.r * 0.12, accent_color.g * 0.12, accent_color.b * 0.12, 0.85)
+	sb.border_color = Color(accent_color.r, accent_color.g, accent_color.b, 0.45)
 	sb.set_border_width_all(1)
 	sb.set_corner_radius_all(CORNER_RADIUS_BADGE)
 	sb.content_margin_left = 6
@@ -194,20 +220,20 @@ static func create_badge_style(accent_color: Color = COLOR_CYAN_PRIMARY) -> Styl
 static func create_tab_style(is_active: bool) -> StyleBoxFlat:
 	var sb: StyleBoxFlat = StyleBoxFlat.new()
 	sb.set_corner_radius_all(CORNER_RADIUS_BUTTON)
-	sb.content_margin_left = 14
-	sb.content_margin_right = 14
+	sb.content_margin_left = 12
+	sb.content_margin_right = 12
 	sb.content_margin_top = 8
 	sb.content_margin_bottom = 8
 
 	if is_active:
-		sb.bg_color = Color(0.329 * 0.18, 0.902 * 0.18, 0.918 * 0.18, 0.95)
+		sb.bg_color = Color(0.09, 0.14, 0.24, 0.98)
 		sb.border_color = COLOR_CYAN_PRIMARY
-		sb.set_border_width_all(2)
-		sb.shadow_color = Color(0.329, 0.902, 0.918, 0.25)
-		sb.shadow_size = 8
+		sb.set_border_width_all(1)
+		sb.shadow_color = Color(0.329, 0.902, 0.918, 0.20)
+		sb.shadow_size = 6
 	else:
-		sb.bg_color = Color(0.06, 0.085, 0.14, 0.85)
-		sb.border_color = COLOR_BORDER_SUBTLE
+		sb.bg_color = Color(0.045, 0.065, 0.115, 0.85)
+		sb.border_color = Color(0.20, 0.28, 0.40, 0.25)
 		sb.set_border_width_all(1)
 	return sb
 
@@ -249,7 +275,7 @@ static func apply_button_style(
 	# Focus Ring (Accessible, subtle cyan border)
 	sb_focus.bg_color = Color(0, 0, 0, 0)
 	sb_focus.border_color = COLOR_CYAN_PRIMARY
-	sb_focus.set_border_width_all(2)
+	sb_focus.set_border_width_all(1)
 
 	var font: Font = get_interface_font("SemiBold")
 	var font_color: Color = COLOR_TEXT_PRIMARY
@@ -257,81 +283,101 @@ static func apply_button_style(
 	var font_pressed: Color = COLOR_TEXT_PRIMARY
 	var font_disabled: Color = COLOR_TEXT_DIM
 
+	var icon_color: Color = font_color
+	var icon_hover: Color = font_hover
+	var icon_pressed: Color = font_pressed
+	var icon_disabled: Color = font_disabled
+
 	match type:
 		ButtonType.PRIMARY:
-			# Solid Cyan Fill, Deep Navy Text, Outer Cyan Glow
+			# Solid Cyan Fill, Deep Navy Text, Subtle Bloom
 			font = get_display_font("SemiBold")
 			font_color = COLOR_CYAN_DARK
 			font_hover = COLOR_CYAN_DARK
 			font_pressed = COLOR_CYAN_DARK
 			font_disabled = COLOR_TEXT_DIM
 
+			icon_color = COLOR_CYAN_DARK
+			icon_hover = COLOR_CYAN_DARK
+			icon_pressed = COLOR_CYAN_DARK
+			icon_disabled = COLOR_TEXT_DIM
+
 			sb_normal.bg_color = COLOR_CYAN_PRIMARY
 			sb_normal.border_color = COLOR_CYAN_HOVER
 			sb_normal.set_border_width_all(1)
 			sb_normal.shadow_color = COLOR_CYAN_GLOW
-			sb_normal.shadow_size = 10
+			sb_normal.shadow_size = 6
 			sb_normal.shadow_offset = Vector2(0, 2)
 
 			sb_hover.bg_color = COLOR_CYAN_HOVER
 			sb_hover.border_color = Color.WHITE
 			sb_hover.set_border_width_all(1)
-			sb_hover.shadow_color = Color(COLOR_CYAN_PRIMARY.r, COLOR_CYAN_PRIMARY.g, COLOR_CYAN_PRIMARY.b, 0.50)
-			sb_hover.shadow_size = 14
+			sb_hover.shadow_color = Color(COLOR_CYAN_PRIMARY.r, COLOR_CYAN_PRIMARY.g, COLOR_CYAN_PRIMARY.b, 0.35)
+			sb_hover.shadow_size = 8
 			sb_hover.shadow_offset = Vector2(0, 2)
 
 			sb_pressed.bg_color = COLOR_CYAN_PRESSED
 			sb_pressed.border_color = COLOR_CYAN_PRIMARY
 			sb_pressed.set_border_width_all(1)
-			sb_pressed.shadow_size = 4
+			sb_pressed.shadow_size = 2
 
-			sb_disabled.bg_color = Color(0.08, 0.12, 0.18, 0.6)
+			sb_disabled.bg_color = Color(0.07, 0.10, 0.16, 0.60)
 			sb_disabled.border_color = COLOR_BORDER_SUBTLE
 			sb_disabled.set_border_width_all(1)
 
 		ButtonType.SECONDARY:
-			# Dark Navy Fill, Cyan/Accent Outline, Bright Text
+			# Dark Navy Surface, Subtle 1px Outline, Crisp Text
 			font = get_interface_font("Medium")
 			font_color = COLOR_TEXT_PRIMARY
-			font_hover = COLOR_TEXT_PRIMARY
+			font_hover = Color.WHITE
 			font_pressed = accent
 			font_disabled = COLOR_TEXT_DIM
 
+			icon_color = accent
+			icon_hover = Color.WHITE
+			icon_pressed = accent
+			icon_disabled = COLOR_TEXT_DIM
+
 			sb_normal.bg_color = COLOR_BG_SURFACE
-			sb_normal.border_color = Color(accent.r, accent.g, accent.b, 0.55)
+			sb_normal.border_color = Color(accent.r, accent.g, accent.b, 0.35)
 			sb_normal.set_border_width_all(1)
 
 			sb_hover.bg_color = COLOR_BG_HOVER
 			sb_hover.border_color = accent
-			sb_hover.set_border_width_all(2)
-			sb_hover.shadow_color = Color(accent.r, accent.g, accent.b, 0.25)
-			sb_hover.shadow_size = 8
+			sb_hover.set_border_width_all(1)
+			sb_hover.shadow_color = Color(accent.r, accent.g, accent.b, 0.18)
+			sb_hover.shadow_size = 6
 
-			sb_pressed.bg_color = Color(accent.r * 0.15, accent.g * 0.15, accent.b * 0.15, 0.95)
+			sb_pressed.bg_color = Color(accent.r * 0.12, accent.g * 0.12, accent.b * 0.12, 0.95)
 			sb_pressed.border_color = accent
 			sb_pressed.set_border_width_all(1)
 
-			sb_disabled.bg_color = Color(0.05, 0.07, 0.11, 0.60)
-			sb_disabled.border_color = COLOR_BORDER_SUBTLE
+			sb_disabled.bg_color = Color(0.04, 0.06, 0.10, 0.60)
+			sb_disabled.border_color = Color(0.18, 0.24, 0.32, 0.20)
 			sb_disabled.set_border_width_all(1)
 
 		ButtonType.TERTIARY:
-			# Minimal/Transparent Surface, Subtle Highlight
+			# Minimal / Ghost Surface
 			font = get_interface_font("Regular")
 			font_color = COLOR_TEXT_SECONDARY
 			font_hover = COLOR_TEXT_PRIMARY
 			font_pressed = accent
 			font_disabled = COLOR_TEXT_DIM
 
-			sb_normal.bg_color = Color(0.08, 0.12, 0.20, 0.25)
+			icon_color = COLOR_TEXT_SECONDARY
+			icon_hover = COLOR_TEXT_PRIMARY
+			icon_pressed = accent
+			icon_disabled = COLOR_TEXT_DIM
+
+			sb_normal.bg_color = Color(0, 0, 0, 0)
 			sb_normal.border_color = Color(0, 0, 0, 0)
 			sb_normal.set_border_width_all(0)
 
-			sb_hover.bg_color = Color(1.0, 1.0, 1.0, 0.08)
+			sb_hover.bg_color = Color(1.0, 1.0, 1.0, 0.06)
 			sb_hover.border_color = COLOR_BORDER_SUBTLE
 			sb_hover.set_border_width_all(1)
 
-			sb_pressed.bg_color = Color(1.0, 1.0, 1.0, 0.14)
+			sb_pressed.bg_color = Color(1.0, 1.0, 1.0, 0.10)
 			sb_pressed.border_color = accent
 			sb_pressed.set_border_width_all(1)
 
@@ -340,80 +386,95 @@ static func apply_button_style(
 			sb_disabled.set_border_width_all(0)
 
 		ButtonType.UTILITY:
-			# Dark Elevated Surface with Accent Border & Icon Support
+			# Dark Elevated Surface, Compact, Clear Accent Icon
 			font = get_interface_font("SemiBold")
 			font_color = COLOR_TEXT_PRIMARY
-			font_hover = COLOR_TEXT_PRIMARY
+			font_hover = Color.WHITE
 			font_pressed = accent
 			font_disabled = COLOR_TEXT_DIM
 
+			icon_color = accent
+			icon_hover = Color.WHITE
+			icon_pressed = accent
+			icon_disabled = COLOR_TEXT_DIM
+
 			sb_normal.bg_color = COLOR_BG_ELEVATED
-			sb_normal.border_color = Color(accent.r, accent.g, accent.b, 0.50)
+			sb_normal.border_color = Color(accent.r, accent.g, accent.b, 0.40)
 			sb_normal.set_border_width_all(1)
 
 			sb_hover.bg_color = COLOR_BG_HOVER
 			sb_hover.border_color = accent
-			sb_hover.set_border_width_all(2)
-			sb_hover.shadow_color = Color(accent.r, accent.g, accent.b, 0.25)
-			sb_hover.shadow_size = 6
+			sb_hover.set_border_width_all(1)
+			sb_hover.shadow_color = Color(accent.r, accent.g, accent.b, 0.18)
+			sb_hover.shadow_size = 5
 
-			sb_pressed.bg_color = Color(accent.r * 0.12, accent.g * 0.12, accent.b * 0.12, 0.95)
+			sb_pressed.bg_color = Color(accent.r * 0.10, accent.g * 0.10, accent.b * 0.10, 0.95)
 			sb_pressed.border_color = accent
-			sb_pressed.set_border_width_all(2)
+			sb_pressed.set_border_width_all(1)
 
-			sb_disabled.bg_color = Color(0.04, 0.06, 0.10, 0.50)
+			sb_disabled.bg_color = Color(0.04, 0.05, 0.08, 0.50)
 			sb_disabled.border_color = COLOR_BORDER_SUBTLE
 			sb_disabled.set_border_width_all(1)
 
 		ButtonType.DESTRUCTIVE:
-			# Red/Coral Warning Border and Accents
+			# Restrained Dark Burgundy Surface, Coral Accent
 			var red_col: Color = COLOR_ROSE_ALERT
 			font = get_interface_font("SemiBold")
-			font_color = Color("#FFA4B3")
-			font_hover = COLOR_TEXT_PRIMARY
+			font_color = Color("#FFA8B5")
+			font_hover = Color.WHITE
 			font_pressed = red_col
 			font_disabled = COLOR_TEXT_DIM
 
-			sb_normal.bg_color = Color(0.14, 0.05, 0.08, 0.90)
-			sb_normal.border_color = Color(red_col.r, red_col.g, red_col.b, 0.55)
+			icon_color = red_col
+			icon_hover = Color.WHITE
+			icon_pressed = red_col
+			icon_disabled = COLOR_TEXT_DIM
+
+			sb_normal.bg_color = Color(0.12, 0.04, 0.07, 0.90)
+			sb_normal.border_color = Color(red_col.r, red_col.g, red_col.b, 0.35)
 			sb_normal.set_border_width_all(1)
 
-			sb_hover.bg_color = Color(0.22, 0.07, 0.12, 0.95)
+			sb_hover.bg_color = Color(0.18, 0.06, 0.10, 0.95)
 			sb_hover.border_color = red_col
-			sb_hover.set_border_width_all(2)
-			sb_hover.shadow_color = COLOR_ROSE_GLOW
-			sb_hover.shadow_size = 8
+			sb_hover.set_border_width_all(1)
+			sb_hover.shadow_color = Color(red_col.r, red_col.g, red_col.b, 0.18)
+			sb_hover.shadow_size = 6
 
-			sb_pressed.bg_color = Color(0.10, 0.03, 0.05, 0.95)
+			sb_pressed.bg_color = Color(0.08, 0.02, 0.04, 0.95)
 			sb_pressed.border_color = red_col
 			sb_pressed.set_border_width_all(1)
 
-			sb_disabled.bg_color = Color(0.08, 0.04, 0.06, 0.50)
-			sb_disabled.border_color = COLOR_BORDER_SUBTLE
+			sb_disabled.bg_color = Color(0.06, 0.03, 0.05, 0.50)
+			sb_disabled.border_color = Color(0.20, 0.10, 0.12, 0.25)
 			sb_disabled.set_border_width_all(1)
 
 		ButtonType.ICON:
-			# Square / Circular Compact Icon Button (>= 48dp)
+			# Square / Circular Compact Icon Button (>= 48dp touch target)
 			font = get_interface_font("Medium")
 			font_color = COLOR_TEXT_PRIMARY
 			font_hover = COLOR_TEXT_PRIMARY
 			font_pressed = accent
 			font_disabled = COLOR_TEXT_DIM
 
+			icon_color = accent
+			icon_hover = Color.WHITE
+			icon_pressed = accent
+			icon_disabled = COLOR_TEXT_DIM
+
 			sb_normal.bg_color = COLOR_BG_SURFACE
-			sb_normal.border_color = COLOR_BORDER_SUBTLE
+			sb_normal.border_color = Color(accent.r, accent.g, accent.b, 0.30)
 			sb_normal.set_border_width_all(1)
 
 			sb_hover.bg_color = COLOR_BG_HOVER
 			sb_hover.border_color = accent
-			sb_hover.set_border_width_all(2)
+			sb_hover.set_border_width_all(1)
 
-			sb_pressed.bg_color = Color(accent.r * 0.15, accent.g * 0.15, accent.b * 0.15, 0.95)
+			sb_pressed.bg_color = Color(accent.r * 0.12, accent.g * 0.12, accent.b * 0.12, 0.95)
 			sb_pressed.border_color = accent
 			sb_pressed.set_border_width_all(1)
 
 			sb_disabled.bg_color = Color(0.04, 0.06, 0.10, 0.50)
-			sb_disabled.border_color = COLOR_BORDER_SUBTLE
+			sb_disabled.border_color = Color(0.18, 0.24, 0.32, 0.20)
 			sb_disabled.set_border_width_all(1)
 
 	# Apply overrides
@@ -431,6 +492,52 @@ static func apply_button_style(
 	btn.add_theme_color_override("font_pressed_color", font_pressed)
 	btn.add_theme_color_override("font_focus_color", font_hover)
 	btn.add_theme_color_override("font_disabled_color", font_disabled)
+
+	# Apply icon tint overrides
+	btn.add_theme_color_override("icon_normal_color", icon_color)
+	btn.add_theme_color_override("icon_hover_color", icon_hover)
+	btn.add_theme_color_override("icon_pressed_color", icon_pressed)
+	btn.add_theme_color_override("icon_focus_color", icon_hover)
+	btn.add_theme_color_override("icon_disabled_color", icon_disabled)
+
+## Convenient helper to assign a custom icon from the icon family
+static func apply_button_icon(
+	btn: Button,
+	icon_name: String,
+	alignment: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT
+) -> void:
+	if not btn: return
+	var tex = get_icon(icon_name)
+	if tex:
+		btn.icon = tex
+		btn.icon_alignment = alignment
+		btn.expand_icon = true
+
+static func apply_primary_button(btn: Button, text: String = "", icon_name: String = "") -> void:
+	apply_button_style(btn, ButtonType.PRIMARY)
+	if text != "": btn.text = text
+	if icon_name != "": apply_button_icon(btn, icon_name, HORIZONTAL_ALIGNMENT_LEFT)
+
+static func apply_secondary_button(btn: Button, text: String = "", icon_name: String = "", accent: Variant = null) -> void:
+	apply_button_style(btn, ButtonType.SECONDARY, accent)
+	if text != "": btn.text = text
+	if icon_name != "": apply_button_icon(btn, icon_name, HORIZONTAL_ALIGNMENT_LEFT)
+
+static func apply_utility_button(btn: Button, text: String = "", icon_name: String = "", accent: Variant = null) -> void:
+	apply_button_style(btn, ButtonType.UTILITY, accent)
+	if text != "": btn.text = text
+	if icon_name != "": apply_button_icon(btn, icon_name, HORIZONTAL_ALIGNMENT_LEFT)
+
+static func apply_destructive_button(btn: Button, text: String = "", icon_name: String = "") -> void:
+	apply_button_style(btn, ButtonType.DESTRUCTIVE)
+	if text != "": btn.text = text
+	if icon_name != "": apply_button_icon(btn, icon_name, HORIZONTAL_ALIGNMENT_LEFT)
+
+static func apply_icon_button(btn: Button, icon_name: String, min_size: Vector2 = Vector2(48, 48), accent: Variant = null) -> void:
+	apply_button_style(btn, ButtonType.ICON, accent)
+	btn.text = ""
+	apply_button_icon(btn, icon_name, HORIZONTAL_ALIGNMENT_CENTER)
+	btn.custom_minimum_size = min_size
 
 ## Backwards-compatibility wrapper for existing screens
 static func apply_button_skin(btn: Button, accent_color: Color = COLOR_CYAN_PRIMARY, is_primary: bool = false) -> void:

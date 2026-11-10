@@ -151,18 +151,29 @@ func _update_tab_buttons() -> void:
 	tab_records.button_pressed = (current_tab == Tab.RECORDS)
 	tab_timeline.button_pressed = (current_tab == Tab.TIMELINE)
 
-	tab_transmissions.add_theme_stylebox_override("normal", UIDesignSystemClass.create_tab_style(current_tab == Tab.TRANSMISSIONS))
-	tab_logs.add_theme_stylebox_override("normal", UIDesignSystemClass.create_tab_style(current_tab == Tab.LOGS))
-	tab_records.add_theme_stylebox_override("normal", UIDesignSystemClass.create_tab_style(current_tab == Tab.RECORDS))
-	tab_timeline.add_theme_stylebox_override("normal", UIDesignSystemClass.create_tab_style(current_tab == Tab.TIMELINE))
+	var tab_list = [
+		[tab_transmissions, "Transmissions", "icon_transmission", current_tab == Tab.TRANSMISSIONS],
+		[tab_logs, "Logs", "icon_logs", current_tab == Tab.LOGS],
+		[tab_records, "Records", "icon_records", current_tab == Tab.RECORDS],
+		[tab_timeline, "Timeline", "icon_timeline", current_tab == Tab.TIMELINE]
+	]
 
-	var active_color = UIDesignSystemClass.COLOR_CYAN_PRIMARY
-	var dim_color = UIDesignSystemClass.COLOR_TEXT_MUTED
-
-	tab_transmissions.add_theme_color_override("font_color", active_color if current_tab == Tab.TRANSMISSIONS else dim_color)
-	tab_logs.add_theme_color_override("font_color", active_color if current_tab == Tab.LOGS else dim_color)
-	tab_records.add_theme_color_override("font_color", active_color if current_tab == Tab.RECORDS else dim_color)
-	tab_timeline.add_theme_color_override("font_color", active_color if current_tab == Tab.TIMELINE else dim_color)
+	for item in tab_list:
+		var btn: Button = item[0]
+		var title: String = item[1]
+		var icon_name: String = item[2]
+		var is_active: bool = item[3]
+		btn.text = title
+		UIDesignSystemClass.apply_button_icon(btn, icon_name, HORIZONTAL_ALIGNMENT_LEFT)
+		btn.add_theme_stylebox_override("normal", UIDesignSystemClass.create_tab_style(is_active))
+		btn.add_theme_stylebox_override("hover", UIDesignSystemClass.create_tab_style(is_active))
+		btn.add_theme_stylebox_override("pressed", UIDesignSystemClass.create_tab_style(true))
+		var active_col = UIDesignSystemClass.COLOR_CYAN_PRIMARY
+		var dim_col = UIDesignSystemClass.COLOR_TEXT_SECONDARY
+		btn.add_theme_color_override("font_color", active_col if is_active else dim_col)
+		btn.add_theme_color_override("icon_normal_color", active_col if is_active else dim_col)
+		btn.add_theme_color_override("icon_hover_color", Color.WHITE)
+		btn.add_theme_color_override("icon_pressed_color", active_col)
 
 func _render_current_tab() -> void:
 	for child in entries_list.get_children():
@@ -187,13 +198,48 @@ func _update_header_status() -> void:
 	var pct: float = prog.get("percentage", 0.0)
 	var unl: int = prog.get("unlocked", 0)
 	var tot: int = prog.get("total", 0)
-	status_label.text = "ARCHIVE RESTORATION: %d%% (%d / %d RECORDS RECOVERED)" % [int(round(pct)), unl, tot]
+	status_label.text = "Archive Restoration: %d%% (%d / %d Records Recovered)" % [int(round(pct)), unl, tot]
 	if restoration_bar:
 		restoration_bar.value = pct
 
 # ==============================================================================
 # TAB RENDERERS
 # ==============================================================================
+
+func _create_locked_row(message: String) -> HBoxContainer:
+	var hbox = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 8)
+	var lock_icon = TextureRect.new()
+	lock_icon.texture = UIDesignSystemClass.get_icon("icon_locked")
+	lock_icon.custom_minimum_size = Vector2(16, 16)
+	lock_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	lock_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	lock_icon.modulate = UIDesignSystemClass.COLOR_TEXT_DIM
+	hbox.add_child(lock_icon)
+
+	var locked_lbl = Label.new()
+	locked_lbl.text = message
+	locked_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	UIDesignSystemClass.apply_technical_text(locked_lbl, 12, UIDesignSystemClass.COLOR_TEXT_DIM)
+	hbox.add_child(locked_lbl)
+	return hbox
+
+func _create_status_badge(text: String, icon_name: String, color: Color) -> HBoxContainer:
+	var hbox = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 5)
+	var icon_rect = TextureRect.new()
+	icon_rect.texture = UIDesignSystemClass.get_icon(icon_name)
+	icon_rect.custom_minimum_size = Vector2(14, 14)
+	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon_rect.modulate = color
+	hbox.add_child(icon_rect)
+
+	var lbl = Label.new()
+	lbl.text = text
+	UIDesignSystemClass.apply_technical_text(lbl, 11, color, "Bold")
+	hbox.add_child(lbl)
+	return hbox
 
 func _render_transmissions() -> void:
 	var transmissions = NarrativeRegistryClass.get_all_transmissions()
@@ -223,21 +269,18 @@ func _render_transmissions() -> void:
 			spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			top_row.add_child(spacer)
 
-			var status_pill = Label.new()
-			status_pill.text = "✦ RESTORED"
-			status_pill.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
-			status_pill.add_theme_font_size_override("font_size", 11)
+			var status_pill = _create_status_badge("Restored", "icon_complete", UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
 			top_row.add_child(status_pill)
 			vbox.add_child(top_row)
 
 			var title_lbl = Label.new()
-			title_lbl.text = "✦ %s // %s" % [ch_name, type_str]
+			title_lbl.text = "%s // %s" % [ch_name, type_str]
 			title_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_CYAN_PRIMARY)
 			title_lbl.add_theme_font_size_override("font_size", 15)
 			vbox.add_child(title_lbl)
 
 			var sub_lbl = Label.new()
-			sub_lbl.text = "%s  |  %s" % [trans.get("sender", "MORROW"), trans.get("channel", "LINK")]
+			sub_lbl.text = "Speaker: %s  •  Channel: %s" % [trans.get("sender", "MORROW"), trans.get("channel", "LINK")]
 			sub_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_MUTED)
 			sub_lbl.add_theme_font_size_override("font_size", 12)
 			vbox.add_child(sub_lbl)
@@ -246,10 +289,9 @@ func _render_transmissions() -> void:
 			btn_row.add_theme_constant_override("separation", 8)
 
 			var btn_view = Button.new()
-			btn_view.text = "INSPECT LOG"
 			btn_view.custom_minimum_size = Vector2(0, 44)
 			btn_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			UIDesignSystemClass.apply_button_style(btn_view, UIDesignSystemClass.ButtonType.SECONDARY)
+			UIDesignSystemClass.apply_secondary_button(btn_view, "View Transmission", "icon_transmission")
 			var captured_trans = trans
 			btn_view.pressed.connect(func():
 				_open_reader(
@@ -264,9 +306,8 @@ func _render_transmissions() -> void:
 			btn_row.add_child(btn_view)
 
 			var btn_play = Button.new()
-			btn_play.text = "REPLAY ▶"
 			btn_play.custom_minimum_size = Vector2(110, 44)
-			UIDesignSystemClass.apply_button_style(btn_play, UIDesignSystemClass.ButtonType.PRIMARY)
+			UIDesignSystemClass.apply_primary_button(btn_play, "Replay", "icon_play")
 			btn_play.pressed.connect(func():
 				_show_cinematic_transmission(captured_trans)
 			)
@@ -274,11 +315,7 @@ func _render_transmissions() -> void:
 
 			vbox.add_child(btn_row)
 		else:
-			var locked_lbl = Label.new()
-			locked_lbl.text = "🔒 [RESTRICTED // COMPLETE %s TO DECRYPT]" % ch_name
-			locked_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_DIM)
-			locked_lbl.add_theme_font_size_override("font_size", 13)
-			vbox.add_child(locked_lbl)
+			vbox.add_child(_create_locked_row("Restricted Transmission // Complete %s to Decrypt" % ch_name))
 
 		entries_list.add_child(card)
 		idx += 1
@@ -307,37 +344,28 @@ func _render_logs() -> void:
 			spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			top_row.add_child(spacer)
 
-			if not is_read:
-				var new_badge = Label.new()
-				new_badge.text = "✦ NEW"
-				new_badge.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_AMBER_WARN)
-				new_badge.add_theme_font_size_override("font_size", 11)
-				top_row.add_child(new_badge)
-			else:
-				var read_badge = Label.new()
-				read_badge.text = "VERIFIED"
-				read_badge.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
-				read_badge.add_theme_font_size_override("font_size", 11)
-				top_row.add_child(read_badge)
-
+			var badge = _create_status_badge("New Entry", "icon_unread", UIDesignSystemClass.COLOR_AMBER_WARN) if not is_read else _create_status_badge("Verified Log", "icon_complete", UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
+			top_row.add_child(badge)
 			vbox.add_child(top_row)
 
 			var title_lbl = Label.new()
-			title_lbl.text = "✦ %s" % log_entry.get("title", "")
+			title_lbl.text = log_entry.get("title", "")
 			title_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_CYAN_PRIMARY)
 			title_lbl.add_theme_font_size_override("font_size", 15)
 			vbox.add_child(title_lbl)
 
 			var meta_lbl = Label.new()
-			meta_lbl.text = "Author: %s  |  Date: %s" % [log_entry.get("author", "Unknown"), log_entry.get("date", "Unknown")]
+			meta_lbl.text = "Author: %s  •  Date: %s" % [log_entry.get("author", "Unknown"), log_entry.get("date", "Unknown")]
 			meta_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_MUTED)
 			meta_lbl.add_theme_font_size_override("font_size", 12)
 			vbox.add_child(meta_lbl)
 
 			var btn = Button.new()
-			btn.text = "READ RESEARCH LOG ▶"
 			btn.custom_minimum_size = Vector2(0, 44)
-			UIDesignSystemClass.apply_button_style(btn, UIDesignSystemClass.ButtonType.PRIMARY if not is_read else UIDesignSystemClass.ButtonType.SECONDARY)
+			if not is_read:
+				UIDesignSystemClass.apply_primary_button(btn, "Read Research Log", "icon_logs")
+			else:
+				UIDesignSystemClass.apply_secondary_button(btn, "Read Research Log", "icon_logs")
 			var captured_log = log_entry
 			var captured_lid = lid
 			btn.pressed.connect(func():
@@ -354,12 +382,8 @@ func _render_logs() -> void:
 			)
 			vbox.add_child(btn)
 		else:
-			var locked_lbl = Label.new()
 			var unlock_lvl = log_entry.get("unlock_level", 1)
-			locked_lbl.text = "🔒 [CLASSIFIED LOG // RESTORE IN SECTOR %02d]" % unlock_lvl
-			locked_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_DIM)
-			locked_lbl.add_theme_font_size_override("font_size", 13)
-			vbox.add_child(locked_lbl)
+			vbox.add_child(_create_locked_row("Classified Research Log // Recover in Sector %02d" % unlock_lvl))
 
 		entries_list.add_child(card)
 
@@ -386,15 +410,12 @@ func _render_records() -> void:
 			spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			top_row.add_child(spacer)
 
-			var class_lbl = Label.new()
-			class_lbl.text = rec.get("classification", "RESTRICTED")
-			class_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
-			class_lbl.add_theme_font_size_override("font_size", 11)
-			top_row.add_child(class_lbl)
+			var class_badge = _create_status_badge(rec.get("classification", "RESTRICTED"), "icon_restricted", UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
+			top_row.add_child(class_badge)
 			vbox.add_child(top_row)
 
 			var title_lbl = Label.new()
-			title_lbl.text = "✦ %s" % rec.get("title", "")
+			title_lbl.text = rec.get("title", "")
 			title_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
 			title_lbl.add_theme_font_size_override("font_size", 15)
 			vbox.add_child(title_lbl)
@@ -406,9 +427,8 @@ func _render_records() -> void:
 			vbox.add_child(cat_lbl)
 
 			var btn = Button.new()
-			btn.text = "INSPECT FACILITY DIRECTIVE ▶"
 			btn.custom_minimum_size = Vector2(0, 44)
-			UIDesignSystemClass.apply_button_style(btn, UIDesignSystemClass.ButtonType.SECONDARY, UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
+			UIDesignSystemClass.apply_secondary_button(btn, "Inspect Directive", "icon_records", UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
 			var captured_rec = rec
 			btn.pressed.connect(func():
 				_open_reader(
@@ -422,12 +442,8 @@ func _render_records() -> void:
 			)
 			vbox.add_child(btn)
 		else:
-			var locked_lbl = Label.new()
 			var req_lvl = rec.get("unlock_level", 1)
-			locked_lbl.text = "🔒 [RESTRICTED SCHEMATIC // REACH LEVEL %02d]" % req_lvl
-			locked_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_DIM)
-			locked_lbl.add_theme_font_size_override("font_size", 13)
-			vbox.add_child(locked_lbl)
+			vbox.add_child(_create_locked_row("Restricted Schematic // Reach Level %02d" % req_lvl))
 
 		entries_list.add_child(card)
 		idx += 1
@@ -445,7 +461,7 @@ func _render_timeline() -> void:
 		if is_unlocked:
 			var top_row = HBoxContainer.new()
 			var time_lbl = Label.new()
-			time_lbl.text = "⏱ %s" % entry.get("timestamp", "")
+			time_lbl.text = entry.get("timestamp", "")
 			time_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_AMBER_WARN)
 			time_lbl.add_theme_font_size_override("font_size", 12)
 			top_row.add_child(time_lbl)
@@ -454,15 +470,12 @@ func _render_timeline() -> void:
 			spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			top_row.add_child(spacer)
 
-			var auth_lbl = Label.new()
-			auth_lbl.text = "PARITY SECURE"
-			auth_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
-			auth_lbl.add_theme_font_size_override("font_size", 11)
-			top_row.add_child(auth_lbl)
+			var auth_badge = _create_status_badge("Parity Secure", "icon_complete", UIDesignSystemClass.COLOR_EMERALD_SUCCESS)
+			top_row.add_child(auth_badge)
 			vbox.add_child(top_row)
 
 			var title_lbl = Label.new()
-			title_lbl.text = "✦ %s" % entry.get("title", "")
+			title_lbl.text = entry.get("title", "")
 			title_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_PRIMARY)
 			title_lbl.add_theme_font_size_override("font_size", 15)
 			vbox.add_child(title_lbl)
@@ -475,12 +488,8 @@ func _render_timeline() -> void:
 			summary_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			vbox.add_child(summary_lbl)
 		else:
-			var locked_lbl = Label.new()
 			var req_lvl = entry.get("unlock_level", 1)
-			locked_lbl.text = "🔒 [TEMPORAL RECORD ENCRYPTED // REACH LEVEL %02d]" % req_lvl
-			locked_lbl.add_theme_color_override("font_color", UIDesignSystemClass.COLOR_TEXT_DIM)
-			locked_lbl.add_theme_font_size_override("font_size", 13)
-			vbox.add_child(locked_lbl)
+			vbox.add_child(_create_locked_row("Temporal Record Encrypted // Reach Level %02d" % req_lvl))
 
 		entries_list.add_child(card)
 
@@ -619,14 +628,13 @@ func handle_back_button() -> bool:
 
 func _style_components() -> void:
 	if reader_modal:
-		reader_modal.add_theme_stylebox_override("panel", UIDesignSystemClass.create_panel_style(UIDesignSystemClass.COLOR_CYAN_PRIMARY, Color(0.04, 0.065, 0.12, 0.98), 2, 14, 18))
+		reader_modal.add_theme_stylebox_override("panel", UIDesignSystemClass.create_panel_style(UIDesignSystemClass.COLOR_CYAN_PRIMARY, Color(0.04, 0.065, 0.12, 0.98), 1, 14, 14))
 	if btn_close_reader:
-		UIDesignSystemClass.apply_button_style(btn_close_reader, UIDesignSystemClass.ButtonType.PRIMARY)
+		UIDesignSystemClass.apply_primary_button(btn_close_reader, "Close Record", "icon_close")
 	if btn_replay_reader:
-		UIDesignSystemClass.apply_button_style(btn_replay_reader, UIDesignSystemClass.ButtonType.SECONDARY)
+		UIDesignSystemClass.apply_secondary_button(btn_replay_reader, "Replay Transmission", "icon_play")
 	if btn_back:
-		UIDesignSystemClass.apply_button_style(btn_back, UIDesignSystemClass.ButtonType.SECONDARY)
-		btn_back.icon = preload("res://assets/icons/ui/icon_back.svg")
+		UIDesignSystemClass.apply_icon_button(btn_back, "icon_back", Vector2(48, 48))
 
 	var header_title = $MainContainer/VBoxContainer/Header/TopRow/TitleBox/Title
 	if header_title:
@@ -651,9 +659,11 @@ func _style_components() -> void:
 
 	# Embedded transmission modal buttons
 	if btn_proceed_transmission:
-		UIDesignSystemClass.apply_button_style(btn_proceed_transmission, UIDesignSystemClass.ButtonType.PRIMARY)
+		UIDesignSystemClass.apply_primary_button(btn_proceed_transmission, "Proceed", "icon_next")
 	if btn_skip_transmission:
 		UIDesignSystemClass.apply_button_style(btn_skip_transmission, UIDesignSystemClass.ButtonType.TERTIARY)
+		btn_skip_transmission.text = "Skip"
+		UIDesignSystemClass.apply_button_icon(btn_skip_transmission, "icon_close")
 
 	# Progress bar style
 	if restoration_bar:

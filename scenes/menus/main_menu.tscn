@@ -58,31 +58,31 @@ custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.960784, 0.968627, 1, 1)
 theme_override_font_sizes/font_size = 24
-text = "PLAY"
+text = "Start Journey"
 
 [node name="LevelsButton" type="Button" parent="VBoxContainer/Buttons"]
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "LEVEL SELECT"
+text = "Select Level"
 
 [node name="ArchiveButton" type="Button" parent="VBoxContainer/Buttons"]
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "INCIDENT ARCHIVE"
+text = "Incident Archive"
 
 [node name="SettingsButton" type="Button" parent="VBoxContainer/Buttons"]
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "SETTINGS"
+text = "Settings"
 
 [node name="CreditsButton" type="Button" parent="VBoxContainer/Buttons"]
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "CREDITS"
+text = "Facility Credits"
 
 [node name="CreditsPopup" type="PanelContainer" parent="."]
 visible = false

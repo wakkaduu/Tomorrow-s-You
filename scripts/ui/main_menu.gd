@@ -24,9 +24,9 @@ func _ready() -> void:
 	credits_popup.add_theme_stylebox_override("panel", UIDesignSystemClass.create_panel_style(
 		UIDesignSystemClass.COLOR_CYAN_PRIMARY,
 		Color(0.04, 0.065, 0.12, 0.98),
-		2,
+		1,
 		14,
-		20
+		14
 	))
 
 	# Apply typography to title and tagline
@@ -35,26 +35,36 @@ func _ready() -> void:
 	if tagline_lbl:
 		UIDesignSystemClass.apply_body_text(tagline_lbl, UIDesignSystemClass.FONT_SIZE_BODY, UIDesignSystemClass.COLOR_TEXT_SECONDARY, "Medium")
 
-	# Apply button styling with clear hierarchy
-	UIDesignSystemClass.apply_button_style(play_button, UIDesignSystemClass.ButtonType.PRIMARY)
-	play_button.custom_minimum_size = Vector2(0, 60)
+	# Update Play button text and icon with clear hierarchy
+	var has_progress: bool = SaveManager and not SaveManager.completed_levels.is_empty()
+	var play_title: String = "Continue Journey" if has_progress else "Start Journey"
+	UIDesignSystemClass.apply_primary_button(play_button, play_title, "icon_play")
+	play_button.custom_minimum_size = Vector2(0, 56)
 
-	UIDesignSystemClass.apply_button_style(levels_button, UIDesignSystemClass.ButtonType.SECONDARY)
-	levels_button.custom_minimum_size = Vector2(0, 52)
+	UIDesignSystemClass.apply_secondary_button(levels_button, "Select Level", "icon_menu")
+	levels_button.custom_minimum_size = Vector2(0, 50)
 
-	UIDesignSystemClass.apply_button_style(archive_button, UIDesignSystemClass.ButtonType.SECONDARY)
-	archive_button.custom_minimum_size = Vector2(0, 52)
+	var archive_title: String = "Incident Archive"
+	if SaveManager:
+		var prog = SaveManager.get_archive_progress()
+		var unl = prog.get("unlocked", 0)
+		var tot = prog.get("total", 31)
+		if unl > 0:
+			archive_title = "Incident Archive (%d/%d)" % [unl, tot]
+	UIDesignSystemClass.apply_secondary_button(archive_button, archive_title, "icon_archive")
+	archive_button.custom_minimum_size = Vector2(0, 50)
 
-	UIDesignSystemClass.apply_button_style(settings_button, UIDesignSystemClass.ButtonType.SECONDARY)
-	settings_button.custom_minimum_size = Vector2(0, 52)
+	UIDesignSystemClass.apply_secondary_button(settings_button, "Settings", "icon_settings")
+	settings_button.custom_minimum_size = Vector2(0, 50)
 
 	# Credits has less visual weight (Tertiary)
 	UIDesignSystemClass.apply_button_style(credits_button, UIDesignSystemClass.ButtonType.TERTIARY)
+	credits_button.text = "Facility Credits"
 	credits_button.custom_minimum_size = Vector2(0, 44)
 
 	var close_cred_btn = $CreditsPopup/VBoxContainer/CloseCreditsButton
 	if close_cred_btn:
-		UIDesignSystemClass.apply_button_style(close_cred_btn, UIDesignSystemClass.ButtonType.PRIMARY)
+		UIDesignSystemClass.apply_primary_button(close_cred_btn, "Close", "icon_close")
 
 	var cred_title = $CreditsPopup/VBoxContainer/CreditsTitle
 	if cred_title:
@@ -77,22 +87,6 @@ func _ready() -> void:
 			if background and background.has_method("set_screen_mode"):
 				background.set_screen_mode(ThemeManagerClass.ScreenMode.MAIN_MENU)
 		)
-
-	# Update Play button text: "CONTINUE JOURNEY" if progress exists, else "START PLAYING"
-	if SaveManager and not SaveManager.completed_levels.is_empty():
-		play_button.text = "CONTINUE JOURNEY ▶"
-	else:
-		play_button.text = "START PLAYING ▶"
-
-	# Update Archive button badge with recovery stats
-	if SaveManager:
-		var prog = SaveManager.get_archive_progress()
-		var unl = prog.get("unlocked", 0)
-		var tot = prog.get("total", 31)
-		if unl > 0:
-			archive_button.text = "INCIDENT ARCHIVE [%d/%d]" % [unl, tot]
-		else:
-			archive_button.text = "INCIDENT ARCHIVE"
 
 	if AudioManager:
 		AudioManager.play_music()

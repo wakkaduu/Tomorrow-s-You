@@ -1,3 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
-  <path d="M 24 10 L 12 26 L 19 26 L 19 36 L 29 36 L 29 26 L 36 26 Z" fill="#54E6EA"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 19V5"/>
+  <path d="M5 12l7-7 7 7"/>
 </svg>
