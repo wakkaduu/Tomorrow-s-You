@@ -14,7 +14,7 @@ All notable changes to this project will be documented in this file.
 ### Release preparation
 
 - Prepared version `0.1.0-alpha.2`, Android versionCode `5`, with the existing package ID, save schema and permanent release certificate required by packaging verification.
-- Added targeted regression coverage and internal Android emulator QA. Final same-key signed artifact QA and developer release approval remain pending.
+- Added 86 targeted regression checks; all 19 suites pass. The same-key signed alpha.2 APK passed Android 15 x86_64 emulator QA, including upgrade and fresh-profile tests. The separate prerelease draft remains unpublished for developer review.
 
 ## [1.3.0] - 2026-11-09
 

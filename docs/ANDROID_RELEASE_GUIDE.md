@@ -2,11 +2,13 @@
 
 ## Candidate and source
 
-Next candidate version: **0.1.0-alpha.2**, Android versionCode **5**, package **com.tomorrowsyou.game**, proposed tag **v0.1.0-alpha.2**. Release title: **TOMORROW'S YOU — Android Alpha 0.1.0-alpha.2**. Always mark this release as a prerelease. Preserve the existing alpha.1 draft and assets; alpha.2 requires a separate draft and explicit developer approval. Reuse the permanent release key; do not run initial key setup again.
+Current draft candidate version: **0.1.0-alpha.2**, Android versionCode **5**, package **com.tomorrowsyou.game**, tag **v0.1.0-alpha.2**. Release title: **TOMORROW'S YOU — Android Alpha 0.1.0-alpha.2**. Always mark this release as a prerelease. Preserve the existing alpha.1 draft and assets; alpha.2 requires a separate draft and explicit developer approval. Reuse the permanent release key; do not run initial key setup again.
 
-The starting revision is `0c1d5619b3247fd7999eacae37132f691a4a2605`. Initial working tree was clean; no local/remote tags or GitHub releases existed at inspection. The previous internal debug versionCode was 3, so 4 preserves integer progression despite changing the visible version from internal 1.3.0 to public alpha 0.1.0. Increment versionCode on every future distributed build. Change both `project.godot` and the Android preset version fields together.
+Current signed candidate: source `10956640e8f0bbbe6077c2e613b3aab62574d301`, SHA-256 `a39c2fd89c4c57b23c8d644f0c762cbbc5dbdb6194358aa472d7f40a8c4dafc9`. Actual Android 15 x86_64 QA and uploaded-asset verification passed; see [QA results](ALPHA_RELEASE_QA.md). The [alpha.2 draft](https://github.com/wakkaduu/Tomorrow-s-You/releases/tag/untagged-f86154f4ebabc53070fb) already exists and remains unpublished. Do not recreate its tag/draft or run key setup again. The commands below document release preparation.
 
-Release preparation edits are initially uncommitted. A build manifest must distinguish the base commit from working-tree changes. Before staging a GitHub draft, commit only reviewed release changes, push the intended commit, rebuild, and ensure the APK manifest identifies that exact clean source. Do not tag old source while uploading an APK containing newer uncommitted changes.
+Historical alpha.1 preparation started at `0c1d5619b3247fd7999eacae37132f691a4a2605`, with a clean tree and no releases/tags at that original inspection. Its versionCode advanced from internal debug 3 to alpha.1 code 4; alpha.2 now advances to code 5. Increment versionCode on every future distributed build. Change both `project.godot` and the Android preset version fields together.
+
+Release preparation edits are initially uncommitted. A build manifest must distinguish the base commit from working-tree changes. Before staging a GitHub draft, commit only reviewed release changes, push the intended commit, rebuild, and ensure the APK manifest identifies that exact clean source. Do not tag old source while uploading an APK containing newer uncommitted changes. For this candidate, the tag remains on the exact signed-build commit `1095664`; a later documentation-only commit records completed QA without changing the tested production fingerprint or requiring another build.
 
 ## Official setup reference
 

@@ -1,25 +1,25 @@
 # Alpha 2 Android defect remediation
 
-Status: **four fixes pass automated and internal Android checks; final signed release candidate remains HOLD**.
+Status: **PASS — all four fixes verified on the final signed alpha.2 APK for the tested Android 15 x86_64 profile. Ready for developer review; the draft remains unpublished**.
 
 Follow-up date: November 11, 2026 (Asia/Manila). The original findings and immutable alpha.1 artifact are recorded in [Android release QA](ALPHA_RELEASE_QA.md). No public release is authorized.
 
 ## Scope and artifact identity
 
-The implementation is based on `221f4226bf593199c4c7d7b0b5c5bb6f576549fa`, with reviewed fixes approved for commit on November 11, 2026. The internal APK was built before that commit; the final build manifest will record the exact approved source commit. It preserves campaign definitions, intended solutions, WAIT budgets, story content, the release package ID and save schema 3. No website or physical phone was changed.
+The implementation is based on `221f4226bf593199c4c7d7b0b5c5bb6f576549fa`, with reviewed fixes approved for commit on November 11, 2026. The internal APK was built before the commit; the final signed APK was built from the clean source commit `10956640e8f0bbbe6077c2e613b3aab62574d301`. It preserves campaign definitions, intended solutions, WAIT budgets, story content, the release package ID and save schema 3. No website or physical phone was changed.
 
-**The APK tested here is an internal debug build, not the final release APK.** It uses an isolated package suffix so the retained alpha.1 installation and saves remain available for subsequent same-key upgrade testing.
+**Both the initial internal debug build and the final same-key signed APK were tested.** The final signed build was tested as an alpha.1 upgrade and in a fresh Android user profile; no existing save was cleared. The internal build used an isolated package suffix to preserve alpha.1 before the upgrade check. The final signed build used the production package and successfully upgraded that retained installation.
 
-| Field | Internal build actually tested | Final alpha.2 requirement |
+| Field | Internal build actually tested | Final signed alpha.2 tested |
 |---|---|---|
-| Filename | `TomorrowsYou-alpha2-internal-debug.apk` | `TomorrowsYou-v0.1.0-alpha.2-android.apk` — NOT BUILT |
+| Filename | `TomorrowsYou-alpha2-internal-debug.apk` | `TomorrowsYou-v0.1.0-alpha.2-android.apk` |
 | Package | `com.tomorrowsyou.game.qa` | `com.tomorrowsyou.game` |
-| Version / code | `0.1.0-alpha.2` / `5` | Same version/code prepared |
-| SHA-256 | `ef5d2a6d4e86b05fca177f0884a949a1017d79b21b5c8fcba32d1cc8828b1a86` | NOT AVAILABLE; do not reuse the debug or alpha.1 hash |
-| Size | 117,046,951 bytes | NOT AVAILABLE |
-| Signing / debuggable | Existing debug identity / true; signature verified | Permanent alpha.1 release identity / false; NOT TESTED |
-| Source | Base commit above plus uncommitted fixes | Exact approved source commit pending |
-| Production content fingerprint | `4a3f648a0d685658dfed1ecb613981787ccb468a2f462367e6f2204b3b47ca67` | Recorded again by final build helper |
+| Version / code | `0.1.0-alpha.2` / `5` | `0.1.0-alpha.2` / `5` |
+| SHA-256 | `ef5d2a6d4e86b05fca177f0884a949a1017d79b21b5c8fcba32d1cc8828b1a86` | `a39c2fd89c4c57b23c8d644f0c762cbbc5dbdb6194358aa472d7f40a8c4dafc9` |
+| Size | 117,046,951 bytes | 107,211,976 bytes |
+| Signing / debuggable | Existing debug identity / true; signature verified | Permanent alpha.1 release identity / false; v2/v3 verified |
+| Source | Base commit above plus uncommitted fixes | `10956640e8f0bbbe6077c2e613b3aab62574d301` |
+| Production content fingerprint | `4a3f648a0d685658dfed1ecb613981787ccb468a2f462367e6f2204b3b47ca67` | `4a3f648a0d685658dfed1ecb613981787ccb468a2f462367e6f2204b3b47ca67` |
 
 The staging project is outside Git on the approved secondary drive. Its intentional differences are the `.qa` package suffix, QA display name and debug export/signing. The production game scripts, scenes, assets and Android renderer setting are the fixed working-tree content. Packaging checks now explicitly require certificate SHA-256 `43f8a0c0bfe13c5c60e3d8d61360ffecdbea4778f437b53c8a5bd98d1438f0db` for every release verification, including verification without a prior manifest. No new release keystore was created.
 
@@ -123,16 +123,29 @@ Evidence includes unsuccessful capture attempts and navigation transitions. In p
 
 Screenshots and raw logs: `/home/wakkadu/.local/share/tomorrows-you-qa/alpha2/`. Internal staging project: `/run/media/wakkadu/4C1A86B21A86989A/TomorrowsYou-Alpha-QA/alpha2-internal-project/`. No test artifact is bundled into a release APK. The original alpha.1 draft and checksum remain unchanged.
 
+
+## Final signed candidate verification
+
+[Separate draft prerelease](https://github.com/wakkaduu/Tomorrow-s-You/releases/tag/untagged-f86154f4ebabc53070fb) — release ID `441167681`, tag `v0.1.0-alpha.2`, source `10956640e8f0bbbe6077c2e613b3aab62574d301`. It remains draft + prerelease, with no publication.
+
+The final signed APK (107,211,976 bytes, SHA-256 `a39c2fd89c4c57b23c8d644f0c762cbbc5dbdb6194358aa472d7f40a8c4dafc9`) uses the production package `com.tomorrowsyou.game`, version `0.1.0-alpha.2` / code 5, the permanent alpha.1 certificate and non-debuggable release configuration. Its actual GitHub upload was downloaded using authenticated CLI and the hash/checksum/signature verified again.
+
+Signed-APK checks repeated the four defect scenarios and the Android checklist on the existing API 35 x86_64 AVD. Owner user 0 passed the same-key upgrade with the two 14-action/three-star records, unlocks and disclosed hints preserved. A new per-user app-data context (Android user 10) passed first launch, Back/modal/menu/explicit-exit behavior, default Compatibility rendering, movement, Echoes/expiry, door synchronization, WAIT budgets 3 and 2, shared hints/free rereading, MORROW/Archive, both level completions, background/foreground, offline operation and restart persistence.
+
+First completion and replay each scored 14; a slower 16-action replay kept best 14. Stationary enlargement/reduction and live resizing with an Echo on a plate, including Pause, retained correct grid alignment and simulation state. No app crash, fatal exception or GDScript error was found; the final crash buffer is empty. This verifies the selected Compatibility path, not an underlying Vulkan renderer fix or untested physical devices.
+
+Full signed evidence and the per-check matrix are in [the final QA report](ALPHA_RELEASE_QA.md) and `/home/wakkadu/.local/share/tomorrows-you-qa/alpha2-signed/`. Internal/debug evidence above remains separate. Supplemental failed navigation captures `55`–`56` were excluded from passes; settled-screen checks `57`–`63` verify the Owner-profile hint/Back result.
+
 ## Remaining requirements and release decision
 
-**PASS:** four fixes in the internal Android profile; solution/state regression coverage; ten campaign source solutions; original gameplay/story/WAIT data preserved; schema-compatible save behavior.
+**PASS:** four fixes in both the internal and final signed Android profile; solution/state regression coverage; ten campaign source solutions; original gameplay/story/WAIT data preserved; schema-compatible save behavior.
 
-**NOT TESTED:** final same-key signed alpha.2 APK, real alpha.1 → alpha.2 signed upgrade, physical phones/ARM ABIs, Android versions other than 15/API 35, audible audio/haptics, notches/gesture navigation, performance endurance, complete ten-level Android playthrough and all narrative/archive content. No broad device or Android-version compatibility claim is made. Existing movement-loop WAIT alternatives and Nightmare's two-Echo shortcut remain known balance limitations.
+**NOT TESTED:** physical phones/ARM ABIs, Android versions other than 15/API 35, audible audio/haptics, notches/gesture navigation, performance endurance, complete ten-level Android playthrough and all narrative/archive content. No broad device or Android-version compatibility claim is made. Existing movement-loop WAIT alternatives and Nightmare's two-Echo shortcut remain known balance limitations.
 
-**BLOCKED pending developer action:** obtaining the final release signature through the local private-password prompt after committing the approved fixes. No release password should enter chat. A final source commit, release certificate verification, non-debuggable check, production package check, file size and SHA-256 must be recorded for the actual signed candidate, then its Android runtime checks must pass.
+**BLOCKED:** none for preparing the tested candidate. The local signing step, exact source/package/version/certificate/non-debuggable/hash checks and signed-APK runtime QA are complete. Public publication remains unauthorized.
 
 **FAIL:** no reproduced failure remains in the four exercised internal remediation scenarios. The underlying emulator Vulkan-renderer failure has not been claimed fixed; the selected production Android renderer avoids it.
 
-Version `0.1.0-alpha.2` / code 5 and release notes/helper are prepared. Do not label alpha.2 ready, tag it or create its separate draft until the signed candidate passes. The developer approved the reviewed commit and conditional push/tag/separate draft preparation on November 11, 2026. Remote actions remain conditional on successful final signed-artifact QA. No asset replacement or public publication is authorized. The permanent key, package ID, save schema, phone installation and website are preserved.
+Version `0.1.0-alpha.2` / code 5 passed signed-APK QA and is ready for developer review. The approved push, tag and separate unpublished draft were created after those checks passed. The release tag points to the exact build commit; final evidence is recorded separately in a documentation-only commit. Alpha.1 was not replaced and no public publication is authorized. The permanent key, package ID, save schema, phone installation and website are preserved.
 
 The dedicated emulator and QA ADB server were stopped after evidence collection. The AVD and both app installations are retained; the display override is reset to 720×1280 and airplane mode remains enabled.

@@ -1,8 +1,79 @@
 # Android alpha release QA
 
-## Alpha.2 remediation follow-up — November 11, 2026
+## Final signed alpha.2 QA — November 11, 2026
 
-**Current decision: HOLD for the final signed candidate.** All four fixes pass the internal Android build and automated regressions. This does not change alpha.1's historical failures below or certify an unbuilt release APK. See [Alpha 2 fix report](ALPHA2_FIX_REPORT.md) for root causes, corrections, file list and evidence.
+**PASS for the tested Android 15 x86_64 emulator profile. Ready for developer review; [the separate prerelease draft](https://github.com/wakkaduu/Tomorrow-s-You/releases/tag/untagged-f86154f4ebabc53070fb) remains unpublished.** Physical-device and wider Android compatibility are not established. The earlier alpha.2 internal checkpoint and alpha.1 failures below are retained as historical evidence.
+
+| Artifact check | Verified final value |
+|---|---|
+| APK | `TomorrowsYou-v0.1.0-alpha.2-android.apk` |
+| APK source commit / annotated tag target | `10956640e8f0bbbe6077c2e613b3aab62574d301` / `v0.1.0-alpha.2` |
+| Version / code / package | `0.1.0-alpha.2` / `5` / `com.tomorrowsyou.game` |
+| Size | 107,211,976 bytes |
+| SHA-256 | `a39c2fd89c4c57b23c8d644f0c762cbbc5dbdb6194358aa472d7f40a8c4dafc9` |
+| Certificate SHA-256 | `43f8a0c0bfe13c5c60e3d8d61360ffecdbea4778f437b53c8a5bd98d1438f0db` — unchanged from alpha.1 |
+| Signature / debuggable / permissions | v2 and v3 verified / false / none |
+| Declared minimum / target API | 24 / 36; not a tested OS range |
+| Graphics requirements | OpenGL ES 3 required; Vulkan features declared optional |
+| Native ABIs | ARM64, ARMv7, x86, x86_64; only x86_64 executed here |
+| Authenticated uploaded asset verification | PASS — downloaded APK hash, checksum file and signature match the runtime-tested APK and GitHub digest |
+
+### Environment and installation
+
+Reused `TomorrowsYou_Alpha_QA`, emulator 37.2.13, AOSP Android 15/API 35 x86_64 revision 2, Pixel 2-derived profile, two vCPUs, actual 2,560 MiB RAM, KVM version 12 usable, 720×1280/density 240. Host graphics used Intel UHD 620 through the emulator translator **with Vulkan available**; the signed game selected OpenGL ES 3 Compatibility directly. No renderer toggle was needed. Live 720×1600 and 480×800 display overrides were exercised and reset.
+
+`adb install -r` of the exact signed APK returned Success on emulator Owner user 0, upgrading alpha.1 without uninstalling or clearing data. The two completed 14-action/three-star records, next-level unlock and prior hint disclosures were preserved (`02`, `61`). The daily allowance was 3 after the legitimate new-day reset; disclosed stages remained available.
+
+For clean first-run data, created only Android user **10**, `TomorrowsYou Alpha2 Signed Fresh QA`, inside the same AVD and enabled the already-installed signed package with `install-existing --user 10`. This is a fresh per-user installation/data context, not a second global APK install or another AVD. It began with Start Journey and 3/31 Archive records. Both users and their saves are retained. All commands selected dedicated ADB port 5038 / serial `emulator-5580`, with AVD and active-user guards. No physical phone was used.
+
+### Signed-APK runtime results
+
+Evidence below is under `/home/wakkadu/.local/share/tomorrows-you-qa/alpha2-signed/evidence/`; numbers refer to the corresponding named PNG captures.
+
+| Check | Result and actual observation | Evidence |
+|---|---|---|
+| First launch, Main Menu | PASS — visible and responsive on upgrade and fresh profile | `01`, `05` |
+| Difficulty / Level Select | PASS — fresh locks, selection, hierarchical Back and retained records | `06`–`07`, `31`, `47`, `58`–`60` |
+| Back / Pause / resume | PASS — one press opens/closes Pause; input consumes no turn while paused; Hint closes without credit charge | `10`–`16`, `41`, `62`–`63` |
+| Auxiliary return | PASS — Settings and Archive restore the same paused turn-3 puzzle | `14`–`17` |
+| Exit confirmation | PASS — Main Menu Back requires confirmation; explicit Exit Game terminates; relaunch works | `04`, `52`–`54`, `explicit-exit.txt` |
+| Movement / discarded attempt | PASS — accepted movements and closed-door rejection; Restart refunds discarded action | `13`, `25`, `42`, `45` |
+| Echo recording/playback/expiry | PASS — committed recording contributes once; Echo occupies plate through turn 6 and expires on turn 7 | `19`–`25` |
+| Door visual/logical sync | PASS — entry on final active Echo turn; closure on expiry; rejected LEFT into closed door leaves turn/action count unchanged | `24`–`25`, `44`–`45` |
+| Level-specific WAIT limits | PASS for Levels 1–2 — budgets 3 and 2; exhausted touch/Space rejects; Echo commit retains spent allowance | `18`–`19`, `33`, `43` |
+| Level completion | PASS for Levels 1–2 — each 8-turn winning attempt / 14 actions / three stars | `27`, `46` |
+| Replay scoring / historical best | PASS — 14 → replay 14; slower replay 16 preserves best 14, including restart | `27`–`31`, `47` |
+| Shared daily hints / free reread | PASS — one credit in Level 1 plus two in Level 2; zero prevents another reveal; disclosed stages remain free and persist | `12`, `34`–`35`, `48` |
+| MORROW / Archive | PASS for exercised content — Next, allowed Back/Skip closure, reader, research log, replay and return | `08`–`10`, `15`, `26`, `49`–`51` |
+| Stationary live resize | PASS — player stays aligned at turn 00/actions 0 through enlargement/reduction/restoration | `37`–`39` |
+| Active Echo / paused resize | PASS — player, Echo/plate, open gate, turn 3 and score 9 retained | `20`–`23` |
+| Background/foreground | PASS — turn-1 puzzle returns paused | `40`–`41` |
+| Save persistence / restart / upgrade | PASS for exercised records, progress, disclosures and credits | `02`, `47`–`48`, `54`, `61` |
+| Offline gameplay | PASS for exercised flows — airplane mode 1, Wi-Fi/data off, active default network none | `offline-state.txt`, solves/readers/hints/restarts above |
+| App crashes / script errors | No app crash, fatal exception or GDScript error found; final crash buffer empty | `final-app-logcat.txt`, `final-crash-buffer.txt` |
+
+A shader-cache recompilation warning occurred at some cold starts; visible rendering followed. Supplemental Owner-profile captures `55`–`56` show an unsuccessful automated navigation after a user switch and are not used as hint/Back evidence. The settled-screen checks `57`–`63` confirm the preserved disclosures and correct Back behavior. No claim is derived from a filename alone.
+
+### Source regression and remaining coverage
+
+**PASS — 19/19 source suites**, including 86 targeted checks, ten campaign solutions, 282 WAIT optimization checks, 3,187 turn/WAIT checks, 20 hint tests and 15 release-helper tests. The tested production-content fingerprint matches the signed build. The date-dependent test-fixture corrections described below affect tests only.
+
+**NOT TESTED:** physical phones, ARM/ARM64 execution, Android versions other than 15/API 35, audio/haptics, notches/gesture navigation, endurance/performance, complete ten-level Android progression and all narrative/archive content. All ten canonical solutions pass source simulation; only Levels 1–2 were completed on Android. The underlying Vulkan-driver/Swappy issue is not claimed fixed; Android selects Compatibility instead. Known movement-loop WAIT alternatives and Nightmare's two-Echo shortcut remain unchanged.
+
+**FAIL:** no reproduced failure remains in the four exercised signed-APK remediation scenarios. **BLOCKED:** none for preparing this tested candidate. Public publication is not authorized and still requires developer approval.
+
+### Release decision and provenance
+
+The exact signed APK is suitable for developer review and controlled alpha testing within the demonstrated profile. The approved source push, annotated tag and separate draft were created after signed-APK QA passed. Alpha.1's draft and asset digest remain unchanged. The uploaded alpha.2 APK was freshly downloaded and verified, rather than relying only on the local file or GitHub metadata.
+
+The tag and packaging manifest point to **10956640e8f0bbbe6077c2e613b3aab62574d301**, the exact clean source used for the signed build. Final QA documentation is recorded in a later documentation-only commit on `main`; compiled production content is unchanged, so no extra signed rebuild is needed.
+
+Durable evidence: `/home/wakkadu/.local/share/tomorrows-you-qa/alpha2-signed/`, including `runtime-qa.json`, static manifest/signing verification, uploaded-release download, device metadata, actions, screenshots and logs. The emulator and dedicated QA ADB server were stopped after testing; data and both QA users are retained, with Owner user 0 restored, 720×1280 display and airplane mode on. The website, permanent key and personal phone were not modified. Nothing was publicly published.
+
+
+## Earlier alpha.2 internal checkpoint — superseded by signed QA above
+
+**Decision at the internal-only checkpoint: HOLD for the final signed candidate.** All four fixes pass the internal Android build and automated regressions. This does not change alpha.1's historical failures below or certify an unbuilt release APK. See [Alpha 2 fix report](ALPHA2_FIX_REPORT.md) for root causes, corrections, file list and evidence.
 
 | Gate | Current result |
 |---|---|
