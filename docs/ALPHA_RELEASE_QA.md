@@ -2,7 +2,7 @@
 
 ## Final signed alpha.2 QA — November 11, 2026
 
-**PASS for the tested Android 15 x86_64 emulator profile. Ready for developer review; [the separate prerelease draft](https://github.com/wakkaduu/Tomorrow-s-You/releases/tag/untagged-f86154f4ebabc53070fb) remains unpublished.** Physical-device and wider Android compatibility are not established. The earlier alpha.2 internal checkpoint and alpha.1 failures below are retained as historical evidence.
+**PASS for the tested Android 15 x86_64 emulator profile. Ready for developer review; [the separate prerelease draft](https://github.com/wakkaduu/Tomorrow-s-You/releases/tag/untagged-b02475be4d1d0b05ccae) remains unpublished.** Physical-device and wider Android compatibility are not established. The earlier alpha.2 internal checkpoint and alpha.1 failures below are retained as historical evidence.
 
 | Artifact check | Verified final value |
 |---|---|

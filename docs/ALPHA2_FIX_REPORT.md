@@ -126,7 +126,7 @@ Screenshots and raw logs: `/home/wakkadu/.local/share/tomorrows-you-qa/alpha2/`.
 
 ## Final signed candidate verification
 
-[Separate draft prerelease](https://github.com/wakkaduu/Tomorrow-s-You/releases/tag/untagged-f86154f4ebabc53070fb) — release ID `441167681`, tag `v0.1.0-alpha.2`, source `10956640e8f0bbbe6077c2e613b3aab62574d301`. It remains draft + prerelease, with no publication.
+[Separate draft prerelease](https://github.com/wakkaduu/Tomorrow-s-You/releases/tag/untagged-b02475be4d1d0b05ccae) — release ID `441167681`, tag `v0.1.0-alpha.2`, source `10956640e8f0bbbe6077c2e613b3aab62574d301`. It remains draft + prerelease, with no publication.
 
 The final signed APK (107,211,976 bytes, SHA-256 `a39c2fd89c4c57b23c8d644f0c762cbbc5dbdb6194358aa472d7f40a8c4dafc9`) uses the production package `com.tomorrowsyou.game`, version `0.1.0-alpha.2` / code 5, the permanent alpha.1 certificate and non-debuggable release configuration. Its actual GitHub upload was downloaded using authenticated CLI and the hash/checksum/signature verified again.
 
