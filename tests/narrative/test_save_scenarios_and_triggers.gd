@@ -68,6 +68,7 @@ func run_all_scenario_tests() -> void:
 
 		# 2. Load into SaveManager
 		var sm = SaveManagerScript.new()
+		sm.set_test_date("2026-11-10", 1794270000)
 		sm.set_custom_save_path(sandbox_v2_path)
 		sm.load_save()
 

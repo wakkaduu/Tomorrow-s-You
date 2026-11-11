@@ -8,7 +8,8 @@ config_version=5
 
 config/name="Tomorrow's You"
 config/description="Every failed attempt becomes your teammate."
-config/version="0.1.0-alpha.1"
+config/version="0.1.0-alpha.2"
+config/quit_on_go_back=false
 config/icon="res://icon.svg"
 run/main_scene="res://scenes/boot/boot.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
@@ -91,6 +92,7 @@ theme/custom_font="res://assets/fonts/Inter/Inter-Regular.ttf"
 [rendering]
 
 renderer/rendering_method="mobile"
+renderer/rendering_method.android="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
 environment/defaults/default_clear_color=Color(0.0431373, 0.0627451, 0.12549, 1)
 

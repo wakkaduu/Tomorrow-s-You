@@ -2,7 +2,7 @@
 
 ## Candidate and source
 
-Prepared version: **0.1.0-alpha.1**, Android versionCode **4**, package **com.tomorrowsyou.game**, proposed tag **v0.1.0-alpha.1**. Release title: **TOMORROW'S YOU — Android Alpha 0.1.0**. Always mark this release as a prerelease.
+Next candidate version: **0.1.0-alpha.2**, Android versionCode **5**, package **com.tomorrowsyou.game**, proposed tag **v0.1.0-alpha.2**. Release title: **TOMORROW'S YOU — Android Alpha 0.1.0-alpha.2**. Always mark this release as a prerelease. Preserve the existing alpha.1 draft and assets; alpha.2 requires a separate draft and explicit developer approval. Reuse the permanent release key; do not run initial key setup again.
 
 The starting revision is `0c1d5619b3247fd7999eacae37132f691a4a2605`. Initial working tree was clean; no local/remote tags or GitHub releases existed at inspection. The previous internal debug versionCode was 3, so 4 preserves integer progression despite changing the visible version from internal 1.3.0 to public alpha 0.1.0. Increment versionCode on every future distributed build. Change both `project.godot` and the Android preset version fields together.
 
@@ -51,18 +51,18 @@ This sets Godot's documented `GODOT_ANDROID_KEYSTORE_RELEASE_PATH`, `GODOT_ANDRO
 
 Expected final artifact:
 
-`build/android/releases/TomorrowsYou-v0.1.0-alpha.1-android.apk`
+`build/android/releases/TomorrowsYou-v0.1.0-alpha.2-android.apk`
 
 The helper verifies the package/version, ABIs, signature, non-debuggable flag and permission list, then creates a matching `.apk.sha256` file and `.apk.manifest.json` with actual size, hash, source revision, local source state, build time in Asia/Manila, and verification status. It also copies the release notes. Never fabricate metadata before a signed APK exists. Unsigned internal smoke builds are not release artifacts and must never be uploaded as the public alpha.
 
 Independent checks:
 
 ```sh
-/home/wakkadu/Android/Sdk/build-tools/34.0.0/apksigner verify --verbose --print-certs build/android/releases/TomorrowsYou-v0.1.0-alpha.1-android.apk
-/home/wakkadu/Android/Sdk/build-tools/34.0.0/aapt2 dump badging build/android/releases/TomorrowsYou-v0.1.0-alpha.1-android.apk
-/home/wakkadu/Android/Sdk/build-tools/34.0.0/aapt dump permissions build/android/releases/TomorrowsYou-v0.1.0-alpha.1-android.apk
+/home/wakkadu/Android/Sdk/build-tools/34.0.0/apksigner verify --verbose --print-certs build/android/releases/TomorrowsYou-v0.1.0-alpha.2-android.apk
+/home/wakkadu/Android/Sdk/build-tools/34.0.0/aapt2 dump badging build/android/releases/TomorrowsYou-v0.1.0-alpha.2-android.apk
+/home/wakkadu/Android/Sdk/build-tools/34.0.0/aapt dump permissions build/android/releases/TomorrowsYou-v0.1.0-alpha.2-android.apk
 cd build/android/releases
-sha256sum -c TomorrowsYou-v0.1.0-alpha.1-android.apk.sha256
+sha256sum -c TomorrowsYou-v0.1.0-alpha.2-android.apk.sha256
 ```
 
 Confirm API requirements from the **final** APK, all four configured ABIs, expected portrait activity, no debuggable attribute, no unintended permissions, and the expected release certificate. The final release certificate must differ from the debug certificate. No Internet permission is expected for offline gameplay; verify this rather than assuming it.
@@ -98,9 +98,9 @@ Initial preparation had no GitHub CLI. Continuation verified the installed CLI i
 After developer approval, commit and push only the reviewed release files, rebuild the signed APK from that clean commit, and verify its manifest and checksum. Device QA remains a publication gate; a private draft may record it as pending. Then create and push the reviewed tag at the exact APK source commit (never move an existing tag):
 
 ```sh
-git tag -a v0.1.0-alpha.1 <exact-APK-source-commit> -m "TOMORROW'S YOU — Android Alpha 0.1.0"
-git push origin refs/tags/v0.1.0-alpha.1
-git ls-remote --tags origin 'refs/tags/v0.1.0-alpha.1*'
+git tag -a v0.1.0-alpha.2 <exact-APK-source-commit> -m "TOMORROW'S YOU — Android Alpha 0.1.0-alpha.2"
+git push origin refs/tags/v0.1.0-alpha.2
+git ls-remote --tags origin 'refs/tags/v0.1.0-alpha.2*'
 ```
 
 Only after confirming that tag's peeled commit matches the build manifest:
@@ -109,12 +109,12 @@ Only after confirming that tag's peeled commit matches the build manifest:
 python3 scripts/tools/android_alpha_release.py draft
 ```
 
-The helper verifies the existing remote tag targets the exact APK source commit and uses `--verify-tag`. It never implicitly creates a tag. It only creates **draft + prerelease** releases; it has no public publish command. Attach only the signed verified APK and its checksum. Review the release notes in `docs/releases/0.1.0-alpha.1.md`, replace pending validation wording with actual outcomes, and include the final manifest metadata.
+The helper verifies the existing remote tag targets the exact APK source commit and uses `--verify-tag`. It never implicitly creates a tag. It only creates **draft + prerelease** releases; it has no public publish command. Attach only the signed verified APK and its checksum. Review the release notes in `docs/releases/0.1.0-alpha.2.md`, replace pending validation wording with actual outcomes, and include the final manifest metadata.
 
 Manual equivalent:
 
 1. Open https://github.com/wakkaduu/Tomorrow-s-You/releases/new.
-2. Choose the reviewed release source commit and proposed tag `v0.1.0-alpha.1`.
+2. Choose the reviewed release source commit and proposed tag `v0.1.0-alpha.2`.
 3. Title it `TOMORROW'S YOU — Android Alpha 0.1.0`.
 4. Paste the reviewed release notes and mark it as a prerelease.
 5. Attach the signed APK and matching checksum; check their size/hash against the manifest.

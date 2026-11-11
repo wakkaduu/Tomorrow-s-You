@@ -32,6 +32,8 @@ func _init() -> void:
 			push_error("   --> FAILED [✗]: %s %s" % [test_name, err_msg])
 
 	var save_mgr = SaveManagerClass.new()
+	save_mgr.set_test_date("2026-11-10", 1000)
+	save_mgr.set_custom_save_path("user://hint-clock-tests.cfg")
 	save_mgr.reset_progress()
 
 	# --------------------------------------------------------------------------
@@ -194,6 +196,7 @@ func _init() -> void:
 		# Instantiate a fresh SaveManager to simulate application restart
 		var fresh_mgr = SaveManagerClass.new()
 		fresh_mgr.set_test_date("2026-11-12", 200000)
+		fresh_mgr.set_custom_save_path("user://hint-clock-tests.cfg")
 		fresh_mgr.load_save()
 		var rem: int = fresh_mgr.get_remaining_daily_hints()
 		fresh_mgr.free()
@@ -206,6 +209,7 @@ func _init() -> void:
 	run_test.call(14, "Revealed hints remain revealed across application restarts", func() -> bool:
 		var fresh_mgr = SaveManagerClass.new()
 		fresh_mgr.set_test_date("2026-11-12", 200000)
+		fresh_mgr.set_custom_save_path("user://hint-clock-tests.cfg")
 		fresh_mgr.load_save()
 		var lvl_01_idx: int = fresh_mgr.get_revealed_hint_index("lvl_01")
 		var lvl_02_idx: int = fresh_mgr.get_revealed_hint_index("lvl_02")

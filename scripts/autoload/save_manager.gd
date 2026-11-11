@@ -292,15 +292,17 @@ func record_level_completion(level_id: String, actions: int, echoes: int, next_l
 	if echoes < prev_best_ech:
 		best_echoes[level_id] = echoes
 
-	# Store structured record
-	level_records[level_id] = {
-		"actions": actions,
-		"echoes": echoes,
-		"stars": stars,
-		"time_sec": time_sec,
-		"rules_version": CURRENT_VERSION,
-		"status": "VERIFIED"
-	}
+	# Keep the structured historical record consistent with the best action score.
+	# A slower replay must not replace the previous winning record.
+	if actions <= prev_best_act:
+		level_records[level_id] = {
+			"actions": actions,
+			"echoes": echoes,
+			"stars": stars,
+			"time_sec": time_sec,
+			"rules_version": CURRENT_VERSION,
+			"status": "VERIFIED"
+		}
 
 	# Clean up any legacy marker for this level
 	legacy_records.erase(level_id)

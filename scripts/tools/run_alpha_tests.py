@@ -11,6 +11,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 SUITES = [
+    'tests/regression/test_alpha2_fixes.tscn',
     'tests/solver/test_wait_optimization.gd', 'tests/regression/test_turn_and_wait.gd',
     'tests/run_all_tests.gd', 'tests/core/test_puzzle_simulation.gd',
     'tests/core/test_level_validation.gd', 'tests/levels/test_campaign_solutions.gd',

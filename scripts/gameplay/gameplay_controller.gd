@@ -345,7 +345,7 @@ func _bind_ui_buttons() -> void:
 	)
 	btn_modal_restart.pressed.connect(func():
 		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
-		if simulation and (simulation.current_turn > 0 or simulation.echo_history.size() > 0):
+		if simulation and (simulation.current_turn > 0 or simulation.echoes.size() > 0):
 			restart_confirm_modal.visible = true
 		else:
 			_toggle_pause()

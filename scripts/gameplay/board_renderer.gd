@@ -84,6 +84,9 @@ func calculate_layout(viewport_size: Vector2) -> void:
 	if level_def == null:
 		return
 
+	var old_offset: Vector2 = board_offset
+	var old_tile_size: float = tile_size
+
 	# Query safe margins if available
 	var safe_top: float = 0.0
 	var safe_bottom: float = 0.0
@@ -122,6 +125,23 @@ func calculate_layout(viewport_size: Vector2) -> void:
 		top_hud_h + (available_h - total_grid_h) * 0.5
 	)
 
+	# Move every cached presentation point into the new board coordinate space.
+	# Fractional cell coordinates retain in-flight interpolation and trail history.
+	if simulation:
+		player_visual_pos = _remap_layout_point(player_visual_pos, old_offset, old_tile_size)
+		player_target_pos = grid_to_world(simulation.player_pos)
+		for i in range(echo_visual_positions.size()):
+			echo_visual_positions[i] = _remap_layout_point(echo_visual_positions[i], old_offset, old_tile_size)
+			echo_target_positions[i] = grid_to_world(simulation.get_echo_position(i))
+			for j in range(echo_trail_points[i].size()):
+				echo_trail_points[i][j] = _remap_layout_point(echo_trail_points[i][j], old_offset, old_tile_size)
+		if _shockwave_timer > 0.0:
+			_shockwave_origin = _remap_layout_point(_shockwave_origin, old_offset, old_tile_size)
+	queue_redraw()
+
+func _remap_layout_point(point: Vector2, old_offset: Vector2, old_tile_size: float) -> Vector2:
+	return board_offset + (point - old_offset) / old_tile_size * tile_size
+
 func _process(delta: float) -> void:
 	_pulse_timer += delta * 2.8
 
@@ -139,7 +159,7 @@ func _process(delta: float) -> void:
 			p["pos"].x = randf()
 
 	# Interpolation speed (instant if reduced animations enabled)
-	var lerp_speed: float = 20.0 * delta
+	var lerp_speed: float = clampf(20.0 * delta, 0.0, 1.0)
 	var save_mgr = get_node_or_null("/root/SaveManager")
 	if save_mgr and bool(save_mgr.get("reduced_animations")):
 		lerp_speed = 1.0

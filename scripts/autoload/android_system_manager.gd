@@ -27,6 +27,7 @@ var _audio_was_muted_by_pause: bool = false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	get_tree().quit_on_go_back = false
 	# Update safe area on start and listen for resize
 	_update_safe_area()
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
@@ -47,98 +48,35 @@ func _notification(what: int) -> void:
 			if OS.get_name() != "Android":
 				_on_application_resumed()
 
-func _unhandled_input(event: InputEvent) -> void:
-	# Fallback key input for Android hardware back button (KEY_BACK) or desktop Escape
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_BACK:
+# Android uses the window notification only. KEY_BACK must not dispatch again.
+# Desktop keys are intercepted before GUI/action_pause can handle the same press.
+func _input(event: InputEvent) -> void:
+	if OS.get_name() != "Android" and event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode in [KEY_BACK, KEY_ESCAPE]:
 			get_viewport().set_input_as_handled()
 			handle_back_request()
-		elif event.keycode == KEY_ESCAPE and OS.get_name() != "Android":
-			# On desktop, Escape also behaves as back button
-			get_viewport().set_input_as_handled()
-			handle_back_request()
+
+var _back_pending: bool = false
 
 func handle_back_request() -> void:
-	back_button_pressed.emit()
+	if _back_pending:
+		return
+	_back_pending = true
+	_dispatch_back_request.call_deferred()
 
+func _dispatch_back_request() -> void:
+	_back_pending = false
+	if SceneRouter.is_transitioning:
+		return
+	back_button_pressed.emit()
 	var current_scene = get_tree().current_scene
 	if current_scene == null:
 		return
-
-	# 1. If scene provides its own custom back-button handler, delegate to it
-	if current_scene.has_method("handle_back_button"):
-		var handled: bool = current_scene.handle_back_button()
-		if handled:
-			trigger_haptic("button")
-			return
-
-	# 2. Scene-specific fallback routing
-	var scene_name: String = current_scene.name
-	var scene_file: String = current_scene.scene_file_path
-
-	if scene_file.ends_with("gameplay.tscn") or scene_name == "Gameplay":
-		_handle_gameplay_back(current_scene)
-	elif scene_file.ends_with("level_select.tscn") or scene_name == "LevelSelect":
-		trigger_haptic("button")
-		SceneRouter.go_to_difficulty_select()
-	elif scene_file.ends_with("difficulty_select.tscn") or scene_name == "DifficultySelect":
-		trigger_haptic("button")
-		SceneRouter.go_to_main_menu()
-	elif scene_file.ends_with("settings.tscn") or scene_name == "Settings":
-		trigger_haptic("button")
-		SceneRouter.go_to_main_menu()
-	elif scene_file.ends_with("incident_archive.tscn") or scene_name == "IncidentArchive":
-		trigger_haptic("button")
-		SceneRouter.go_to_main_menu()
-	elif scene_file.ends_with("main_menu.tscn") or scene_name == "MainMenu":
-		_handle_main_menu_back(current_scene)
-
-func _handle_gameplay_back(gameplay: Node) -> void:
-	# Check for modals in Gameplay scene
-	var modals = gameplay.get_node_or_null("Modals")
-	if modals:
-		var hint_confirm = modals.get_node_or_null("HintConfirmModal")
-		if hint_confirm and hint_confirm.visible:
-			hint_confirm.visible = false
-			trigger_haptic("button")
-			return
-
-		var hint_modal = modals.get_node_or_null("HintModal")
-		if hint_modal and hint_modal.visible:
-			hint_modal.visible = false
-			trigger_haptic("button")
-			return
-
-		var complete_modal = modals.get_node_or_null("CompleteModal")
-		if complete_modal and complete_modal.visible:
-			complete_modal.visible = false
-			trigger_haptic("button")
-			SceneRouter.go_to_level_select()
-			return
-
-		var pause_modal = modals.get_node_or_null("PauseModal")
-		if pause_modal:
-			if pause_modal.visible:
-				# Already paused -> Resume
-				pause_modal.visible = false
-				trigger_haptic("button")
-			else:
-				# Playing -> Pause
-				pause_modal.visible = true
-				trigger_haptic("button")
-			return
-
-func _handle_main_menu_back(menu: Node) -> void:
-	# Check if CreditsPopup or any modal is visible
-	var credits = menu.get_node_or_null("CreditsPopup")
-	if credits and credits.visible:
-		credits.visible = false
+	if current_scene.has_method("handle_back_button") and current_scene.handle_back_button():
 		trigger_haptic("button")
 		return
-
-	# On Android main menu, pressing back cleanly quits the app
-	trigger_haptic("button")
-	get_tree().quit()
+	# Unknown screens return to a menu; quitting requires Main Menu confirmation.
+	SceneRouter.return_from_auxiliary()
 
 # ------------------------------------------------------------------------------
 # App Lifecycle (Pause / Resume)

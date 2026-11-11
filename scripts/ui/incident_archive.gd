@@ -112,7 +112,7 @@ func _bind_signals() -> void:
 	btn_back.pressed.connect(func():
 		if AudioManager: AudioManager.play_sfx("ui_click")
 		if AndroidSystemManager: AndroidSystemManager.trigger_haptic("button")
-		SceneRouter.go_to_main_menu()
+		SceneRouter.return_from_auxiliary()
 	)
 
 	tab_transmissions.pressed.connect(func(): _select_tab(Tab.TRANSMISSIONS))
@@ -623,7 +623,7 @@ func handle_back_button() -> bool:
 	if reader_modal and reader_modal.visible:
 		_close_reader()
 		return true
-	SceneRouter.go_to_main_menu()
+	SceneRouter.return_from_auxiliary()
 	return true
 
 func _style_components() -> void:

@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.0-alpha.2] - Unreleased
+
+### Fixed
+
+- Centralized Android Back routing and disabled automatic Back-to-quit. Main Menu requires exit confirmation; Settings and Archive preserve the originating paused puzzle.
+- Selected OpenGL Compatibility automatically on Android while retaining temporal shaders, particles, Echo trails and other 2D effects. The emulator Vulkan driver issue itself is not claimed fixed.
+- Derived solution scores from committed Echo recordings plus the current attempt, refunding discarded actions and resetting completed-level replays. Slower replays preserve historical best records.
+- Remapped cached player/Echo positions, animation endpoints and trails when board layout changes, preserving simulation state.
+
+### Release preparation
+
+- Prepared version `0.1.0-alpha.2`, Android versionCode `5`, with the existing package ID, save schema and permanent release certificate required by packaging verification.
+- Added targeted regression coverage and internal Android emulator QA. Final same-key signed artifact QA and developer release approval remain pending.
+
 ## [1.3.0] - 2026-11-09
 
 ### Added

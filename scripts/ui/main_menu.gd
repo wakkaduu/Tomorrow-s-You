@@ -16,9 +16,17 @@ const UIDesignSystemClass = preload("res://scripts/ui/components/ui_design_syste
 @onready var background: Control = $TemporalBackground
 
 var _pulse_timer: float = 0.0
+var exit_confirmation: ConfirmationDialog
 
 func _ready() -> void:
 	credits_popup.visible = false
+	exit_confirmation = ConfirmationDialog.new()
+	exit_confirmation.title = "Exit Tomorrow's You?"
+	exit_confirmation.dialog_text = "Leave the game? Your saved progress will be kept."
+	exit_confirmation.ok_button_text = "Exit Game"
+	exit_confirmation.cancel_button_text = "Stay"
+	exit_confirmation.confirmed.connect(func(): get_tree().quit())
+	add_child(exit_confirmation)
 
 	# Apply design system panel style to credits popup
 	credits_popup.add_theme_stylebox_override("panel", UIDesignSystemClass.create_panel_style(
@@ -105,13 +113,17 @@ func _apply_safe_area() -> void:
 		vb.offset_bottom = -maxi(float(m.get("bottom", 0)), 40.0)
 
 func handle_back_button() -> bool:
+	if exit_confirmation.visible:
+		exit_confirmation.hide()
+		return true
 	if credits_popup and credits_popup.visible:
 		credits_popup.visible = false
 		$VBoxContainer.visible = true
 		if background and background.has_method("set_screen_mode"):
 			background.set_screen_mode(ThemeManagerClass.ScreenMode.MAIN_MENU)
 		return true
-	return false
+	exit_confirmation.popup_centered(Vector2i(420, 180))
+	return true
 
 func _process(delta: float) -> void:
 	if SaveManager and SaveManager.reduced_animations:

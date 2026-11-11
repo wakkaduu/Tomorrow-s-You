@@ -18,7 +18,8 @@ class ReleaseVerificationTests(unittest.TestCase):
         self.apk.write_bytes(b'fixture only; not an Android package')
         self.badging = f"package: name='{alpha.PACKAGE}' versionCode='{alpha.CODE}' versionName='{alpha.VERSION}'\nsdkVersion:'24'\ntargetSdkVersion:'36'\nnative-code: 'arm64-v8a' 'armeabi-v7a' 'x86' 'x86_64'"
         self.permissions = ''
-        self.certificate = 'Signer #1 certificate DN: CN=Fixture Release Owner'
+        self.certificate = ('Signer #1 certificate DN: CN=Fixture Release Owner\n'
+                            f'Signer #1 certificate SHA-256 digest: {alpha.RELEASE_CERTIFICATE_SHA256}')
 
     def fake_run(self, args, **kwargs):
         if 'permissions' in args: text = self.permissions
@@ -41,7 +42,7 @@ class ReleaseVerificationTests(unittest.TestCase):
         with self.assertRaises(SystemExit): self.verify()
 
     def test_wrong_version_is_rejected(self):
-        self.badging = self.badging.replace("versionCode='4'", "versionCode='3'")
+        self.badging = self.badging.replace(f"versionCode='{alpha.CODE}'", f"versionCode='{alpha.CODE - 1}'")
         with self.assertRaises(SystemExit): self.verify()
 
     def test_network_permission_is_rejected(self):
@@ -70,6 +71,10 @@ class ReleaseVerificationTests(unittest.TestCase):
     def test_wrong_permanent_certificate_is_rejected(self):
         with self.assertRaises(SystemExit):
             self.verify({'expected_certificate_sha256': '00' * 32})
+
+    def test_new_certificate_is_rejected_without_provenance(self):
+        self.certificate = 'Signer #1 certificate SHA-256 digest: ' + '11' * 32
+        with self.assertRaises(SystemExit): self.verify()
 
     def test_private_key_cannot_be_inside_repository(self):
         with self.assertRaises(SystemExit): alpha.outside_repo(alpha.ROOT / 'key.p12')

@@ -69,6 +69,9 @@ func _apply_safe_area() -> void:
 		content.offset_bottom = -maxi(float(m.get("bottom", 0)), 16.0)
 
 func handle_back_button() -> bool:
+	if reset_confirm_dialog.visible:
+		reset_confirm_dialog.hide()
+		return true
 	_on_back_pressed()
 	return true
 
@@ -79,7 +82,7 @@ func _on_back_pressed() -> void:
 		AndroidSystemManager.trigger_haptic("button")
 	if SaveManager:
 		SaveManager.write_save()
-	SceneRouter.go_to_main_menu()
+	SceneRouter.return_from_auxiliary()
 
 func _on_music_changed(val: float) -> void:
 	if SaveManager:

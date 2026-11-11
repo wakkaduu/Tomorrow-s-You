@@ -28,7 +28,19 @@ var debug_turn_logging: bool = false
 
 var level_def: LevelDefinition = null
 var current_turn: int = 0
-var total_actions_taken: int = 0
+# Only recordings participating in this solution contribute to the score.
+var current_attempt_actions: int:
+	get:
+		return current_recording.get_step_count() if current_recording else 0
+var committed_echo_actions: int:
+	get:
+		var count: int = 0
+		for echo: EchoRecording in echoes:
+			count += echo.get_step_count()
+		return count
+var total_actions_taken: int:
+	get:
+		return committed_echo_actions + current_attempt_actions
 var player_pos: Vector2i = Vector2i.ZERO
 var echoes: Array[EchoRecording] = []
 var current_recording: EchoRecording = null
@@ -42,7 +54,6 @@ var is_completed: bool = false
 
 func load_level(p_level_def: LevelDefinition) -> void:
 	level_def = p_level_def
-	total_actions_taken = 0
 	echoes.clear()
 	game_state = GameState.PLAYING
 	is_completed = false
@@ -164,7 +175,6 @@ func step_move(dir: Vector2i) -> bool:
 	var from_pos: Vector2i = player_pos
 	player_pos = target_pos
 	current_turn += 1
-	total_actions_taken += 1
 	current_recording.record_step("MOVE", dir, player_pos)
 	_advance_turn(from_pos, "MOVE")
 	return true
@@ -178,7 +188,6 @@ func step_wait() -> bool:
 		return false
 
 	current_turn += 1
-	total_actions_taken += 1
 	current_recording.record_step("WAIT", Vector2i.ZERO, player_pos)
 	_advance_turn(player_pos, "WAIT")
 	return true

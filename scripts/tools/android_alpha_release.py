@@ -15,9 +15,11 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[2]
-VERSION = '0.1.0-alpha.1'
-CODE = 4
+VERSION = '0.1.0-alpha.2'
+CODE = 5
 PACKAGE = 'com.tomorrowsyou.game'
+# Permanent identity verified on alpha.1; an update must retain this certificate.
+RELEASE_CERTIFICATE_SHA256 = '43f8a0c0bfe13c5c60e3d8d61360ffecdbea4778f437b53c8a5bd98d1438f0db'
 OUT = ROOT / 'build/android/releases'
 APK = OUT / f'TomorrowsYou-v{VERSION}-android.apk'
 CONFIG = Path.home() / '.config/tomorrows-you/release-signing.json'
@@ -101,6 +103,8 @@ def verify(apk, provenance=None):
     provenance = provenance or {'source_base_commit': None, 'working_tree_modified': None, 'source_content_sha256': None, 'build_date': None}
     expected_certificate = provenance.get('expected_certificate_sha256')
     actual_certificate = re.search(r'certificate SHA-256 digest: ([0-9a-fA-F]+)', signature)
+    if not actual_certificate or actual_certificate.group(1).lower() != RELEASE_CERTIFICATE_SHA256:
+        raise SystemExit('APK certificate differs from the permanent alpha.1 release identity.')
     if expected_certificate and (not actual_certificate or actual_certificate.group(1).lower() != expected_certificate.lower()):
         raise SystemExit('APK certificate differs from the configured permanent release key.')
     info = {'apk': apk.name, 'size_bytes': apk.stat().st_size, 'sha256': digest,
@@ -171,7 +175,7 @@ def build():
         verify(candidate, provenance)
         for suffix in ['', '.sha256', '.manifest.json']:
             os.replace(Path(str(candidate) + suffix), Path(str(APK) + suffix))
-    shutil.copy2(ROOT / 'docs/releases/0.1.0-alpha.1.md', OUT / 'RELEASE_NOTES.md')
+    shutil.copy2(ROOT / 'docs/releases/0.1.0-alpha.2.md', OUT / 'RELEASE_NOTES.md')
     print('Release artifacts are local only. Do not publish until device testing and developer review are complete.')
 
 
@@ -206,7 +210,7 @@ def draft():
     # No public publish operation exists in this helper.
     run(['gh', 'release', 'create', tag, '--repo', 'wakkaduu/Tomorrow-s-You',
          '--draft', '--prerelease', '--verify-tag', '--target', run(['git', 'rev-parse', 'HEAD'], cwd=ROOT, capture_output=True).stdout.strip(),
-         '--title', "TOMORROW'S YOU — Android Alpha 0.1.0", '--notes-file', str(ROOT / 'docs/releases/0.1.0-alpha.1.md'),
+         '--title', f"TOMORROW'S YOU — Android Alpha {VERSION}", '--notes-file', str(ROOT / 'docs/releases/0.1.0-alpha.2.md'),
          str(APK), str(APK.with_suffix('.apk.sha256'))], cwd=ROOT)
 
 
