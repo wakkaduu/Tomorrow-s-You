@@ -1,8 +1,49 @@
 # Android alpha release QA
 
+## Local re-validation of the signed alpha.2 APK — November 13, 2026
+
+**Result: PASS on the tested profile (Android 15 x86_64 emulator, host-GPU OpenGL ES). Physical-device and Vulkan-on-hardware behaviour remain untested.** This section repeats the alpha.2 runtime checks on a freshly built AVD, because the earlier AVD lived on a drive that is no longer present. It supplements the Nov 11 section below; it does not replace it.
+
+| Item | Value |
+|---|---|
+| APK | `TomorrowsYou-v0.1.0-alpha.2-android.apk`, SHA-256 `a39c2fd89c4c57b23c8d644f0c762cbbc5dbdb6194358aa472d7f40a8c4dafc9` (checked against the GitHub draft download and before `adb install`) |
+| Source | Tag `v0.1.0-alpha.2` → `10956640`. HEAD `ab8e982` differs only in docs/CHANGELOG. Package `com.tomorrowsyou.game`, 0.1.0-alpha.2 (5), release certificate `43f8a0c0…38f0db` |
+| Emulator | New AVD `TomorrowsYou_Alpha_QA_Local`, emulator 37.2.13, official `system-images;android-35;default;x86_64` (r02, installed with sdkmanager), Pixel 2 profile, 720×1280 / 240 dpi, 2,560 MiB RAM, 2 cores, KVM, `-gpu host -feature -Vulkan`, serial `emulator-5580`, isolated ADB server on port 5038 |
+| Location | `/mnt/ubuntu-data/Android-QA/` (sdk, avd, home, evidence). The old AVD/QA data were not modified. No physical phone was targeted. |
+| Data | Fresh install, so the real player save and the phone's debug build were never touched. Airplane mode, Wi-Fi and mobile data were off for the whole session after the first launch; all gameplay and archive checks ran offline. |
+
+### Results (screenshots in `/mnt/ubuntu-data/Android-QA/evidence/`)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Launch, Compatibility/OpenGL rendering, MORROW transmissions, effects | PASS — menu, gameplay, intro/outro transmissions and background effects render; no GL errors in logcat | `03`, `04`, `05` |
+| Android Back — gameplay → Pause → Resume; Hint panel; Archive reader → Archive → previous screen; Level Select → Difficulty → Main Menu → exit confirmation; Stay | PASS — process ID unchanged throughout, no turn/credit change (Hint still 3/3) | `19`–`22`, `A1`–`A7`, `B1`–`B4`, `C1` |
+| Replay scoring | PASS — Level 1 first run 14 actions / 3★; after Replay Attempt the counter restarts at 0 and the identical route again gives 14 / 3★ (previously 28 / 1★). Level Select still shows record 14. | `14`, `15`, `23`, `B1` |
+| Live resize with active Echo | PASS — 720×1600 and 480×800 overrides at turn 3: player, Echo, plate and open door stay grid-aligned, turn/recording unchanged; reset restores layout | `16`–`18` |
+| Echo recording/expiry, door sync, WAIT budgets | PASS (Level 1) — Echo holds plate, door opens for the player, Echo expires and door closes behind; WAIT disables at 0 left | `07`–`12` |
+| Save persistence, offline, background/foreground | PASS — Home then relaunch keeps the process; force-stop then relaunch shows Continue Journey, 30/30 stars, Archive 31/31 | `C2`, `C3` |
+| Hint panel / Archive | PASS — hint opens/closes without charge; Archive reader opens, replays text, closes via Back | `21`, `A5`–`A7` |
+
+### Campaign coverage (each solution is from `campaign_solutions.gd`, executed by touch on the emulator)
+
+| Level | Loaded | Interacted | Completed |
+|---|---|---|---|
+| 1–10 | Yes | Yes | Yes — all ten completed with their canonical solutions, each 3★. Final report shows 30/30 stars, 283 total actions, 20 Echoes. Evidence: `L<n>_a`–`L<n>_e`. |
+
+Only the canonical route was run per level; alternative routes, failure paths, hint use beyond Level 1, and the slower-replay "best preserved" case were not repeated here (that case passed in the Nov 11 signed-APK QA). The game ran all ten levels in one process with no crash.
+
+### Findings and remaining issues
+
+- **Software renderer fails (new observation, not a regression):** with `-gpu swiftshader_indirect` (GL_MAX_FRAGMENT_UNIFORM_VECTORS = 261) the app shows a blank dark screen. Logcat shows Godot's built-in `SceneShaderGLES3`/`CanvasShaderGLES3` link errors ("active uniforms exceed GL_MAX_FRAGMENT_UNIFORM_VECTORS"). The project's own shader has only 11 small uniforms, so the limit is hit by engine shaders. Risk assessment: a compatibility risk on low-limit GPUs, not evidence of failure on ordinary phones (the host-GPU run was clean). Needs real-device reports. Log: `swiftshader-indirect-logcat.txt`.
+- **ObjectDB leak at exit (headless tests):** 4 instances, all `AudioStreamWAV`/`AudioStreamPlaybackWAV`, fixed count at shutdown. It does not grow during play, so it is not a long-running-gameplay leak; low priority.
+- A shader-cache "Failed to load cached shader, recompiling" warning appears on first launch. No `FATAL EXCEPTION`, ANR or native crash in `full-logcat.txt`.
+- **Not tested:** physical devices, ARM, other Android versions, real-hardware Vulkan, audio/haptics, gesture navigation, endurance/performance, non-canonical solutions.
+
+**Assessment: CONDITIONAL — LIMITED ALPHA POSSIBLE.** No known release-blocking defect remains and the four reported defects are verified on the signed APK. Device and coverage limits above remain, and publication still needs developer approval.
+
 ## Final signed alpha.2 QA — November 11, 2026
 
-**PASS for the tested Android 15 x86_64 emulator profile. Ready for developer review; [the separate prerelease draft](https://github.com/wakkaduu/Tomorrow-s-You/releases/tag/untagged-b02475be4d1d0b05ccae) remains unpublished.** Physical-device and wider Android compatibility are not established. The earlier alpha.2 internal checkpoint and alpha.1 failures below are retained as historical evidence.
+**PASS for the tested Android 15 x86_64 emulator profile. Ready for developer review; [the alpha.2 prerelease](https://github.com/wakkaduu/Tomorrow-s-You/releases/tag/v0.1.0-alpha.2) (tag URL; live only after publication) remains unpublished.** Physical-device and wider Android compatibility are not established. The earlier alpha.2 internal checkpoint and alpha.1 failures below are retained as historical evidence.
 
 | Artifact check | Verified final value |
 |---|---|
@@ -58,7 +99,7 @@ A shader-cache recompilation warning occurred at some cold starts; visible rende
 
 **PASS — 19/19 source suites**, including 86 targeted checks, ten campaign solutions, 282 WAIT optimization checks, 3,187 turn/WAIT checks, 20 hint tests and 15 release-helper tests. The tested production-content fingerprint matches the signed build. The date-dependent test-fixture corrections described below affect tests only.
 
-**NOT TESTED:** physical phones, ARM/ARM64 execution, Android versions other than 15/API 35, audio/haptics, notches/gesture navigation, endurance/performance, complete ten-level Android progression and all narrative/archive content. All ten canonical solutions pass source simulation; only Levels 1–2 were completed on Android. The underlying Vulkan-driver/Swappy issue is not claimed fixed; Android selects Compatibility instead. Known movement-loop WAIT alternatives and Nightmare's two-Echo shortcut remain unchanged.
+**NOT TESTED:** physical phones, ARM/ARM64 execution, Android versions other than 15/API 35, audio/haptics, notches/gesture navigation, endurance/performance, complete ten-level Android progression and all narrative/archive content. All ten canonical solutions pass source simulation; only Levels 1–2 were completed on Android in this Nov 11 pass (superseded: all ten were completed in the Nov 13 section above). The underlying Vulkan-driver/Swappy issue is not claimed fixed; Android selects Compatibility instead. Known movement-loop WAIT alternatives and Nightmare's two-Echo shortcut remain unchanged.
 
 **FAIL:** no reproduced failure remains in the four exercised signed-APK remediation scenarios. **BLOCKED:** none for preparing this tested candidate. Public publication is not authorized and still requires developer approval.
 
